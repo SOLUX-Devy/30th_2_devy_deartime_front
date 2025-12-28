@@ -19,8 +19,8 @@ const Login = () => {
         // 백에서 받은 JWT 토큰을 로컬 스토리지에 저장
         localStorage.setItem("accessToken", res.data.accessToken);
 
-        // 로그인 성공 시 메인 페이지로 이동
-        navigate("/home");
+        // 로그인 성공 시 회원가입페이지로 이동
+        navigate("/signup");
       } catch (err) {
         console.error("로그인 실패", err);
       }
