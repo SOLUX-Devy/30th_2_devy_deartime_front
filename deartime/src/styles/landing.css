@@ -1,0 +1,69 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'ABeeZee', sans-serif;
+}
+
+.landing-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    color: black;
+}
+.landing-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    
+}
+.logo-img {
+    position: absolute;
+    width: 29vw;
+    max-width: 300px;
+    min-width: 180px;
+
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.landing-text {
+  position: absolute;
+  top: 40%;
+  left: 50%;   
+  transform: translateX(-50%);
+
+  color: #fff;
+  text-align: center;
+  font-size: clamp(16px, 3vw, 25px);
+}
+.google-login-btn {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 80%;
+  max-width: 400px;
+  height: 80px;
+
+  border-radius: 20px;
+  background: #D9D9D9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: black;
+}
+
+.google-login-btn img {
+  width: 30px;
+  height: 30px;
+  
+}
+
