@@ -1,5 +1,5 @@
 import React from "react";
-import landingImg from "../assets/landing.svg";
+import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
 import "../styles/landing.css";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +17,7 @@ const Landing = () => {
 
     return (
         <div className="landing-container">
-            <img src={landingImg} alt="landing" className="landing-img" />
+            <img src={backgroundImg} alt="landing" className="background-img" />
             <img src={logoImg} alt="logo" className="logo-img" />
             <p className="landing-text">
             별빛처럼 사라지지 않는 기억을 기록하는 곳
