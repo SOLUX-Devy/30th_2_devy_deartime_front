@@ -3,9 +3,17 @@ import landingImg from "../assets/landing.svg";
 import logoImg from "../assets/logo.svg";
 import "../styles/landing.css";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Landing = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+        navigate("/home");
+        }
+    }, [navigate]);
 
     return (
         <div className="landing-container">
