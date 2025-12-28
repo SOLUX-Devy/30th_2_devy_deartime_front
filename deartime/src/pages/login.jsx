@@ -1,39 +1,42 @@
-import React, { useState } from 'react';
+import { useGoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Email:', email, 'Password:', password);
-    // 여기에 로그인 API 호출 가능
-  };
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // 백으로 구글 엑세스 토큰 전달
+        const res = await axios.post(
+          "http://localhost:8080/auth/google",
+          {
+            accessToken: tokenResponse.access_token,
+          }
+        );
+
+        // 백에서 받은 JWT 토큰을 로컬 스토리지에 저장
+        localStorage.setItem("accessToken", res.data.accessToken);
+
+        // 로그인 성공 시 메인 페이지로 이동
+        navigate("/home");
+      } catch (err) {
+        console.error("로그인 실패", err);
+      }
+    },
+    onError: () => {
+      console.log("Google Login Failed");
+    },
+  });
 
   return (
     <div className="login-container">
       <h2>로그인</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
-          <input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required
-          />
-        </div>
-        <button type="submit">로그인</button>
-      </form>
+
+      <button className="google-login-btn" onClick={googleLogin}>
+        Google 계정으로 로그인
+      </button>
     </div>
   );
 };
