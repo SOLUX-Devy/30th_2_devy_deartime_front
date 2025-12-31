@@ -1,0 +1,33 @@
+.mailbox-container {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #030715, #233a80);
+    color: white;
+    padding: 20px;
+}
+
+.mailbox-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.mailbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.letter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+/* 상단 메인 네비바 임시 자리 */
+.main-navbar-placeholder {
+    height: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
