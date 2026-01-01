@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import DearTimeMini from "../assets/DearTimemini.png";
+import DearTimeMini from "../assets/logo.svg";
 
 export default function Header() {
     const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
