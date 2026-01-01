@@ -1,16 +1,16 @@
-.mailbox-container {
+.letterbox-container {
     min-height: 100vh;
     background: linear-gradient(to bottom, #030715, #233a80);
     color: white;
     padding: 20px;
 }
 
-.mailbox-content {
+.letterbox-content {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.mailbox-header {
+.letterbox-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

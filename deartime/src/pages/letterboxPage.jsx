@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/MailboxPage.css';
+import '../styles/LetterboxPage.css';
 import LetterCard from '../components/LetterCard';
 import MailTabs from '../components/MailTabs'; 
 import SendButton from '../components/SendButton'; 
@@ -22,15 +22,15 @@ const apiResponse = {
     }
 };
 
-const MailboxPage = () => {
+const Letterbox = () => {
     const letters = apiResponse.data.data;
 
     return (
-        <div className="mailbox-container">
+        <div className="letterbox-container">
         <div className="main-navbar-placeholder">Main Navbar</div>
         
-            <div className="mailbox-content">
-                <header className="mailbox-header">
+            <div className="letterbox-content">
+                <header className="letterbox-header">
                     {/* Tabs, Button 컴포넌트 삽입 */}
                     <MailTabs />
                     <SendButton />
@@ -47,4 +47,4 @@ const MailboxPage = () => {
     );
 };
 
-export default MailboxPage;
+export default Letterbox;
