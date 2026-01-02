@@ -27,7 +27,6 @@ const Letterbox = () => {
 
     return (
         <div className="letterbox-container">
-        <div className="main-navbar-placeholder">Main Navbar</div>
         
             <div className="letterbox-content">
                 <header className="letterbox-header">
