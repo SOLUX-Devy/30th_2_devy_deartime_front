@@ -1,12 +1,13 @@
 .letterbox-container {
+    width:100%;
     min-height: 100vh;
     background: linear-gradient(to bottom, #030715, #233a80);
     color: white;
-    padding: 20px;
+    padding: 20px 0;
 }
 
 .letterbox-content {
-    max-width: 1200px;
+    max-width: 80%;
     margin: 0 auto;
 }
 
@@ -23,11 +24,3 @@
     gap: 24px;
 }
 
-/* 상단 메인 네비바 임시 자리 */
-.main-navbar-placeholder {
-    height: 60px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-}

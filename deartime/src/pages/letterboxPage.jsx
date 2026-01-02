@@ -17,6 +17,16 @@ const apiResponse = {
             sentAt: "2025-12-15T00:32:08.164649",
             isRead: true,
             isBookmarked: true
+        }, 
+        {
+            letterId: 2,
+            senderNickname: "테스터_A",
+            title: "첫 편지입니다",
+            summary: "17148",
+            themeCode: "PINK",
+            sentAt: "2025-12-15T00:32:08.164649",
+            isRead: true,
+            isBookmarked: true
         }
         ]
     }
@@ -27,7 +37,6 @@ const Letterbox = () => {
 
     return (
         <div className="letterbox-container">
-        <div className="main-navbar-placeholder">Main Navbar</div>
         
             <div className="letterbox-content">
                 <header className="letterbox-header">

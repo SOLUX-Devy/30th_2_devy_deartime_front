@@ -18,7 +18,7 @@ export default function Header() {
             /* ===== Header ===== */
             .header {
             position: relative;
-            width: 100vw;              /* 🔥 화면 끝까지 */
+            width: 100%;              /* 화면 끝까지 */
             height: 80px;
             background: linear-gradient(
                 180deg,
@@ -33,7 +33,7 @@ export default function Header() {
             max-width: 1440px;          /* 시안용 폭 */
             height: 100%;
             margin: 0 auto;
-            padding: 0 48px;
+            padding: 0 10rem;
 
             display: flex;
             align-items: center;
@@ -70,7 +70,7 @@ export default function Header() {
             font-weight: 600;
             }
 
-            /* active 밑줄 (있어 보이게) */
+            /* active 밑줄 */
             .item.active::after {
             content: "";
             position: absolute;
