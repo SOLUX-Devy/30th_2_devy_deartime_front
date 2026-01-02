@@ -1,11 +1,14 @@
 import React from 'react';
 import '../styles/LetterCard.css';
+import bgDarkBlue from '../assets/bg-dark-blue.png';
+import bgLightPink from '../assets/bg-light-pink.png';
+import bgLightGrey from '../assets/bg-light-grey.png';
 
 const THEME_IMAGES = {
-    DEFAULT: '/assets/bg-dark-blue.png', 
-    PINK: '/assets/bg-light-pink.png',
-    SPRING: '/assets/bg-light-grey.png'
-    };
+    DEFAULT: bgDarkBlue, 
+    PINK: bgLightPink,
+    SPRING: bgLightGrey
+};
 
 const LetterCard = ({ data }) => {
     const {
