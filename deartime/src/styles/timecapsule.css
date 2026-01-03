@@ -55,3 +55,157 @@
   background-color: white;
   border-radius: 50%;
 }
+
+/* ====== 카드 그리드 ====== */
+.tc-grid {
+  margin-left: 60px;
+  margin-right: 60px;
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.tc-empty {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ====== TimeCapsuleCard ====== */
+.tc-card {
+  width: 240px;
+  height: 323px;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 16px;
+  border-radius: 16px;
+  box-sizing: border-box;
+
+  background: transparent;
+  border: none;
+
+  cursor: pointer;
+  text-align: left;
+}
+
+/* 1) canAccess=false => 투명 박스 */
+.tc-card--locked {
+  background: transparent;
+  border: none;
+}
+
+/* 2) canAccess=true & opened=false => 파란색 박스 */
+.tc-card--accessible {
+  background: #0e77bc;
+  border: none;
+}
+
+/* 3) canAccess=true & opened=true => fill #000 20% + border #0E77BC 50% 3px */
+.tc-card--opened {
+  background: rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(14, 119, 188, 0.5);
+}
+
+.tc-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tc-card__dday {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.tc-card__created {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tc-card__imgWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tc-card__img {
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+}
+
+.tc-card__meta {
+  margin-top: 10px;
+}
+
+.tc-card__sender {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tc-card__title {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ====== 페이지네이션 (스샷처럼) ====== */
+.tc-pagination {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 26px;
+}
+
+.tc-page {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tc-page:hover {
+  color: white;
+}
+
+.tc-page.active {
+  background: #0E77BC;
+  color: white;
+  font-weight: 700;
+}
+
+.tc-layout {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tc-pagination {
+  margin-top: auto;      /* ✅ 아래로 밀기 */
+  padding-top: 28px;     /* ✅ 원래 marginTop 28px 역할 */
+  padding-bottom: 24px;
+}
+
+.timecapsule-container {
+  display: flex;
+  flex-direction: column;
+}
