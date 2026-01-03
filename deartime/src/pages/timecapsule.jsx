@@ -380,10 +380,12 @@ const TimeCapsule = () => {
                 key={capsule.id}
                 capsule={capsule}
                 onClick={() => {
-                  console.log('clicked capsule:', capsule.id);
+                  if (!capsule.canAccess) return; // ✅ 접근 불가면 클릭 무시
+                  navigate(`/timecapsule/${capsule.id}`);
                 }}
               />
             ))}
+
 
             {/* ✅ 마지막 페이지 등에서 부족한 칸 채우기 */}
             {Array.from({ length: emptyCount }).map((_, idx) => (

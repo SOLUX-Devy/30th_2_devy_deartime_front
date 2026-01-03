@@ -11,6 +11,7 @@ import Home from "./pages/home.jsx";
 import Letterbox from "./pages/letterboxPage";
 import Timecapsule from "./pages/timecapsule";
 import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
+import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
 /*import Freind from "./pages/freind"; */
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/letterbox" element={<Letterbox />} />
         <Route path="/timecapsule" element={<Timecapsule />} />
         <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
+        <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
         {/* <Route path="/freind" element={<Freind />} /> */}
         
       </Routes>
