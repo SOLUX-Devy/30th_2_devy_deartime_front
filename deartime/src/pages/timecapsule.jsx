@@ -1,15 +1,18 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import bg from '../assets/background_nostar.png';
 import '../styles/timecapsule.css';
 import TimeCapsuleCard from '../components/TimeCapsuleCard';
 
 const TimeCapsule = () => {
+  const navigate = useNavigate();
+
   const tabs = ['전체 캡슐', '받은 캡슐', '나의 캡슐'];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
 
-  // ✅ 페이지네이션
-  const [page, setPage] = useState(1); // UI 편하게 1부터
+  // ✅ 페이지네이션 (UI 편하게 1부터)
+  const [page, setPage] = useState(1);
   const pageSize = 8;
 
   // ✅ 정렬: 'desc' = 최신순(추천), 'asc' = 오래된순
@@ -93,7 +96,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: false,
       },
-
       {
         id: 5,
         title: '받은 캡슐',
@@ -109,7 +111,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: true,
       },
-
       {
         id: 6,
         title: '받은 캡슐',
@@ -125,7 +126,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: true,
       },
-
       {
         id: 7,
         title: '받은 캡슐',
@@ -141,7 +141,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: true,
       },
-
       {
         id: 8,
         title: '받은 캡슐',
@@ -157,7 +156,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: true,
       },
-
       {
         id: 9,
         title: '받은 캡슐',
@@ -173,7 +171,6 @@ const TimeCapsule = () => {
         opened: false,
         canAccess: true,
       },
-
       {
         id: 10,
         title: '받은 캡슐',
@@ -189,7 +186,6 @@ const TimeCapsule = () => {
         opened: true,
         canAccess: true,
       },
-
       {
         id: 11,
         title: '받은 캡슐',
@@ -225,7 +221,7 @@ const TimeCapsule = () => {
     );
   }, [activeIndex, mockCapsules, myUserId]);
 
-  // ✅ 열린 캡슐만 보기 (opened가 아니라 canAccess 기준)
+  // ✅ 열린 캡슐만 보기 (canAccess 기준)
   const finalList = useMemo(() => {
     if (!showOpenOnly) return filteredByTab;
     return filteredByTab.filter((c) => c.canAccess === true);
@@ -240,7 +236,7 @@ const TimeCapsule = () => {
       return sortOrder === 'desc' ? tb - ta : ta - tb;
     });
     return arr;
-  }, [finalList]);
+  }, [finalList, sortOrder]);
 
   // ✅ 페이지 계산
   const totalElements = sortedList.length;
@@ -250,96 +246,121 @@ const TimeCapsule = () => {
   const pagedList = useMemo(() => {
     const start = (safePage - 1) * pageSize;
     return sortedList.slice(start, start + pageSize);
-  }, [sortedList, safePage]);
+  }, [sortedList, safePage, pageSize]);
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
     [totalPages]
   );
 
+  // ✅ "11개 중 1-8" 표시 (토글 줄 오른쪽에 표시)
+  const rangeText = useMemo(() => {
+    if (totalElements === 0) return `0개 중 0-0`;
+    const start = (safePage - 1) * pageSize + 1;
+    const end = Math.min(safePage * pageSize, totalElements);
+    return `${totalElements}개 중 ${start}-${end}`;
+  }, [totalElements, safePage, pageSize]);
+
   return (
     <div
       className="timecapsule-container"
       style={{ backgroundImage: `url(${bg})` }}
     >
-      {/* 상단 세부 네비 */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '50px',
-          marginBottom: '0px',
-          marginLeft: '60px',
-          marginTop: '10px',
-        }}
-      >
-        {tabs.map((tab, index) => {
-          const isActive = index === activeIndex;
-
-          return (
-            <span
-              key={tab}
-              onClick={() => {
-                setActiveIndex(index);
-                setPage(1); // ✅ 탭 바뀌면 1페이지로
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.opacity = 1;
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.opacity = 0.7;
-              }}
-              style={{
-                position: 'relative',
-                fontSize: '20px',
-                fontWeight: isActive ? 600 : 350,
-                paddingBottom: '6px',
-                cursor: 'pointer',
-                color: 'white',
-                opacity: isActive ? 1 : 0.7,
-                transition: 'opacity 0.2s ease',
-              }}
-            >
-              {tab}
-
-              {/* 클릭 시에만 촤악 나오는 밑줄 */}
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  bottom: 0,
-                  width: '100%',
-                  height: '2px',
-                  backgroundColor: '#0E77BC',
-                  transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
-                  transformOrigin: 'center',
-                  transition: 'transform 0.3s ease',
-                }}
-              />
-            </span>
-          );
-        })}
-      </div>
-
-      {/* 열린 캡슐만 보기 */}
-      <div className="open-only-toggle">
-        <span className="toggle-label">열린 캡슐만 보기</span>
-
-        <button
-          type="button"
-          className={`toggle-button ${showOpenOnly ? 'on' : ''}`}
-          onClick={() => {
-            setShowOpenOnly((prev) => !prev);
-            setPage(1); // ✅ 토글 바뀌면 1페이지로
+      {/* 상단 영역 (왼쪽: 탭 / 오른쪽: 캡슐 생성 버튼) */}
+      <div className="tc-topbar">
+        {/* 상단 세부 네비 */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '50px',
+            marginBottom: '0px',
+            marginLeft: '60px',
+            marginTop: '10px',
           }}
-          aria-pressed={showOpenOnly}
         >
-          <span className="toggle-knob" />
-        </button>
+          {tabs.map((tab, index) => {
+            const isActive = index === activeIndex;
+
+            return (
+              <span
+                key={tab}
+                onClick={() => {
+                  setActiveIndex(index);
+                  setPage(1);
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.opacity = 1;
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.opacity = 0.7;
+                }}
+                style={{
+                  position: 'relative',
+                  fontSize: '20px',
+                  fontWeight: isActive ? 600 : 350,
+                  paddingBottom: '6px',
+                  cursor: 'pointer',
+                  color: 'white',
+                  opacity: isActive ? 1 : 0.7,
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                {tab}
+
+                {/* 클릭 시 밑줄 */}
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    bottom: 0,
+                    width: '100%',
+                    height: '2px',
+                    backgroundColor: '#0E77BC',
+                    transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
+                    transformOrigin: 'center',
+                    transition: 'transform 0.3s ease',
+                  }}
+                />
+              </span>
+            );
+          })}
+        </div>
+
+        {/* 오른쪽: 캡슐 생성 */}
+        <div className="tc-topbar-right">
+          <button
+            type="button"
+            className="tc-create-btn"
+            onClick={() => navigate('/timecapsule/create')}
+          >
+            캡슐 생성
+          </button>
+        </div>
       </div>
 
-      {/* ✅ A 방식: 컨텐츠가 적어도 페이지네이션이 아래로 내려가게 */}
+      {/* ✅ 토글 줄: (왼쪽) 열린 캡슐만 보기 / (오른쪽) 11개 중 1-8 */}
+      <div className="tc-toggle-row">
+        <div className="open-only-toggle">
+          <span className="toggle-label">열린 캡슐만 보기</span>
+
+          <button
+            type="button"
+            className={`toggle-button ${showOpenOnly ? 'on' : ''}`}
+            onClick={() => {
+              setShowOpenOnly((prev) => !prev);
+              setPage(1);
+            }}
+            aria-pressed={showOpenOnly}
+          >
+            <span className="toggle-knob" />
+          </button>
+        </div>
+
+        <div className="tc-range">{rangeText}</div>
+      </div>
+
+      {/* ✅ 카드 목록 + 페이지네이션(아래 고정) */}
       <div className="tc-layout">
-        {/* ✅ 카드 목록 (페이지당 10개만) */}
         <div className="tc-grid">
           {pagedList.length === 0 ? (
             <div className="tc-empty">캡슐이 없습니다.</div>
@@ -356,34 +377,15 @@ const TimeCapsule = () => {
           )}
         </div>
 
-        {/* ✅ 페이지네이션 (inline style 유지 + className 추가) */}
+        {/* 페이지네이션 */}
         {totalPages > 1 && (
-          <div
-            className="tc-pagination"
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '26px',
-            }}
-          >
+          <div className="tc-pagination">
             {pageNumbers.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: p === safePage ? '#0E77BC' : 'transparent',
-                  color: 'white',
-                  fontSize: '16px',
-                  fontWeight: p === safePage ? 700 : 400,
-                  cursor: 'pointer',
-                  opacity: p === safePage ? 1 : 0.9,
-                }}
+                className={`tc-page ${p === safePage ? 'active' : ''}`}
               >
                 {p}
               </button>
