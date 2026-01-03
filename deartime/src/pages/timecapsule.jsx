@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import bg from '../assets/background_nostar.png';
-import '../styles/timecapsule.css';
-import TimeCapsuleCard from '../components/TimeCapsuleCard';
+// src/pages/timecapsule.jsx
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import bg from "../assets/background_nostar.png";
+import "../styles/timecapsule.css";
+import TimeCapsuleCard from "../components/TimeCapsuleCard";
+import LockedCapsuleModal from "../components/LockedCapsuleModal";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
 
-  const tabs = ['전체 캡슐', '받은 캡슐', '나의 캡슐'];
+  const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
 
@@ -16,10 +18,16 @@ const TimeCapsule = () => {
   const pageSize = 8;
 
   // ✅ 정렬: 'desc' = 최신순(추천), 'asc' = 오래된순
-  const sortOrder = 'desc';
+  const sortOrder = "desc";
 
   // ✅ 임시 로그인 유저(나중에 auth에서 가져오면 됨)
   const myUserId = 2;
+
+  // ✅ 잠김 모달
+  const [lockedModalOpen, setLockedModalOpen] = useState(false);
+  const [lockedMessage, setLockedMessage] = useState(
+    "아직 열 수 없는 타임캡슐이에요"
+  );
 
   // ✅ 목데이터: API 연동 전 테스트용
   const mockCapsules = useMemo(
@@ -27,19 +35,19 @@ const TimeCapsule = () => {
       // canAccess=false (투명 박스)
       {
         id: 1,
-        title: '2년 뒤의 나에게',
+        title: "2년 뒤의 나에게",
         content: null,
-        theme: 'graduation',
+        theme: "graduation",
         imageUrl: null,
-        openAt: '2027-01-20T15:30:00',
+        openAt: "2027-01-20T15:30:00",
         isNotified: false,
         senderId: 1,
-        senderNickname: 'user1',
+        senderNickname: "user1",
         senderProfileImageUrl: null,
         receiverId: 2,
-        receiverNickname: 'me',
+        receiverNickname: "me",
         receiverProfileImageUrl: null,
-        createdAt: '2025-09-30T10:00:00.000000',
+        createdAt: "2025-09-30T10:00:00.000000",
         opened: false,
         canAccess: false,
       },
@@ -47,17 +55,17 @@ const TimeCapsule = () => {
       // canAccess=true & opened=false (파란 박스)
       {
         id: 2,
-        title: '내일의 나에게',
+        title: "내일의 나에게",
         content: null,
-        theme: 'daily',
+        theme: "daily",
         imageUrl: null,
-        openAt: '2026-01-01T15:30:00',
+        openAt: "2026-01-01T15:30:00",
         isNotified: false,
         senderId: 2,
-        senderNickname: 'me',
+        senderNickname: "me",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-10-01T12:00:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-10-01T12:00:00.000000",
         opened: false,
         canAccess: true,
       },
@@ -65,17 +73,17 @@ const TimeCapsule = () => {
       // canAccess=true & opened=true (검정20% + 파랑테두리)
       {
         id: 3,
-        title: '열린 캡슐 예시',
-        content: '열렸으니까 내용이 보입니다!',
-        theme: 'happy',
+        title: "열린 캡슐 예시",
+        content: "열렸으니까 내용이 보입니다!",
+        theme: "happy",
         imageUrl: null,
-        openAt: '2025-09-01T09:00:00',
+        openAt: "2025-09-01T09:00:00",
         isNotified: true,
         senderId: 2,
-        senderNickname: 'me',
+        senderNickname: "me",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-08-20T14:00:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-08-20T14:00:00.000000",
         opened: true,
         canAccess: true,
       },
@@ -83,121 +91,121 @@ const TimeCapsule = () => {
       // 받은 캡슐 예시
       {
         id: 4,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-03-03T00:00:00',
+        openAt: "2026-03-03T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: false,
       },
       {
         id: 5,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
       {
         id: 6,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
       {
         id: 7,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
       {
         id: 8,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
       {
         id: 9,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
       {
         id: 10,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: true,
         canAccess: true,
       },
       {
         id: 11,
-        title: '받은 캡슐',
+        title: "받은 캡슐",
         content: null,
-        theme: 'letter',
+        theme: "letter",
         imageUrl: null,
-        openAt: '2026-01-02T00:00:00',
+        openAt: "2026-01-02T00:00:00",
         senderId: 9,
-        senderNickname: 'user9',
+        senderNickname: "user9",
         receiverId: 2,
-        receiverNickname: 'me',
-        createdAt: '2025-11-11T09:30:00.000000',
+        receiverNickname: "me",
+        createdAt: "2025-11-11T09:30:00.000000",
         opened: false,
         canAccess: true,
       },
@@ -233,7 +241,7 @@ const TimeCapsule = () => {
     arr.sort((a, b) => {
       const ta = new Date(a.createdAt).getTime();
       const tb = new Date(b.createdAt).getTime();
-      return sortOrder === 'desc' ? tb - ta : ta - tb;
+      return sortOrder === "desc" ? tb - ta : ta - tb;
     });
     return arr;
   }, [finalList, sortOrder]);
@@ -255,7 +263,7 @@ const TimeCapsule = () => {
 
   const emptyCount = Math.max(0, pageSize - pagedList.length);
 
-  // ✅ "11개 중 1-8" 표시 (토글 줄 오른쪽에 표시)
+  // ✅ "11개 중 1-8" 표시
   const rangeText = useMemo(() => {
     if (totalElements === 0) return `0개 중 0-0`;
     const start = (safePage - 1) * pageSize + 1;
@@ -273,11 +281,11 @@ const TimeCapsule = () => {
         {/* 상단 세부 네비 */}
         <div
           style={{
-            display: 'flex',
-            gap: '50px',
-            marginBottom: '0px',
-            marginLeft: '60px',
-            marginTop: '10px',
+            display: "flex",
+            gap: "50px",
+            marginBottom: "0px",
+            marginLeft: "60px",
+            marginTop: "10px",
           }}
         >
           {tabs.map((tab, index) => {
@@ -297,14 +305,14 @@ const TimeCapsule = () => {
                   if (!isActive) e.currentTarget.style.opacity = 0.7;
                 }}
                 style={{
-                  position: 'relative',
-                  fontSize: '20px',
+                  position: "relative",
+                  fontSize: "20px",
                   fontWeight: isActive ? 600 : 350,
-                  paddingBottom: '6px',
-                  cursor: 'pointer',
-                  color: 'white',
+                  paddingBottom: "6px",
+                  cursor: "pointer",
+                  color: "white",
                   opacity: isActive ? 1 : 0.7,
-                  transition: 'opacity 0.2s ease',
+                  transition: "opacity 0.2s ease",
                 }}
               >
                 {tab}
@@ -312,15 +320,15 @@ const TimeCapsule = () => {
                 {/* 클릭 시 밑줄 */}
                 <span
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     left: 0,
                     bottom: 0,
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: '#0E77BC',
-                    transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
-                    transformOrigin: 'center',
-                    transition: 'transform 0.3s ease',
+                    width: "100%",
+                    height: "2px",
+                    backgroundColor: "#0E77BC",
+                    transform: isActive ? "scaleX(1)" : "scaleX(0)",
+                    transformOrigin: "center",
+                    transition: "transform 0.3s ease",
                   }}
                 />
               </span>
@@ -333,21 +341,21 @@ const TimeCapsule = () => {
           <button
             type="button"
             className="tc-create-btn"
-            onClick={() => navigate('/timecapsule/create')}
+            onClick={() => navigate("/timecapsule/create")}
           >
             캡슐 생성
           </button>
         </div>
       </div>
 
-      {/* ✅ 토글 줄: (왼쪽) 열린 캡슐만 보기 / (오른쪽) 11개 중 1-8 */}
+      {/* 토글 줄 */}
       <div className="tc-toggle-row">
         <div className="open-only-toggle">
           <span className="toggle-label">열린 캡슐만 보기</span>
 
           <button
             type="button"
-            className={`toggle-button ${showOpenOnly ? 'on' : ''}`}
+            className={`toggle-button ${showOpenOnly ? "on" : ""}`}
             onClick={() => {
               setShowOpenOnly((prev) => !prev);
               setPage(1);
@@ -361,40 +369,40 @@ const TimeCapsule = () => {
         <div className="tc-range">{rangeText}</div>
       </div>
 
-      {/* ✅ 카드 목록 + 페이지네이션(아래 고정) */}
+      {/* 카드 목록 + 페이지네이션 */}
       <div className="tc-layout">
         <div className="tc-grid">
-        {pagedList.length === 0 ? (
-          <>
-            <div className="tc-empty">캡슐이 없습니다.</div>
+          {pagedList.length === 0 ? (
+            <>
+              <div className="tc-empty">캡슐이 없습니다.</div>
 
-            {/* ✅ 8칸 채우기용 더미 */}
-            {Array.from({ length: pageSize }).map((_, idx) => (
-              <div key={`empty-${idx}`} className="tc-card--empty" />
-            ))}
-          </>
-        ) : (
-          <>
-            {pagedList.map((capsule) => (
-              <TimeCapsuleCard
-                key={capsule.id}
-                capsule={capsule}
-                onClick={() => {
-                  if (!capsule.canAccess) return; // ✅ 접근 불가면 클릭 무시
-                  navigate(`/timecapsule/${capsule.id}`);
-                }}
-              />
-            ))}
+              {Array.from({ length: pageSize }).map((_, idx) => (
+                <div key={`empty-${idx}`} className="tc-card--empty" />
+              ))}
+            </>
+          ) : (
+            <>
+              {pagedList.map((capsule) => (
+                <TimeCapsuleCard
+                  key={capsule.id}
+                  capsule={capsule}
+                  onClick={() => {
+                    if (!capsule.canAccess) {
+                      setLockedMessage("아직 열 수 없는 타임캡슐이에요");
+                      setLockedModalOpen(true);
+                      return;
+                    }
+                    navigate(`/timecapsule/${capsule.id}`);
+                  }}
+                />
+              ))}
 
-
-            {/* ✅ 마지막 페이지 등에서 부족한 칸 채우기 */}
-            {Array.from({ length: emptyCount }).map((_, idx) => (
-              <div key={`empty-${idx}`} className="tc-card--empty" />
-            ))}
-          </>
-        )}
-      </div>
-
+              {Array.from({ length: emptyCount }).map((_, idx) => (
+                <div key={`empty-${idx}`} className="tc-card--empty" />
+              ))}
+            </>
+          )}
+        </div>
 
         {/* 페이지네이션 */}
         {totalPages > 1 && (
@@ -404,7 +412,7 @@ const TimeCapsule = () => {
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                className={`tc-page ${p === safePage ? 'active' : ''}`}
+                className={`tc-page ${p === safePage ? "active" : ""}`}
               >
                 {p}
               </button>
@@ -412,6 +420,13 @@ const TimeCapsule = () => {
           </div>
         )}
       </div>
+
+      {/* ✅ 모달은 tc-layout 밖 + container 끝나기 직전에 */}
+      <LockedCapsuleModal
+        open={lockedModalOpen}
+        message={lockedMessage}
+        onClose={() => setLockedModalOpen(false)}
+      />
     </div>
   );
 };

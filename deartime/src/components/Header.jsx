@@ -17,7 +17,9 @@ export default function Header() {
 
         /* ===== Header ===== */
         .header {
-          position: relative;
+          position: sticky;
+          top: 0;
+          z-index: 10000;
           width: 100%;
           height: 80px;
 
