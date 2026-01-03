@@ -37,7 +37,7 @@ export default function Header() {
 
             display: flex;
             align-items: center;
-            gap: 220px;
+            justify-content: space-between;
             }
 
             .logo img {
@@ -50,6 +50,7 @@ export default function Header() {
             display: flex;
             align-items: center;
             gap: 130px;
+            margin-right: 500px;
             }
 
             .item {
