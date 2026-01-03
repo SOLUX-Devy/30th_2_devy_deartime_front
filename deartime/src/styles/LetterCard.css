@@ -1,0 +1,57 @@
+.letter-card {
+    aspect-ratio: 3 / 4;
+    padding: 24px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    color: #333; /* 기본 텍스트 색상 (배경에 따라 조절) */
+}
+
+/* 테마별 텍스트 색상 대응 */
+.letter-card.theme-DEFAULT { color: #ffffff; }
+.letter-card.theme-PINK { color: #4a4a4a; }
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sender-info {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.summary-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-top: 15px;
+    /* 50자 제한은 JS에서 처리하지만, 넘칠 경우를 대비한 CSS */
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.status-unread {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.bookmark-icon {
+    font-size: 1.2rem;
+    color: #ffd700;
+}

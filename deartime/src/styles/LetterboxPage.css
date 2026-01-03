@@ -1,0 +1,26 @@
+.letterbox-container {
+    width:100%;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #030715, #233a80);
+    color: white;
+    padding: 20px 0;
+}
+
+.letterbox-content {
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+.letterbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.letter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
