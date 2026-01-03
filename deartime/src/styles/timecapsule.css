@@ -61,12 +61,27 @@
 
 /* ====== 카드 그리드 ====== */
 .tc-grid {
-  margin-left: 140px;
-  margin-right: 0px;
-  margin-top: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px 60px;
+  margin-left: 120px;
+  margin-right: 120px;
+  margin-top: 15px;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* ✅ 무조건 4개 */
+  column-gap: 60px;
+  row-gap: 30px;
+}
+
+
+/* ✅ 페이지 8칸 고정용 투명 더미 카드 */
+.tc-card--empty {
+  width: 100%;
+  max-width: 240px;
+  height: 323px;
+
+  border-radius: 16px;
+  background: transparent;
+
+  pointer-events: none; /* 클릭/호버 방지 */
 }
 
 .tc-empty {
@@ -83,7 +98,7 @@
 /* ====== 페이지네이션 ====== */
 .tc-pagination {
   margin-top: auto;        /* ✅ 내용 적을 때 아래로 고정 */
-  padding-top: 28px;
+  padding-top: 40px;
   padding-bottom: 24px;
 
   display: flex;
@@ -100,6 +115,7 @@
   background: transparent;
   color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
+  font-weight: 300;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
@@ -108,10 +124,14 @@
   color: white;
 }
 
+.tc-page:hover {
+  background: rgba(42, 66, 128, 1); /* #2A4280 / 80% */
+  color: white;
+}
+
 .tc-page.active {
   background: #0E77BC;
   color: white;
-  font-weight: 700;
 }
 
 /* ===== 상단 우측 영역 ===== */
@@ -143,8 +163,7 @@
 }
 
 .tc-create-btn:hover {
-  background-color: #2A4280;
-  opacity: 0.85;
+  background-color: rgba(42, 66, 128, 0.85);
 }
 
 .tc-range {

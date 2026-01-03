@@ -40,15 +40,12 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
   const dday = useMemo(() => calcDDay(openAt), [openAt]);
   const created = useMemo(() => formatDateYYYYMMDD(createdAt), [createdAt]);
 
-  // ✅ 상태별 박스 스타일
-  const variantClass =
-    !canAccess
-      ? 'tc-card--locked'
-      : opened
-      ? 'tc-card--opened'
-      : 'tc-card--accessible';
+  const variantClass = !canAccess
+    ? 'tc-card--locked'
+    : opened
+    ? 'tc-card--opened'
+    : 'tc-card--accessible';
 
-  // ✅ 이미지 규칙
   const imgSrc =
     canAccess && opened ? imageUrl || capsuleDefaultImg : capsuleDefaultImg;
 
@@ -74,14 +71,16 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
         </div>
       </button>
 
-      {/* ✅ TimeCapsuleCard 전용 CSS를 JSX에 “합침” */}
       <style>{`
         .tc-card {
-          width: 240px;
+          width: 100%;
+          max-width: 240px;
           height: 323px;
+          justify-self: center;
 
           display: flex;
           flex-direction: column;
+          align-items: center;
 
           padding: 16px;
           border-radius: 16px;
@@ -91,80 +90,104 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           border: none;
 
           cursor: pointer;
-          text-align: left;
+          text-align: center;
         }
 
-        /* 1) canAccess=false => 투명 박스 */
+        /* 접근 불가 */
         .tc-card--locked {
           background: transparent;
-          border: none;
         }
 
-        /* 2) canAccess=true & opened=false => 파란색 박스 */
-        .tc-card--accessible {
-          background: #0e77bc;
-          border: none;
+        /* 🔥 OPEN ME – 채도 다운 & 은은 */
+          .tc-card--accessible {
+          animation: openMeGlow 3.2s ease-in-out infinite;
+          will-change: background-color, box-shadow;
         }
 
-        /* 3) canAccess=true & opened=true => fill #000 20% + border #0E77BC 50% 3px */
+        @keyframes openMeGlow {
+          0% {
+            background-color: rgba(14, 119, 188, 0.05);
+            box-shadow: 0 0 0 rgba(14, 119, 188, 0);
+          }
+          50% {
+            background-color: rgba(14, 119, 188, 0.3);
+            box-shadow:
+            0 0 12px rgba(14, 119, 188, 0.28),
+            0 0 24px rgba(14, 119, 188, 0.15);
+          }
+          100% {
+            background-color: rgba(14, 119, 188, 0.05);
+            box-shadow: 0 0 0 rgba(14, 119, 188, 0);
+          }
+        }
+
+        /* 열린 캡슐 */
         .tc-card--opened {
           background: rgba(0, 0, 0, 0.2);
-          border: 3px solid rgba(14, 119, 188, 0.5);
+          box-shadow: inset 0 0 0 2.5px rgba(14, 119, 188, 0.5);
         }
 
         .tc-card__top {
           display: flex;
-          justify-content: space-between;
+          flex-direction: column;
           align-items: center;
-          margin-bottom: 10px;
+          margin-bottom: 5px;
         }
 
         .tc-card__dday {
-          font-size: 14px;
-          font-weight: 700;
+          font-size: 20px;
+          font-weight: 100;
           color: #ffffff;
         }
 
         .tc-card__created {
-          font-size: 12px;
-          font-weight: 400;
+          margin-top: 5px;
+          font-size: 10px;
+          font-weight: 100;
           color: rgba(255, 255, 255, 0.85);
         }
 
         .tc-card__imgWrap {
-          flex: 1;
+          width: 200px;
+          height: 200px;
+
           display: flex;
           align-items: center;
           justify-content: center;
+
+          border-radius: 20px;   /* ✅ 추가 */
+          overflow: hidden; 
         }
 
         .tc-card__img {
-          width: 150px;
-          height: auto;
+          width: 200px;
+          height: 200px;
           object-fit: contain;
+          border-radius: 20px;
         }
 
         .tc-card__meta {
-          margin-top: 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .tc-card__sender {
-          font-size: 13px;
-          font-weight: 500;
-          color: rgba(255, 255, 255, 0.9);
+          margin-top: 5px;
+          font-size: 14px;
+          font-weight: 100;
+          color: rgba(255, 255, 255, 0.95);
         }
 
         .tc-card__title {
-          margin-top: 6px;
-          font-size: 16px;
-          font-weight: 700;
-          color: #ffffff;
-
+          margin-top: 10px;
+          font-size: 10px;
+          font-weight: 100;
+          color: rgba(255, 255, 255, 0.95);
           overflow: hidden;
           text-overflow: ellipsis;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          white-space: nowrap;
+          max-width: 100%;
         }
       `}</style>
     </>

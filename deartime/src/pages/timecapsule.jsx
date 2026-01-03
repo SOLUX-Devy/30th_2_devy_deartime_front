@@ -253,6 +253,8 @@ const TimeCapsule = () => {
     [totalPages]
   );
 
+  const emptyCount = Math.max(0, pageSize - pagedList.length);
+
   // ✅ "11개 중 1-8" 표시 (토글 줄 오른쪽에 표시)
   const rangeText = useMemo(() => {
     if (totalElements === 0) return `0개 중 0-0`;
@@ -362,10 +364,18 @@ const TimeCapsule = () => {
       {/* ✅ 카드 목록 + 페이지네이션(아래 고정) */}
       <div className="tc-layout">
         <div className="tc-grid">
-          {pagedList.length === 0 ? (
+        {pagedList.length === 0 ? (
+          <>
             <div className="tc-empty">캡슐이 없습니다.</div>
-          ) : (
-            pagedList.map((capsule) => (
+
+            {/* ✅ 8칸 채우기용 더미 */}
+            {Array.from({ length: pageSize }).map((_, idx) => (
+              <div key={`empty-${idx}`} className="tc-card--empty" />
+            ))}
+          </>
+        ) : (
+          <>
+            {pagedList.map((capsule) => (
               <TimeCapsuleCard
                 key={capsule.id}
                 capsule={capsule}
@@ -373,9 +383,16 @@ const TimeCapsule = () => {
                   console.log('clicked capsule:', capsule.id);
                 }}
               />
-            ))
-          )}
-        </div>
+            ))}
+
+            {/* ✅ 마지막 페이지 등에서 부족한 칸 채우기 */}
+            {Array.from({ length: emptyCount }).map((_, idx) => (
+              <div key={`empty-${idx}`} className="tc-card--empty" />
+            ))}
+          </>
+        )}
+      </div>
+
 
         {/* 페이지네이션 */}
         {totalPages > 1 && (
