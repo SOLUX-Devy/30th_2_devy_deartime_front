@@ -1,35 +1,34 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Header from "./components/Header";
 
-function App() {
-  const [count, setCount] = useState(0)
+import Login from "./pages/login.jsx";
+import Signup from "./pages/signup.jsx";
+import Home from "./pages/home.jsx";
+import TimeCapsule from "./pages/timecapsule";
 
+/*개발 후 주석 풀어서 사용해주세요! -나연 */
+/*import Gallery from "./pages/gallery";*/
+import Letterbox from "./pages/letterboxPage";
+import Timecapsule from "./pages/timecapsule";
+/*import Freind from "./pages/freind"; */
+
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <BrowserRouter>
+      {/* 모든 페이지에 공통으로 들어가는 헤더 */}
+      <Header /> 
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/home" element={<Home />} />
 
-export default App
+        {/* <Route path="/gallery" element={<Gallery />} /> */}
+        <Route path="/letterbox" element={<Letterbox />} />
+        <Route path="/timecapsule" element={<Timecapsule />} />
+        {/* <Route path="/freind" element={<Freind />} /> */}
+        
+      </Routes>
+    </BrowserRouter>
+  );
+}
