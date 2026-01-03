@@ -19,7 +19,7 @@ export default function Header() {
             .header {
             position: relative;
             width: 100%;              /* 화면 끝까지 */
-            height: 75px;
+            height: 80px;
             background: linear-gradient(
                 180deg,
                 #0b1220 0%,
