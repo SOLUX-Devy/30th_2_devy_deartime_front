@@ -5,6 +5,7 @@ import '../styles/timecapsule.css';
 const TimeCapsule = () => {
   const tabs = ['전체 캡슐', '받은 캡슐', '나의 캡슐'];
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showOpenOnly, setShowOpenOnly] = useState(false);
 
   return (
     <div
@@ -12,7 +13,7 @@ const TimeCapsule = () => {
       style={{ backgroundImage: `url(${bg})` }}
     >
         {/* 상단 세부 네비 */}
-        <div style={{ display: 'flex', gap: '50px', marginBottom: '20px', marginLeft: '60px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '50px', marginBottom: '0px', marginLeft: '60px', marginTop: '10px' }}>
           {tabs.map((tab, index) => {
             const isActive = index === activeIndex;
 
@@ -28,7 +29,7 @@ const TimeCapsule = () => {
                 }}
                 style={{
                   position: 'relative',
-                  fontSize: '1.2rem',
+                  fontSize: '20px',
                   fontWeight: isActive ? 600 : 350,
                   paddingBottom: '6px',
                   cursor: 'pointer',
@@ -56,6 +57,20 @@ const TimeCapsule = () => {
               </span>
             );
           })}
+        </div>
+
+        {/* 열린 캡슐만 보기 (CSS/JSX 분리) */}
+        <div className="open-only-toggle">
+          <span className="toggle-label">열린 캡슐만 보기</span>
+
+            <button
+              type="button"
+              className={`toggle-button ${showOpenOnly ? 'on' : ''}`}
+              onClick={() => setShowOpenOnly((prev) => !prev)}
+              aria-pressed={showOpenOnly}
+            >
+              <span className="toggle-knob" />
+            </button>
         </div>
 
       {/* 탭별 내용 (여기에 기존 타임캡슐 내용 넣으면 됨) */}

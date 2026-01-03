@@ -9,3 +9,49 @@
     color: white;
     padding: 20px 0;
 }
+
+/* 열린 캡슐만 보기 */
+.open-only-toggle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: 60px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.toggle-label {
+  font-size: 18px;
+  font-weight: 300;
+  color: white;
+}
+
+/* 토글 버튼 */
+.toggle-button {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #2A4280;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  transition: background-color 0.2s ease;
+}
+
+.toggle-button.on {
+  background-color: #0E77BC;
+  justify-content: flex-end;
+}
+
+/* 토글 동그라미 */
+.toggle-knob {
+  width: 17px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+}
