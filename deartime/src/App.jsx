@@ -5,12 +5,13 @@ import Header from "./components/Header";
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
 import Home from "./pages/home.jsx";
+import TimeCapsule from "./pages/timecapsule";
 
 /*개발 후 주석 풀어서 사용해주세요! -나연 */
 /*import Gallery from "./pages/gallery";*/
 import Letterbox from "./pages/letterboxPage";
-/*import Timecapsule from "./pages/timecapsule";
-import Freind from "./pages/freind"; */
+import Timecapsule from "./pages/timecapsule";
+/*import Freind from "./pages/freind"; */
 
 export default function App() {
   return (
@@ -24,7 +25,7 @@ export default function App() {
 
         {/* <Route path="/gallery" element={<Gallery />} /> */}
         <Route path="/letterbox" element={<Letterbox />} />
-        {/* <Route path="/timecapsule" element={<Timecapsule />} /> */}
+        <Route path="/timecapsule" element={<Timecapsule />} />
         {/* <Route path="/freind" element={<Freind />} /> */}
         
       </Routes>
