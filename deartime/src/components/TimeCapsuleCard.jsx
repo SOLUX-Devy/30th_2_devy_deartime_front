@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import capsuleDefaultImg from '../assets/timecapsule.png';
+import capsuleDefaultImg from '../assets/timecapsule_small.png';
 
 function formatDateYYYYMMDD(iso) {
   if (!iso) return '';
