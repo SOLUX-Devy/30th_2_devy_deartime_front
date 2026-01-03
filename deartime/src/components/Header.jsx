@@ -19,13 +19,13 @@ export default function Header() {
             .header {
             position: relative;
             width: 100%;              /* 화면 끝까지 */
-            height: 80px;
+            height: 75px;
             background: linear-gradient(
                 180deg,
                 #0b1220 0%,
                 #090f1c 100%
             );
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+
             }
 
             /* ===== 안쪽 정렬용 컨테이너 ===== */
@@ -33,11 +33,11 @@ export default function Header() {
             max-width: 1440px;          /* 시안용 폭 */
             height: 100%;
             margin: 0 auto;
-            padding: 0 10rem;
+            padding: 0 5rem;
 
             display: flex;
             align-items: center;
-            gap: 48px;
+            gap: 220px;
             }
 
             .logo img {
@@ -49,7 +49,7 @@ export default function Header() {
             .nav {
             display: flex;
             align-items: center;
-            gap: 40px;
+            gap: 130px;
             }
 
             .item {
@@ -57,6 +57,7 @@ export default function Header() {
             color: white;
             text-decoration: none;
             font-size: 16px;
+            font-weight : 250;
             opacity: 0.75;
             transition: opacity 0.2s ease;
             }
@@ -68,19 +69,10 @@ export default function Header() {
             .item.active {
             opacity: 1;
             font-weight: 600;
+            color : #0E77BC;
             }
 
-            /* active 밑줄 */
-            .item.active::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -10px;
-            height: 2px;
-            background: white;
-            border-radius: 2px;
-            }
+
         `}</style>
 
         {/* ===== Header Markup ===== */}
