@@ -99,7 +99,7 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
         }
 
         /* 🔥 OPEN ME – 채도 다운 & 은은 */
-          .tc-card--accessible {
+        .tc-card--accessible {
           animation: openMeGlow 3.2s ease-in-out infinite;
           will-change: background-color, box-shadow;
         }
@@ -112,8 +112,8 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           50% {
             background-color: rgba(14, 119, 188, 0.3);
             box-shadow:
-            0 0 12px rgba(14, 119, 188, 0.28),
-            0 0 24px rgba(14, 119, 188, 0.15);
+              0 0 12px rgba(14, 119, 188, 0.28),
+              0 0 24px rgba(14, 119, 188, 0.15);
           }
           100% {
             background-color: rgba(14, 119, 188, 0.05);
@@ -147,6 +147,7 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           color: rgba(255, 255, 255, 0.85);
         }
 
+        /* ✅ 이미지 래퍼 – 무조건 20px 라운드 */
         .tc-card__imgWrap {
           width: 200px;
           height: 200px;
@@ -155,10 +156,11 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           align-items: center;
           justify-content: center;
 
-          border-radius: 20px;   /* ✅ 추가 */
-          overflow: hidden; 
+          border-radius: 20px;
+          overflow: hidden; /* 중요 */
         }
 
+        /* ✅ 이미지 자체도 20px 라운드 */
         .tc-card__img {
           width: 200px;
           height: 200px;
