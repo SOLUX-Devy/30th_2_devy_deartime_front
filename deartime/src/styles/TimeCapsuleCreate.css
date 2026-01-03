@@ -263,3 +263,13 @@
 .tc-create-send:hover {
   background-color: rgba(42, 66, 128, 0.85);
 }
+
+.tc-create-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
+
+.tc-create-send:disabled:hover {
+  transform: none; /* hover 효과 있으면 방지 */
+}

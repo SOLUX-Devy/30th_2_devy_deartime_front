@@ -16,7 +16,6 @@ function formatTodayYYYYMMDD() {
 export default function TimeCapsuleCreatePage() {
   const navigate = useNavigate();
 
-  // ✅ 받는 사람 목데이터 (나중에 친구 선택 모달로 교체)
   const mockReceiver = useMemo(
     () => ({
       id: 9,
@@ -26,7 +25,7 @@ export default function TimeCapsuleCreatePage() {
   );
 
   // ✅ 상태
-  const [receiver, setReceiver] = useState(null); // 처음엔 선택 안 된 상태로 두고 싶으면 null 유지
+  const [receiver, setReceiver] = useState(null);
   const [openDate, setOpenDate] = useState(formatTodayYYYYMMDD());
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -38,6 +37,14 @@ export default function TimeCapsuleCreatePage() {
 
   const imageSrc = previewUrl || noPhoto;
 
+  // ✅ 여기!! 렌더 전에 유효성 계산
+  const isFormValid =
+    !!receiver &&
+    openDate?.trim() &&
+    title.trim().length > 0 &&
+    content.trim().length > 0 &&
+    !!pickedFile; // 이미지까지 필수
+
   const onClickImageBox = () => {
     fileRef.current?.click();
   };
@@ -46,10 +53,8 @@ export default function TimeCapsuleCreatePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 이미지 파일만
     if (!file.type.startsWith("image/")) return;
 
-    // 이전 previewUrl 있으면 해제
     if (previewUrl) URL.revokeObjectURL(previewUrl);
 
     const localUrl = URL.createObjectURL(file);
@@ -58,19 +63,16 @@ export default function TimeCapsuleCreatePage() {
   };
 
   const onRemoveReceiver = (e) => {
-    e.stopPropagation(); // 버튼 클릭이 상위 클릭에 영향 안 주게
+    e.stopPropagation();
     setReceiver(null);
   };
 
   const onMockSelectReceiver = () => {
-    // ✅ 지금은 클릭하면 목데이터로 세팅 (나중에 친구 모달에서 선택한 값으로 교체)
     setReceiver(mockReceiver);
   };
 
   const onSubmit = async () => {
-    // ✅ 여기서 나중에 API 붙이면 됨
-    // - pickedFile 있으면 FormData 업로드
-    // - receiver.id, openDate, title, content 전송
+    if (!isFormValid) return;
 
     console.log({
       receiver,
@@ -80,7 +82,6 @@ export default function TimeCapsuleCreatePage() {
       pickedFile,
     });
 
-    // 임시로 뒤로가기
     navigate("/timecapsule");
   };
 
@@ -109,7 +110,6 @@ export default function TimeCapsuleCreatePage() {
               <div className="tc-create-field">
                 <div className="tc-create-label">받는 사람</div>
 
-                {/* ✅ 화살표 제거하고 캡처처럼 "닉네임 + X" */}
                 <button
                   type="button"
                   className="tc-create-receiver"
@@ -148,7 +148,7 @@ export default function TimeCapsuleCreatePage() {
                     className="tc-create-date"
                     value={openDate}
                     onChange={(e) => setOpenDate(e.target.value)}
-                    min={formatTodayYYYYMMDD()} // ✅ 오늘 이전 선택 방지
+                    min={formatTodayYYYYMMDD()}
                   />
                 </div>
               </div>
@@ -165,11 +165,7 @@ export default function TimeCapsuleCreatePage() {
                   tabIndex={0}
                   aria-label="upload image"
                 >
-                  <img
-                    className="tc-create-image"
-                    src={imageSrc}
-                    alt="preview"
-                  />
+                  <img className="tc-create-image" src={imageSrc} alt="preview" />
                   <input
                     ref={fileRef}
                     type="file"
@@ -200,7 +196,12 @@ export default function TimeCapsuleCreatePage() {
 
             {/* 푸터 */}
             <div className="tc-create-footer">
-              <button type="button" className="tc-create-send" onClick={onSubmit}>
+              <button
+                type="button"
+                className="tc-create-send"
+                onClick={onSubmit}
+                disabled={!isFormValid}
+              >
                 보내기
               </button>
             </div>
