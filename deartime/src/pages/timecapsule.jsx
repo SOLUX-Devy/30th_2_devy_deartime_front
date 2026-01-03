@@ -10,7 +10,7 @@ const TimeCapsule = () => {
 
   // ✅ 페이지네이션
   const [page, setPage] = useState(1); // UI 편하게 1부터
-  const pageSize = 10;
+  const pageSize = 8;
 
   // ✅ 정렬: 'desc' = 최신순(추천), 'asc' = 오래된순
   const sortOrder = 'desc';
