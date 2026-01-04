@@ -1,6 +1,16 @@
-.gallery-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
-.date-group { margin-bottom: 40px; }
-.date-title { border-bottom: 2px solid #eee; padding-bottom: 10px; color: #333; }
-.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
-.photo-item img { width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.photo-item p { text-align: center; font-size: 0.9rem; margin-top: 5px; }
+.timecapsule-container {
+  width: 100%;
+  min-height: 100vh;
+
+  /* 배경 이미지 관련 설정 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  color: white;
+  padding: 20px 0;
+
+  /* 내부 요소(탭 메뉴 등)를 세로로 배치 */
+  display: flex;
+  flex-direction: column;
+}
