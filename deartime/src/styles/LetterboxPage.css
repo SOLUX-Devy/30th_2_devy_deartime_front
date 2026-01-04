@@ -15,14 +15,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 40px;
-    padding: 0 5em;
+    margin-bottom: 20px;
+    padding: 0 3em;
 }
 
 .letter-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
     /* 8개가 다 안 차도 높이를 유지하여 페이지네이션 위치 고정 */
     min-height: 500px; 
     align-content: start;
@@ -83,3 +83,10 @@
     opacity: 0.85;
 }
 
+.tc-pagination-info {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+    display: block;
+    text-align: right;
+}

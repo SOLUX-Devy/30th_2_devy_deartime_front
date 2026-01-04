@@ -1,5 +1,5 @@
 .letter-card {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 9 / 10;
     padding: 24px;
     border-radius: 16px;
     display: flex;
@@ -9,7 +9,7 @@
     background-position: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     position: relative;
-    color: #333; /* 기본 텍스트 색상 (배경에 따라 조절) */
+    color: #333; 
 }
 
 /* 테마별 텍스트 색상 대응 */
@@ -18,8 +18,10 @@
 
 .card-top {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    justify-content: space-between; 
+    align-items: center;            
+    padding: 0 5px;            
+    height: 2em;                  
 }
 
 .sender-info {

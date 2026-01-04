@@ -45,6 +45,9 @@ const Letterbox = () => {
     const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
     const safePage = Math.min(page, totalPages);
 
+    const startItem = totalElements === 0 ? 0 : (safePage - 1) * pageSize + 1;
+    const endItem = Math.min(safePage * pageSize, totalElements);
+
     const pageNumbers = useMemo(
         () => Array.from({ length: totalPages }, (_, i) => i + 1),
         [totalPages]
@@ -71,6 +74,9 @@ const Letterbox = () => {
                     <SendButton />
             </header>
             <div className="letterbox-content">
+                <span className="tc-pagination-info">
+                    {totalElements}개 중 {startItem}-{endItem}
+                </span>
 
                 <main className="letter-grid">
                     {isLoading ? (
