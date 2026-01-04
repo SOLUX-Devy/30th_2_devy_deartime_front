@@ -7,7 +7,7 @@ import bgLightGrey from '../assets/bg-light-grey.png';
 const THEME_IMAGES = {
     DEFAULT: bgDarkBlue, 
     PINK: bgLightPink,
-    SPRING: bgLightGrey
+    GREY: bgLightGrey
 };
 
 const LetterCard = ({ data }) => {

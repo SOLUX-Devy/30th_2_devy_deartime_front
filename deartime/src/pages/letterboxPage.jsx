@@ -1,18 +1,44 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import '../styles/LetterboxPage.css';
 import LetterCard from '../components/LetterCard';
 import MailTabs from '../components/MailTabs'; 
 import SendButton from '../components/SendButton'; 
-import letterData from '../mocks/letterboxData.json';
 
 const Letterbox = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [page, setPage] = useState(1);
 
-    const letters = letterData.data; // 편지 데이터
+    const [letters, setLetters] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const pageSize = 8; // 한 페이지에 보여줄 카드 개수
 
-    const [isLoading] = useState(false); 
+    // 탭 인덱스별 API 경로 매핑
+    // 실제 서버 연결 시 해당 경로로 변경 필요, 현재는 publick 폴더에 넣어놓은 mock 데이터 사용
+    const getApiUrl = (index) => {
+        switch (index) {
+            case 0: return '/letterboxMocks/received.json'; // 받은 편지
+            case 1: return '/letterboxMocks/sent.json';     // 보낸 편지
+            case 2: return '/letterboxMocks/bookmarks.json'; // 즐겨찾기
+            case 3: return '/letterboxMocks/shared.json';    // 우리의 우체통
+            default: return '/letterboxMocks/received.json';
+        }
+    };
+
+    // activeIndex가 바뀔 때마다 서버(혹은 mock)에 새로 요청
+    useEffect(() => {
+        // 실제 Spring Boot 연결 시: fetch(`http://localhost:8080/api/letters/${getApiUrl(activeIndex)}?page=${page}`)
+        fetch(getApiUrl(activeIndex)) 
+            .then((res) => res.json())
+            .then((json) => {
+                setLetters(json.data); // 서버가 준 해당 탭의 데이터로 교체
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setIsLoading(false);
+            });
+    }, [activeIndex]); // 탭이 바뀔 때 실행
 
     // 페이지 계산 로직
     const totalElements = letters.length;
@@ -24,7 +50,7 @@ const Letterbox = () => {
         [totalPages]
     );
 
-    // 현재 페이지에 보여줄 데이터 필터링 (Slice)
+    // 현재 페이지에 보여줄 데이터 필터링
     const currentItems = useMemo(() => {
         const firstIdx = (safePage - 1) * pageSize;
         const lastIdx = firstIdx + pageSize;
@@ -37,7 +63,10 @@ const Letterbox = () => {
                 <header className="letterbox-header">
                     <MailTabs 
                         activeIndex={activeIndex} 
-                        setActiveIndex={setActiveIndex} 
+                        setActiveIndex={(index) => {
+                            setIsLoading(true); //클릭하는 순간 로딩 시작
+                            setActiveIndex(index);
+                        }} 
                         setPage={setPage} 
                     />
                     <SendButton />
