@@ -1,57 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // ✅ 상태 관리를 위해 추가
 import '../styles/LetterboxPage.css';
 import LetterCard from '../components/LetterCard';
 import MailTabs from '../components/MailTabs'; 
 import SendButton from '../components/SendButton'; 
 
-// API에서 받은 실제 JSON 구조를 MOCK 데이터로 사용
-const apiResponse = { 
-    data: {
-        data: [
-        {
-            letterId: 1,
-            senderNickname: "테스터_A",
-            title: "첫 편지입니다",
-            summary: "17148",
-            themeCode: "DEFAULT",
-            sentAt: "2025-12-15T00:32:08.164649",
-            isRead: true,
-            isBookmarked: true
-        }, 
-        {
-            letterId: 2,
-            senderNickname: "테스터_A",
-            title: "첫 편지입니다",
-            summary: "17148",
-            themeCode: "PINK",
-            sentAt: "2025-12-15T00:32:08.164649",
-            isRead: true,
-            isBookmarked: true
-        }
-        ]
-    }
-};
-
 const Letterbox = () => {
-    const letters = apiResponse.data.data;
+    // 1. 데이터를 담을 상태(State) 선언
+    const [letters, setLetters] = useState([]);
+    const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
+
+    // 2. 컴포넌트 마운트 시 데이터 fetch
+    useEffect(() => {
+        fetch('/mocks/letters.json') // public/mocks/letters.json 경로
+            .then((res) => {
+                if (!res.ok) throw new Error('데이터 로드 실패');
+                return res.json();
+            })
+            .then((json) => {
+                setLetters(json.data); // JSON 구조에 맞게 설정
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error('Fetch error:', err);
+                setIsLoading(false);
+            });
+    }, []);
 
     return (
         <div className="letterbox-container">
-        
             <div className="letterbox-content">
                 <header className="letterbox-header">
-                    {/* Tabs, Button 컴포넌트 삽입 */}
                     <MailTabs />
                     <SendButton />
                 </header>
 
                 <main className="letter-grid">
-                    {letters.map((letter) => (
-                        <LetterCard key={letter.letterId} data={letter} />
-                    ))}
+                    {/* 3. 데이터 로딩 중 처리 및 리스트 렌더링 */}
+                    {isLoading ? (
+                        <p>편지를 불러오는 중입니다...</p>
+                    ) : (
+                        letters.map((letter) => (
+                            <LetterCard key={letter.letterId} data={letter} />
+                        ))
+                    )}
                 </main>
             </div>
-
         </div>
     );
 };
