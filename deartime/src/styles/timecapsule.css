@@ -1,11 +1,188 @@
 .timecapsule-container {
-    width: 100%;
-    min-height: 100vh;
+  width: 100%;
+  min-height: 100vh;
 
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
-    color: white;
-    padding: 20px 0;
+  color: white;
+  padding: 20px 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== 열린 캡슐만 보기 ====== */
+.open-only-toggle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: 60px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.toggle-label {
+  font-size: 18px;
+  font-weight: 300;
+  color: white;
+}
+
+/* 토글 버튼 */
+.toggle-button {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #2A4280;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  transition: background-color 0.2s ease;
+}
+
+.toggle-button.on {
+  background-color: #0E77BC;
+  justify-content: flex-end;
+}
+
+/* 토글 동그라미 */
+.toggle-knob {
+  width: 17px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+/* ====== 카드 그리드 ====== */
+.tc-grid {
+  margin-left: 120px;
+  margin-right: 120px;
+  margin-top: 15px;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* ✅ 무조건 4개 */
+  column-gap: 60px;
+  row-gap: 30px;
+}
+
+
+/* ✅ 페이지 8칸 고정용 투명 더미 카드 */
+.tc-card--empty {
+  width: 100%;
+  max-width: 240px;
+  height: 323px;
+
+  border-radius: 16px;
+  background: transparent;
+
+  pointer-events: none; /* 클릭/호버 방지 */
+}
+
+.tc-empty {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ====== 페이지 전체 레이아웃 ====== */
+.tc-layout {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== 페이지네이션 ====== */
+.tc-pagination {
+  margin-top: auto;        /* ✅ 내용 적을 때 아래로 고정 */
+  padding-top: 40px;
+  padding-bottom: 24px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 26px;
+}
+
+.tc-page {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tc-page:hover {
+  color: white;
+}
+
+.tc-page:hover {
+  background: rgba(42, 66, 128, 1); /* #2A4280 / 80% */
+  color: white;
+}
+
+.tc-page.active {
+  background: #0E77BC;
+  color: white;
+}
+
+/* ===== 상단 우측 영역 ===== */
+.tc-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tc-topbar-right {
+  margin-right: 60px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.tc-create-btn {
+  width: 130px;
+  height: 45px;
+  border-radius: 12px;
+  border: 1px solid #2A4280;
+  background: rgba(0, 0, 0, 0.15);
+  color: white;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.tc-create-btn:hover {
+  background-color: rgba(42, 66, 128, 0.85);
+}
+
+.tc-range {
+  font-size: 13px;
+  margin-right: 65px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tc-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-left: 60px;
+  margin-right: 60px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+/* 기존 open-only-toggle의 margin들은 tc-toggle-row가 담당하니까 제거해야 정렬 안 꼬임 */
+.open-only-toggle {
+  margin: 0;
 }
