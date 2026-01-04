@@ -37,7 +37,7 @@ const LetterCard = ({ data }) => {
             </div>
 
             <div className="card-body">
-                <h3 className="title-text">{title}</h3>
+                <h4 className="title-text">{title}</h4>
                 <p className="summary-text">{summary}</p> 
             </div>
 

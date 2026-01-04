@@ -1,52 +1,75 @@
-import React, { useState, useEffect } from 'react'; // ✅ 상태 관리를 위해 추가
+import React, { useState, useMemo } from 'react';
 import '../styles/LetterboxPage.css';
 import LetterCard from '../components/LetterCard';
 import MailTabs from '../components/MailTabs'; 
 import SendButton from '../components/SendButton'; 
+import letterData from '../mocks/letterboxData.json';
 
 const Letterbox = () => {
-    // 1. 데이터를 담을 상태(State) 선언
-    const [letters, setLetters] = useState([]);
-    const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [page, setPage] = useState(1);
 
-    // 2. 컴포넌트 마운트 시 데이터 fetch
-    useEffect(() => {
-        fetch('/mocks/letters.json') // public/mocks/letters.json 경로
-            .then((res) => {
-                if (!res.ok) throw new Error('데이터 로드 실패');
-                return res.json();
-            })
-            .then((json) => {
-                setLetters(json.data); // JSON 구조에 맞게 설정
-                setIsLoading(false);
-            })
-            .catch((err) => {
-                console.error('Fetch error:', err);
-                setIsLoading(false);
-            });
-    }, []);
+    const letters = letterData.data; // 편지 데이터
+    const pageSize = 8; // 한 페이지에 보여줄 카드 개수
+
+    const [isLoading] = useState(false); 
+
+    // 페이지 계산 로직
+    const totalElements = letters.length;
+    const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+    const safePage = Math.min(page, totalPages);
+
+    const pageNumbers = useMemo(
+        () => Array.from({ length: totalPages }, (_, i) => i + 1),
+        [totalPages]
+    );
+
+    // 현재 페이지에 보여줄 데이터 필터링 (Slice)
+    const currentItems = useMemo(() => {
+        const firstIdx = (safePage - 1) * pageSize;
+        const lastIdx = firstIdx + pageSize;
+        return letters.slice(firstIdx, lastIdx);
+    }, [safePage, letters]);
 
     return (
         <div className="letterbox-container">
             <div className="letterbox-content">
                 <header className="letterbox-header">
-                    <MailTabs />
+                    <MailTabs 
+                        activeIndex={activeIndex} 
+                        setActiveIndex={setActiveIndex} 
+                        setPage={setPage} 
+                    />
                     <SendButton />
                 </header>
 
                 <main className="letter-grid">
-                    {/* 3. 데이터 로딩 중 처리 및 리스트 렌더링 */}
                     {isLoading ? (
-                        <p>편지를 불러오는 중입니다...</p>
+                        <p>로딩 중...</p>
                     ) : (
-                        letters.map((letter) => (
+                        currentItems.map((letter) => (
                             <LetterCard key={letter.letterId} data={letter} />
                         ))
                     )}
                 </main>
+
+                {/* 페이지네이션 */}
+                {totalPages > 1 && (
+                    <div className="tc-pagination">
+                        {pageNumbers.map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPage(p)}
+                                className={`tc-page ${p === safePage ? 'active' : ''}`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
 };
-
 export default Letterbox;

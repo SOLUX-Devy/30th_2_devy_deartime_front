@@ -23,12 +23,12 @@
 }
 
 .sender-info {
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     font-weight: 600;
 }
 
 .summary-text {
-    font-size: 0.95rem;
+    font-size: 0.rem;
     line-height: 1.6;
     margin-top: 15px;
     /* 50자 제한은 JS에서 처리하지만, 넘칠 경우를 대비한 CSS */

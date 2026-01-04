@@ -20,7 +20,41 @@
 
 .letter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    /* 한 줄에 딱 4개씩 고정하려면 repeat(4, 1fr)이 더 정확합니다 */
+    grid-template-columns: repeat(4, 1fr); 
     gap: 24px;
+    /* 8개가 다 안 차도 높이를 유지하여 페이지네이션 위치 고정 */
+    min-height: 500px; 
+    align-content: start;
+}
+
+.tc-pagination {
+    margin-top: auto; /* 위쪽 여백을 최대로 하여 아래로 밀어냄 */
+    padding: 28px 0;
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+}
+
+.tc-page {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    cursor: pointer;
+    border: none; 
+    transition: all 0.2s ease;
+}
+
+.tc-page.active {
+    background: #0E77BC;
+    color: white;
+    font-weight: 700;
+}
+
+.tc-page:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
 }
 
