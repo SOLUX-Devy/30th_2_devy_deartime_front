@@ -1,0 +1,190 @@
+/* ===== Header ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  width: 100%;
+  height: 80px;
+
+  background: linear-gradient(
+    180deg,
+    #0b1220 0%,
+    #090f1c 100%
+  );
+}
+
+/* ===== 내부 컨테이너 ===== */
+.inner {
+  max-width: 1440px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 5rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+}
+
+/* ===== 왼쪽: 로고 + 네비 ===== */
+.left-section {
+  display: flex;
+  align-items: center;   
+  gap: 120px;            /* 로고 - 갤러리 간격 */
+}
+
+.logo img {
+  height: 22px;
+  display: block;
+}
+
+/* ===== 네비 ===== */
+.nav {
+  display: flex;         
+  align-items: center;
+  gap: 120px;
+}
+
+.item {
+  position: relative;
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 400;
+
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.item:hover {
+  opacity: 1;
+}
+
+.item.active {
+  opacity: 1;
+  color: #0E77BC;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.icon-img-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.noti-img {
+  width: 22px;
+  height: 22px;
+}
+
+/* 빨간 점 */
+.red-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: #e53e3e;
+  border-radius: 50%;
+}
+
+/* ===== 프로필 ===== */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.profile-circle-nav {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.profile-circle-nav img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.arrow-img {
+  width: 10px;
+  transition: transform 0.2s ease;
+}
+
+.arrow-img.up {
+  transform: rotate(180deg);
+}
+
+/* ===== 드롭다운 ===== */
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 250px;
+    height: 350px;
+
+  border-radius: 15px;
+border: 1px solid #2A4280;
+background: #0F1839;
+color: #FFF;
+text-align: center;
+font-family: Inter;
+font-size: 13px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+display: flex;
+  flex-direction: column;   /* ⭐ 세로 정렬 */
+  align-items: center;
+}
+
+.profile-dropdown h2 {
+  margin: 0;
+  margin-top: 15px;
+}
+
+.profile-dropdown p {
+  margin: 0;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.profile-circle-large {
+  width: 96px;        /* 가로 */
+  height: 96px;       /* 세로 (가로랑 같아야 함) */
+  border-radius: 50%; /* 🔥 동그랗게 */
+  overflow: hidden;   /* 이미지 넘치는 부분 자르기 */
+  margin: 12px auto;  /* 가운데 정렬 */
+}
+
+/* 이미지 */
+.profile-circle-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;  /* 비율 유지하면서 꽉 채움 */
+  display: block;
+}
+
+.p-btn {
+    width: 200px;
+height: 40px;
+    border-radius: 10px;
+border: 1px solid #2A4280;
+background: rgba(255, 255, 255, 0.00);
+color: #FFF;
+text-align: center;
+font-family: Inter;
+font-size: 13px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+margin-top: 10px;
+}

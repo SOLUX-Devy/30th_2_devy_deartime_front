@@ -1,113 +1,125 @@
 import { NavLink } from "react-router-dom";
 import DearTimeMini from "../assets/logo.svg";
+import { useState, useEffect, useRef } from "react";
+import NotiIcon from "../assets/noti_bell.svg"; 
+import ArrowDown from "../assets/arrow_down.svg"; 
+import DefaultProfile from "../assets/profile.jpg"; 
+import { MOCK_NOTIFICATIONS, MOCK_USER_PROFILE } from "../mocks/noti_profileDetailResponses.js";
+import "../styles/header.css";
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
+  // 🔹 목데이터 (읽기 전용)
+  const [notifications] = useState(
+    MOCK_NOTIFICATIONS?.data?.content || []
+  );
+
+  const [userProfile] = useState(
+    MOCK_USER_PROFILE?.data || null
+  );
+
+  const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const notiRef = useRef(null);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notiRef.current && !notiRef.current.contains(e.target)) {
+        setIsNotiOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleImgError = (e) => {
+    e.target.src = DefaultProfile;
+  };
+
   return (
-    <>
-      {/* ✅ 전역 리셋 + 헤더 스타일 전부 여기 */}
-      <style>{`
-        /* ===== 전역 리셋 ===== */
-        html, body {
-          margin: 0;
-          padding: 0;
-          width: 100%;
-        }
-
-        /* ===== Header ===== */
-        .header {
-          position: sticky;
-          top: 0;
-          z-index: 10000;
-          width: 100%;
-          height: 80px;
-
-          background: linear-gradient(
-            180deg,
-            #0b1220 0%,
-            #090f1c 100%
-          );
-        }
-
-        /* ===== 안쪽 정렬용 컨테이너 ===== */
-        .inner {
-          max-width: 1440px;
-          height: 100%;
-          margin: 0 auto;
-          padding: 0 5rem;
-
-          display: flex;
-          align-items: center;
-
-          /* ✅ 로고-네비 간격을 여기서 조절 */
-          justify-content: flex-start;
-          gap: 220px; /* ✅ 원하는 만큼 바꾸기 */
-        }
-
-        .logo img {
-          height: 22px;
-          display: block;
-        }
-
-        /* ===== Nav ===== */
-        .nav {
-          display: flex;
-          align-items: center;
-
-          gap: 130px; /* 메뉴 간 간격 */
-          margin: 0;  /* ✅ 기존 margin-left/right 제거 */
-        }
-
-        .item {
-          position: relative;
-          color: white;
-          text-decoration: none;
-          font-size: 16px;
-
-          /* ✅ 클릭 시 네비 흔들림 방지(굵기 고정) */
-          font-weight: 400;
-
-          opacity: 0.75;
-          transition: opacity 0.2s ease, color 0.2s ease;
-        }
-
-        .item:hover {
-          opacity: 1;
-        }
-
-        .item.active {
-          opacity: 1;
-          color: #0E77BC;
-
-          /* ✅ active여도 굵기 고정 (움직임 방지) */
-          font-weight: 400;
-        }
-      `}</style>
-
-      {/* ===== Header Markup ===== */}
-      <header className="header">
-        <div className="inner">
+    <header className="header">
+      <div className="inner">
+        {/* 왼쪽 */}
+        <div className="left-section">
           <NavLink to="/home" className="logo">
             <img src={DearTimeMini} alt="DearTime" />
           </NavLink>
 
           <nav className="nav">
-            <NavLink to="/gallery" className={itemClass}>
-              갤러리
-            </NavLink>
-            <NavLink to="/letterbox" className={itemClass}>
-              우체통
-            </NavLink>
-            <NavLink to="/timecapsule" className={itemClass}>
-              타임캡슐
-            </NavLink>
-            <NavLink to="/freind" className={itemClass}>
-              친구목록
-            </NavLink>
+            <NavLink to="/gallery" className={itemClass}>갤러리</NavLink>
+            <NavLink to="/letterbox" className={itemClass}>우체통</NavLink>
+            <NavLink to="/timecapsule" className={itemClass}>타임캡슐</NavLink>
+            <NavLink to="/freind" className={itemClass}>친구목록</NavLink>
           </nav>
         </div>
-      </header>
-    </>
+
+        {/* 오른쪽 */}
+        <div className="right-section">
+          {/* 알림 */}
+          <div ref={notiRef} style={{ position: "relative" }}>
+            <button
+              className="icon-img-btn"
+              onClick={() => {
+                setIsNotiOpen(!isNotiOpen);
+                setIsProfileOpen(false);
+              }}
+            >
+              <img src={NotiIcon} alt="알림" className="noti-img" />
+              {notifications.some(n => !n.isRead) && <span className="red-dot" />}
+            </button>
+          </div>
+
+          {/* 프로필 */}
+          <div ref={profileRef} style={{ position: "relative" }}>
+            <div
+              className="profile-trigger"
+              onClick={() => {
+                setIsProfileOpen(!isProfileOpen);
+                setIsNotiOpen(false);
+              }}
+            >
+              <div className="profile-circle-nav">
+                <img
+                  src={userProfile?.profileImageUrl || DefaultProfile}
+                  alt="profile"
+                  onError={handleImgError}
+                />
+              </div>
+              <img
+                src={ArrowDown}
+                alt="arrow"
+                className={`arrow-img ${isProfileOpen ? "up" : ""}`}
+              />
+            </div>
+
+            {isProfileOpen && userProfile && (
+              <div className="dropdown profile-dropdown">
+                <h2>{userProfile.nickname} 님</h2>
+                <p>Deartime과 함께한지 {userProfile.joinDays || 0}일째</p>
+
+                <div className="profile-circle-large">
+                  <img
+                    src={userProfile.profileImageUrl || DefaultProfile}
+                    alt="avatar"
+                    onError={handleImgError}
+                  />
+                </div>
+
+                <p>{userProfile.bio}</p>
+                <button className="p-btn">프로필 관리</button>
+                <button className="p-btn">로그아웃</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
