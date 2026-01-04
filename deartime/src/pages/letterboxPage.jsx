@@ -59,8 +59,7 @@ const Letterbox = () => {
 
     return (
         <div className="letterbox-container">
-            <div className="letterbox-content">
-                <header className="letterbox-header">
+            <header className="letterbox-header">
                     <MailTabs 
                         activeIndex={activeIndex} 
                         setActiveIndex={(index) => {
@@ -70,7 +69,8 @@ const Letterbox = () => {
                         setPage={setPage} 
                     />
                     <SendButton />
-                </header>
+            </header>
+            <div className="letterbox-content">
 
                 <main className="letter-grid">
                     {isLoading ? (

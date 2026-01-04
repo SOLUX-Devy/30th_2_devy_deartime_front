@@ -16,11 +16,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 40px;
+    padding: 0 5em;
 }
 
 .letter-grid {
     display: grid;
-    /* 한 줄에 딱 4개씩 고정하려면 repeat(4, 1fr)이 더 정확합니다 */
     grid-template-columns: repeat(4, 1fr); 
     gap: 24px;
     /* 8개가 다 안 차도 높이를 유지하여 페이지네이션 위치 고정 */
@@ -56,5 +56,30 @@
 
 .tc-page:hover:not(.active) {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/*SendButton Styles*/
+.tc-topbar-right {
+    margin-right: 60px;
+    margin-top: 6px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.tc-create-btn {
+    width: 130px;
+    height: 45px;
+    border-radius: 12px;
+    border: 1px solid rgba(14, 119, 188, 0.6);
+    background: rgba(0, 0, 0, 0.15);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease; /* 부드러운 호버 효과를 위해 추가 */
+}
+
+.tc-create-btn:hover {
+    background-color: #2A4280;
+    opacity: 0.85;
 }
 
