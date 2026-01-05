@@ -1,21 +1,40 @@
-/* 컨테이너 설정: 화면 꽉 차게 & flex 구조 */
 .gallery-container {
   width: 100%;
-  height: 100vh; /* 화면 전체 높이 */
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 바깥쪽 스크롤 방지 */
+  overflow: hidden;
   background-size: cover;
   background-position: center;
+  position: relative; /* 오버레이 위치 기준 */
 }
 
-/* 고정 상단 바 */
+/* [추가된 오버레이 스타일: 어둡기 정도를 조절하려면 background의 0.5 숫자를 바꾸세요] */
+.context-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* 0에 가까울수록 밝고, 1에 가까울수록 검정색입니다 */
+  z-index: 900; /* 콘텐츠보다는 위, 우클릭 메뉴보다는 아래 */
+  transition: background 0.3s ease;
+}
+
+/* [추가된 스포트라이트 스타일: 선택된 사진을 오버레이 위로 올림] */
+.photo-item.spotlight {
+  position: relative;
+  z-index: 950; /* 오버레이(900)보다 높게 설정 */
+}
+
 .tc-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 40px 60px 20px 60px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 100; /* 상단바 기본 위치 */
 }
 
 .tab-group {
@@ -26,16 +45,14 @@
 .tab-item {
   position: relative;
   font-size: 24px;
-  font-weight: 300;
   color: white;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 0.2s ease;
 }
 
 .tab-item.active {
   opacity: 1;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .tab-indicator {
@@ -43,35 +60,24 @@
   left: 0;
   bottom: -5px;
   width: 100%;
-  height: 2px;
+  height: 3px;
   background-color: #0E77BC;
 }
 
-.tc-topbar-right {
-  margin-top: 0;
-}
-
-/* 업로드 버튼 스타일 */
 .tc-create-btn {
   width: 110px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1px solid #4a5a8a;
-  background: rgba(255, 255, 255, 0.05);
+  height: 45px;
+  border-radius: 12px;
+  border: 1px solid #2A4280;
+  background: rgba(0, 0, 0, 0.15);
   color: white;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s;
+  font-size: 17px;
 }
 
-.tc-create-btn:hover {
-  background: rgba(74, 90, 138, 0.3);
-}
-
-/* 스크롤 가능한 내용 영역 */
 .gallery-content-wrapper {
-  flex: 1; 
-  overflow-y: auto; 
+  flex: 1;
+  overflow-y: auto;
   padding: 20px 60px 60px 60px;
 }
 
@@ -84,98 +90,137 @@
   border-radius: 10px;
 }
 
-.gallery-content-wrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* 날짜 제목 스타일 */
-.date-group {
-  margin-bottom: 50px;
-}
-
+/* RECORD 그리드 */
 .date-title {
   color: white;
   font-size: 18px;
-  font-weight: 400;
   margin-bottom: 25px;
-  margin-left: 5px; 
 }
 
-/* 그리드 레이아웃 (이미지처럼 6개씩 배치) */
 .photo-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 20px;
+  margin-bottom: 50px;
 }
 
-.photo-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.photo-item img {
+.photo-item .img-box {
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: cover;
   border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.photo-title {
-  color: white;
-  font-size: 14px;
-  font-weight: 300;
-  margin: 0;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* 긴 제목은 ... 처리 */
-}
-
-/* 그리드 칸의 너비를 완전히 동일하게 고정 */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr)); 
-  gap: 20px;
-  width: 100%;
-}
-
-.photo-item {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 3. 이미지 스타일 시정 */
-.photo-item img {
-  width: 100%;
-  aspect-ratio: 1 / 1; 
-  
-  object-fit: cover;
-  object-position: center;
-
-  box-sizing: border-box; 
-  display: block;
-
-  border-radius: 4px;
   background-color: #1a1a1a;
 }
 
-/* 4. 제목 텍스트 위치 고정 */
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .photo-title {
-  margin-top: 12px;
   color: white;
+  margin-top: 10px;
   font-size: 14px;
-  font-weight: 300;
-  
-  height: 1.2em; 
-  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tc-empty {
-  color: rgba(255, 255, 255, 0.5);
+/* ALBUM 그리드 */
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 40px;
+}
+
+.album-img-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.album-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fav-star-icon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.album-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.album-info p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 60px;
+}
+
+.page-num {
   font-size: 18px;
-  text-align: left;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-num.active {
+  background-color: #0E77BC;
+  color: white;
+  border-radius: 50%;
+}
+
+/* 우클릭 메뉴 커스텀 */
+.custom-context-menu {
+  position: absolute;
+  width: 180px;
+  background-color: #1a213e;
+  border-radius: 12px;
+  padding: 8px 0;
+  z-index: 1000; /* 가장 위에 배치 */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  color: white;
+}
+
+.menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.edit-title-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #0E77BC;
+  color: white;
+  padding: 4px;
+  width: 100%;
+  margin-top: 5px;
 }
