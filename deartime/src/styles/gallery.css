@@ -191,14 +191,13 @@
   border-radius: 50%;
 }
 
-/* 우클릭 메뉴 커스텀 */
-.custom-context-menu {
+.context-menu {
   position: absolute;
   width: 180px;
   background-color: #1a213e;
   border-radius: 12px;
   padding: 8px 0;
-  z-index: 1000; /* 가장 위에 배치 */
+  z-index: 1000; 
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -223,4 +222,29 @@
   padding: 4px;
   width: 100%;
   margin-top: 5px;
+}
+/* 주변을 어둡게 만드는 막 */
+.context-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6); /* 이 숫자를 높이면 더 어두워집니다 (0.0 ~ 1.0) */
+  z-index: 900; /* 콘텐츠보다는 위, 메뉴보다는 아래 */
+}
+
+/* 우클릭된 사진만 어둠 위로 올림 */
+.photo-item.spotlight {
+  position: relative;
+  z-index: 950; /* 오버레이(900)보다 높게 설정 */
+  transform: scale(1.02); /* 약간 크게 보이게 하여 강조 효과 증대 */
+  transition: transform 0.2s ease;
+}
+
+/* 우클릭 커스텀 메뉴 (가장 위에 배치) */
+.custom-context-menu {
+  position: absolute;
+  z-index: 1000;
+  /* ... 나머지 스타일 ... */
 }
