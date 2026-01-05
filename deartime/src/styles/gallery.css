@@ -1,0 +1,181 @@
+/* 컨테이너 설정: 화면 꽉 차게 & flex 구조 */
+.gallery-container {
+  width: 100%;
+  height: 100vh; /* 화면 전체 높이 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 바깥쪽 스크롤 방지 */
+  background-size: cover;
+  background-position: center;
+}
+
+/* 고정 상단 바 */
+.tc-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 60px 20px 60px;
+  flex-shrink: 0;
+}
+
+.tab-group {
+  display: flex;
+  gap: 40px;
+}
+
+.tab-item {
+  position: relative;
+  font-size: 24px;
+  font-weight: 300;
+  color: white;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.tab-item.active {
+  opacity: 1;
+  font-weight: 500;
+}
+
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 2px;
+  background-color: #0E77BC;
+}
+
+.tc-topbar-right {
+  margin-top: 0;
+}
+
+/* 업로드 버튼 스타일 */
+.tc-create-btn {
+  width: 110px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #4a5a8a;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.tc-create-btn:hover {
+  background: rgba(74, 90, 138, 0.3);
+}
+
+/* 스크롤 가능한 내용 영역 */
+.gallery-content-wrapper {
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 20px 60px 60px 60px;
+}
+
+.gallery-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gallery-content-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.gallery-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 날짜 제목 스타일 */
+.date-group {
+  margin-bottom: 50px;
+}
+
+.date-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 25px;
+  margin-left: 5px; 
+}
+
+/* 그리드 레이아웃 (이미지처럼 6개씩 배치) */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+}
+
+.photo-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.photo-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 300;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 긴 제목은 ... 처리 */
+}
+
+/* 그리드 칸의 너비를 완전히 동일하게 고정 */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr)); 
+  gap: 20px;
+  width: 100%;
+}
+
+.photo-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. 이미지 스타일 시정 */
+.photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1; 
+  
+  object-fit: cover;
+  object-position: center;
+
+  box-sizing: border-box; 
+  display: block;
+
+  border-radius: 4px;
+  background-color: #1a1a1a;
+}
+
+/* 4. 제목 텍스트 위치 고정 */
+.photo-title {
+  margin-top: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 300;
+  
+  height: 1.2em; 
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tc-empty {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  text-align: left;
+}
