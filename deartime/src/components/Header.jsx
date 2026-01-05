@@ -13,6 +13,7 @@ import "../styles/header.css";
 import friendIcon from "../assets/default_profile.svg";
 import letterIcon from "../assets/letter.svg";
 import capsuleIcon from "../assets/timecapsule.svg";
+import ProfileManageModal from "../components/ProfileManageModal";
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
@@ -81,7 +82,11 @@ export default function Header() {
     };
   };
 
+  // 프로필 관리 버튼 연결
+  const [isProfileManageOpen, setIsProfileManageOpen] = useState(false);
+
   return (
+  <>
     <header className="header">
       <div className="inner">
         {/* 왼쪽 */}
@@ -115,7 +120,6 @@ export default function Header() {
               )}
             </button>
 
-            {/* 알림 드롭다운 */}
             {isNotiOpen && (
               <div className="dropdown noti-dropdown">
                 <h3 className="noti-title">알림</h3>
@@ -128,16 +132,11 @@ export default function Header() {
                       key={noti.id}
                       className={`noti-item ${!noti.isRead ? "unread" : ""}`}
                     >
-                      {/* 왼쪽 아이콘 */}
                       <div className="noti-icon">
-                        <img
-                          src={getNotiIcon(noti.type)}
-                          alt="알림 아이콘"
-                        />
+                        <img src={getNotiIcon(noti.type)} alt="알림 아이콘" />
                       </div>
 
                       <div className="noti-content">
-                        {/* 텍스트 */}
                         <p className="noti-text">{title}</p>
                         {body && <p className="noti-text">{body}</p>}
 
@@ -145,7 +144,6 @@ export default function Header() {
                           <span className="noti-sub">• {noti.contentTitle}</span>
                         )}
 
-                        {/* 하단 영역 */}
                         <div className="noti-footer">
                           {noti.type === "FRIEND_INVITE" && (
                             <div className="noti-actions">
@@ -203,7 +201,15 @@ export default function Header() {
                 </div>
 
                 <p>{userProfile.bio}</p>
-                <button className="p-btn">프로필 관리</button>
+                <button
+                  className="p-btn"
+                  onClick={() => {
+                    setIsProfileManageOpen(true);
+                    setIsProfileOpen(false);
+                  }}
+                >
+                  프로필 관리
+                </button>
                 <button className="p-btn">로그아웃</button>
               </div>
             )}
@@ -211,5 +217,14 @@ export default function Header() {
         </div>
       </div>
     </header>
-  );
+
+    {/* 프로필 관리 모달 */}
+    {isProfileManageOpen && (
+      <ProfileManageModal
+        userProfile={userProfile}
+        onClose={() => setIsProfileManageOpen(false)}
+      />
+    )}
+  </>
+);
 }
