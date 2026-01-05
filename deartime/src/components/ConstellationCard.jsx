@@ -31,10 +31,14 @@ export default function ConstellationCard({ birthday }) {
   const imageSrc = constellationImages[month];
 
   return (
-    <div className="constellation">
+    <div className="card constellation">
       <div className="card-title">CONSTELLATION</div>
-      <img src={imageSrc} alt={`${month}월 별자리`} />
-      <div className="constellation-date">{birthday}</div>
+
+      <div className="card-image">
+        <img src={imageSrc} alt={`${month}월 별자리`} />
+      </div>
+
+      <div className="card-text">{birthday}</div>
     </div>
   );
 }

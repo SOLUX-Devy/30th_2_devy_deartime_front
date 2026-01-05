@@ -23,98 +23,73 @@
     color: #FFF;
     text-align: center;
     font-family: ABeeZee;
-    font-size: 27px;
+    font-size: 24px;
     font-style: normal;
     font-weight: 400;
     line-height: normal;
-    margin-bottom: 80px;
+    margin-bottom: 60px;
+    margin-top: -60px;
 }
 
 .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 120px;
-    align-items: center;
+  display: flex;
+  gap: 120px;
+  align-items: flex-start; 
 }
 
+/* 모든 카드 공통 */
+.card {
+  width: 300px;
+  height: 420px;                 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 제목 */
 .card-title {
-    font-size: 24px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: normal;
-    color: #FFF;
-    text-align: center;
-    font-family: "Josefin Slab";
-    margin-bottom: 20px;
+  height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  font-family: "Josefin Slab";
+  margin-bottom: 20px;
 }
 
-/* 타임캡슐 카드 */
-.capsule {
-    color: #FFF;
-    text-align: center;
-    font-family: "Josefin Slab";
+/* 이미지 영역 */
+.card-image {
+  height: 250px;                
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
 }
 
-.card-sub {
-    font-size: 32px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
+.card-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
-.capsule img {
-    width: 294px;
-    height: 294px;
-    aspect-ratio: 1/1;
-}
-
-.from {
-    font-size: 24px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-} 
-
-.capsule-title {
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-}
-
-/* 레코드 카드 */
-.record img {
-    width: 300px;
-    height: 300px;
-    aspect-ratio: 1/1;
+.card-record .card-image img {
     border-radius: 20px;
 }
 
-.record-text {
-    color: #FFF;
-    text-align: center;
-    font-family: "Josefin Slab";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
+/* 하단 텍스트 */
+.card-text {
+  margin-top: 35px;             
+  font-size: 16px;
+  font-weight: 400;
+  color: #fff;
+  font-family: "Josefin Slab";
 }
 
-/* 별자리 카드 */
-.constellation img {
-    width: 250px;
-    height: 250px;
-    aspect-ratio: 1/1;
+.card-wrapper .card-title {
+  margin-bottom: 40px;
 }
 
-.constellation-date {
-    color: #FFF;
-    text-align: center;
-    font-family: "Josefin Slab";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-}
+
+
