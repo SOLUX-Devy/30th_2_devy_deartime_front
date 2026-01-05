@@ -11,7 +11,7 @@ const SendButton = () => {
                 className="tc-create-btn"
                 onClick={() => navigate('/timecapsule/create')}
             >
-                캡슐 생성
+                편지 보내기 
             </button>
         </div>
     );
