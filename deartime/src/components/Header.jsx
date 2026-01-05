@@ -1,20 +1,26 @@
 import { NavLink } from "react-router-dom";
 import DearTimeMini from "../assets/logo.svg";
 import { useState, useEffect, useRef } from "react";
-import NotiIcon from "../assets/noti_bell.svg"; 
-import ArrowDown from "../assets/arrow_down.svg"; 
-import DefaultProfile from "../assets/profile.jpg"; 
-import { MOCK_NOTIFICATIONS, MOCK_USER_PROFILE } from "../mocks/noti_profileDetailResponses.js";
+import NotiIcon from "../assets/noti_bell.svg";
+import ArrowDown from "../assets/arrow_down.svg";
+import DefaultProfile from "../assets/profile.jpg";
+import {
+  MOCK_NOTIFICATIONS,
+  MOCK_USER_PROFILE,
+} from "../mocks/noti_profileDetailResponses.js";
 import "../styles/header.css";
+
+import friendIcon from "../assets/default_profile.svg";
+import letterIcon from "../assets/letter.svg";
+import capsuleIcon from "../assets/timecapsule.svg";
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
-  // 🔹 목데이터 (읽기 전용)
+  // 목데이터
   const [notifications] = useState(
     MOCK_NOTIFICATIONS?.data?.content || []
   );
-
   const [userProfile] = useState(
     MOCK_USER_PROFILE?.data || null
   );
@@ -24,6 +30,13 @@ export default function Header() {
 
   const notiRef = useRef(null);
   const profileRef = useRef(null);
+
+  const formatTime = (dateString) => {
+    const diff = (new Date() - new Date(dateString)) / 1000 / 60;
+    if (diff < 60) return `${Math.floor(diff)}분 전`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}시간 전`;
+    return dateString.slice(0, 10).replace(/-/g, ".");
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -36,11 +49,36 @@ export default function Header() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleImgError = (e) => {
     e.target.src = DefaultProfile;
+  };
+
+  const getNotiIcon = (type) => {
+    switch (type) {
+      case "FRIEND_INVITE":
+        return friendIcon;
+      case "TIMECAPSULE_OPEN":
+      case "TIMECAPSULE_RECEIVED":
+        return capsuleIcon;
+      case "LETTER_RECEIVED":
+        return letterIcon;
+      default:
+        return friendIcon;
+    }
+  };
+
+  const splitNotiContent = (content) => {
+    const match = content.match(/(.+님이)\s(.+)/);
+    if (!match) return { title: content, body: null };
+
+    return {
+      title: match[1],
+      body: match[2],
+    };
   };
 
   return (
@@ -72,8 +110,60 @@ export default function Header() {
               }}
             >
               <img src={NotiIcon} alt="알림" className="noti-img" />
-              {notifications.some(n => !n.isRead) && <span className="red-dot" />}
+              {notifications.some(n => !n.isRead) && (
+                <span className="red-dot" />
+              )}
             </button>
+
+            {/* 알림 드롭다운 */}
+            {isNotiOpen && (
+              <div className="dropdown noti-dropdown">
+                <h3 className="noti-title">알림</h3>
+
+                {notifications.map((noti) => {
+                  const { title, body } = splitNotiContent(noti.content);
+
+                  return (
+                    <div
+                      key={noti.id}
+                      className={`noti-item ${!noti.isRead ? "unread" : ""}`}
+                    >
+                      {/* 왼쪽 아이콘 */}
+                      <div className="noti-icon">
+                        <img
+                          src={getNotiIcon(noti.type)}
+                          alt="알림 아이콘"
+                        />
+                      </div>
+
+                      <div className="noti-content">
+                        {/* 텍스트 */}
+                        <p className="noti-text">{title}</p>
+                        {body && <p className="noti-text">{body}</p>}
+
+                        {noti.contentTitle && (
+                          <span className="noti-sub">• {noti.contentTitle}</span>
+                        )}
+
+                        {/* 하단 영역 */}
+                        <div className="noti-footer">
+                          {noti.type === "FRIEND_INVITE" && (
+                            <div className="noti-actions">
+                              <button className="noti-btn accept">수락</button>
+                              <button className="noti-btn reject">거절</button>
+                            </div>
+                          )}
+
+                          <span className="noti-time">
+                            {formatTime(noti.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* 프로필 */}
