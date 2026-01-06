@@ -1,0 +1,133 @@
+.shared-mailbox-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: white;
+}
+
+.shared-header {
+    display: flex;
+    align-items: center;
+    gap: 2em;
+    padding: 5px 0;
+}
+
+.user-tag {
+    background-color: #D1E9E9;
+    color: #333;
+    padding: 7px 14px 7px 17px; /* 오른쪽 패딩을 살짝 조정 */
+    border-radius: 8px;
+    font-weight: bold;
+    font-size:1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width:10em;
+    height:2em;
+}
+
+/* X 버튼 스타일 리셋 및 커스텀 */
+.tag-close-btn {
+    margin-left:auto;
+    background: none;   
+    border: none;          
+    padding: 0;            
+    font-size: 1.2rem;    
+    line-height: 1;
+    color: #666;           
+    cursor: pointer;       
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, transform 0.2s; 
+}
+
+.tag-close-btn:hover {
+    color: #d5282b;      
+    transform: scale(1.1); 
+}
+
+.tag-close-btn:active {
+    transform: scale(0.9); 
+}
+
+/* 날짜 구분선 */
+.date-separator {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+/* 채팅 공통 */
+.chat-item {
+    display: flex;
+    margin-bottom: 20px;
+    max-width: 80%;
+}
+
+/* 상대방 메시지 (왼쪽) */
+.chat-item.theirs {
+    align-self: flex-start;
+    gap: 10px;
+}
+
+.avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.avatar-circle {
+    width: 45px;
+    height: 45px;
+    background-color: #76a8f3; /* 임시 배경색 */
+    border-radius: 50%;
+}
+
+.sender-name {
+    font-size: 0.75rem;
+    margin-top: 5px;
+}
+
+.theirs .message-bubble {
+    background-color: #D1E9E9; 
+    color: #333;
+    border-radius: 0 15px 15px 15px;
+}
+
+/* 내 메시지 (오른쪽) */
+.chat-item.mine {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+    max-width: 70%;
+
+    margin-right: 0;
+    margin-left: auto;
+    padding-right: 3em;
+}
+
+.mine .message-bubble {
+    background-color: rgba(60, 80, 120, 0.6); 
+    color: white;
+    border-radius: 15px 0 15px 15px;
+}
+
+/* 메시지 공통 */
+.message-bubble {
+    padding: 15px 20px;
+    position: relative;
+    max-width: 500px;
+}
+
+.message-content {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.message-time {
+    display: block;
+    font-size: 0.7rem;
+    margin-top: 8px;
+    opacity: 0.7;
+}

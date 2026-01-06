@@ -14,7 +14,7 @@ const THEME_IMAGES = {
     GREY: bgLightGrey
 };
 
-const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
+const LetterCard = ({ data, isFocused, setFocusedId, onDelete, onToggleBookmark, onMarkAsRead }) => {
     const {
         senderNickname,
         title,
@@ -41,6 +41,7 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
     // 토글 핸들러 함수
     const handleBookmarkToggle = (e) => {
         e.stopPropagation(); // 카드 클릭 이벤트(상세페이지 이동 등)와 겹치지 않게 방지
+        onToggleBookmark(data.letterId, !starred); // 부모에게 이 편지의 ID와 현재 상태의 반대값을 전달
         setStarred(!starred);
     };
 
@@ -76,6 +77,10 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
             // 일반 클릭 시 상세보기 팝업 열기
             setIsDetailOpen(true);
             console.log("상세 페이지 이동"); 
+
+            if (!data.isRead) {
+                onMarkAsRead(data.letterId);
+            }
         }
     };
 

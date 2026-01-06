@@ -9,20 +9,20 @@
     /* 가로세로 중앙 정렬 */
     display: flex;
     justify-content: center;
-    align-items: center; 
+    align-items: flex-start; 
     
     z-index: 1000;
-    padding: 20px;
+    padding: 60px 20px;
     box-sizing: border-box;
 }
 
 .letter-paper {
     position: relative;
+    margin-top: 3em;
     width: 90%;
-    max-width: 500px;
-    max-height: 85vh;
-    /* aspect-ratio: 3 / 4; */
-    /*내용이 많으면 오히려 방해가 될 수 있어 주석 처리, 필요시 해제 */
+    max-width: 35rem;
+    min-height: 25rem;
+    max-height: 80vh;
     
     /*이미지를 찌그러뜨리지 않고 꽉 채우기 */
     background-size: cover; 
@@ -33,13 +33,17 @@
     background-repeat: no-repeat;
     
     padding: 30px 40px 50px 40px;
+    padding-bottom: clamp(40px, 8%, 60px);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    border-radius: 10px;
+    border-radius: 8px;
     
     /* default 배경색 */
-    background-color: #f4e7d3; 
+    background-color: #ffffff; 
+    background-size: cover;
+    background-position: center;
+    border-radius: 20px;
 }
 
 @keyframes fadeInModal {
@@ -50,7 +54,7 @@
 .letter-content-wrapper {
     flex: 1;
     overflow-y: auto; /* 내용이 많으면 내부에서 스크롤 생성 */
-    margin-top: 5px;
+    margin : 5px 0;
     scrollbar-width: thin;
 }
 
@@ -63,10 +67,16 @@
     border-radius: 10px;
 }
 
+.detail-text {
+    line-height: 1.7; 
+    white-space: pre-wrap; /* 줄바꿈(\n) 반영 */
+    word-break: break-all;
+}
+
 .close-btn {
     position: absolute;
-    top: 25px;
-    right: 25px;
+    top: 0.3em;
+    right: 0.3em;
     
     background: none;
     border: none;
@@ -84,12 +94,11 @@
 }
 
 .close-btn:hover {
-    color: #000;
+    color: #af2222;
     transform: rotate(90deg); 
 }
 
 /* 테마별 글자색 설정 */
-
 .letterbox-container .letter-paper.theme-DEFAULT { 
     color: #ffffff; 
 }

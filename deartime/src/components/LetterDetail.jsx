@@ -14,7 +14,9 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
             
             // 시뮬레이션
             await new Promise(resolve => setTimeout(resolve, 500));
-            setDetailData({ content: "서버에서 가져온 상세 내용입니다..." });
+            setDetailData({ 
+                content: "테스트 문구입니다. ".repeat(100) // 100번 반복
+                });
             setIsLoading(false);
         };
 
