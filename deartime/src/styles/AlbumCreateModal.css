@@ -1,31 +1,8 @@
-/* 전체 루트 및 오버레이 */
-.modal-root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-}
-
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* 주변을 어둡게 함 */
-  backdrop-filter: blur(2px);
-}
-
-/* 모달 컨테이너 */
+/* 앨범 생성 모달 컨테이너 */
 .album-modal-container {
   position: relative;
   width: 480px;
-  background-color: #050E25; /* 아주 진한 네이비 배경 */
+  background-color: #050E25;
   border-radius: 20px;
   padding: 40px;
   display: flex;
@@ -35,46 +12,7 @@
   z-index: 3001;
 }
 
-.modal-close-btn {
-  position: absolute;
-  top: 25px;
-  right: 25px;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.modal-title {
-  color: white;
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 30px;
-  letter-spacing: 1px;
-}
-
-/* 표지 사진 섹션 */
-.cover-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 35px;
-}
-
-.cover-preview {
-  width: 240px;
-  height: 240px;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #1a1a1a;
-}
-
-.cover-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+/* 표지 사진 변경 버튼 */
 .change-cover-btn {
   background: none;
   border: 1px solid #2A4280;
@@ -83,47 +21,14 @@
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
-  transition: background 0.3s; /* */
+  transition: background 0.3s ease; 
 }
 
 .change-cover-btn:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* 입력 섹션 */
-.input-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 40px;
-}
-
-.input-label {
-  color: white;
-  font-size: 20px;
-  font-weight: 500;
-  text-align: left;
-}
-
-.album-title-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #2A4280;
-  border-radius: 12px;
-  padding: 15px;
-  color: white;
-  font-size: 18px;
-  outline: none;
-}
-
 /* 생성 버튼 */
-.modal-footer {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-}
-
 .submit-btn {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid #2A4280;
@@ -132,7 +37,7 @@
   border-radius: 12px;
   font-size: 18px;
   cursor: pointer;
-  transition: background 0.3s; /* */
+  transition: background 0.3s ease;
 }
 
 .submit-btn:hover {
