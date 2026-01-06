@@ -92,7 +92,7 @@
     font-size: 18px;
 }
 
-.delete-btn:hover {
+.delete-btn:hover, .delete-btn:focus {
     background: #0E77BC; 
     color: #EA2E35; 
     border: 1px solid #2A4280;     

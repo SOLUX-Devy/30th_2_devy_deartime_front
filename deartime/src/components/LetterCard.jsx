@@ -1,6 +1,9 @@
 import React, {useState, useRef} from 'react';
 import '../styles/LetterCard.css';
 import DeleteCheck from '../components/DeleteCheck';
+import LetterDetail from '../components/LetterDetail';
+
+// 배경 이미지 임포트
 import bgDarkBlue from '../assets/bg-dark-blue.png';
 import bgLightPink from '../assets/bg-light-pink.png';
 import bgLightGrey from '../assets/bg-light-grey.png';
@@ -22,6 +25,8 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
         isBookmarked
     } = data;
 
+    const currentBgImage = THEME_IMAGES[themeCode] || THEME_IMAGES.DEFAULT;
+
     // 즐겨찾기 상태를 로컬 state로 관리 (초기값은 서버/Mock 데이터)
     const [starred, setStarred] = useState(isBookmarked);
 
@@ -29,6 +34,9 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
     const timerRef = useRef(null); // 꾹 누르기 시간을 측정할 타이머
     const [isCheckOpen, setIsCheckOpen] = useState(false); // 팝업 전용 상태
     const isLongPress = useRef(false); // 롱프레스 여부를 기록할 변수 추가
+
+    //상세보기 상태
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
 
     // 토글 핸들러 함수
     const handleBookmarkToggle = (e) => {
@@ -65,7 +73,9 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
         if (isFocused) {
             setFocusedId(null); // 메뉴가 떠 있을 때 클릭하면 닫기
         } else {
-            console.log("상세 페이지 이동"); // 평상시 클릭
+            // 일반 클릭 시 상세보기 팝업 열기
+            setIsDetailOpen(true);
+            console.log("상세 페이지 이동"); 
         }
     };
 
@@ -166,6 +176,15 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete }) => {
                     </div>
                 </div>
             </div>
+            {/* 상세보기 모달 */}
+            <LetterDetail 
+                isOpen={isDetailOpen} 
+                onClose={() => setIsDetailOpen(false)} 
+                letterId={data.letterId}
+                bgImage={currentBgImage}
+                themeCode={themeCode}
+            />
+
             {/* 삭제팝업  컴포넌트를 카드 바깥에 배치 */}
             <DeleteCheck 
                 isOpen={isCheckOpen} 
