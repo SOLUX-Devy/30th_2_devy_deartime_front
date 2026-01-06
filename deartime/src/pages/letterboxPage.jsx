@@ -10,6 +10,13 @@ const Letterbox = () => {
 
     const [letters, setLetters] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [focusedId, setFocusedId] = useState(null); // 현재 포커스된 카드 ID 관리
+
+    const handlePageClick = () => {
+        if (focusedId) {
+            setFocusedId(null);
+        }
+    };
 
     const pageSize = 8; // 한 페이지에 보여줄 카드 개수
 
@@ -60,9 +67,18 @@ const Letterbox = () => {
         return letters.slice(firstIdx, lastIdx);
     }, [safePage, letters]);
 
+    //삭제 로직 : 특정 ID 제외 나머지만 남김
+    const deleteLetter = (id) => {
+        // filter 함수를 사용하는 것이 가장 Efficient(효율적)합니다.
+        setLetters((prevLetters) => prevLetters.filter(letter => letter.letterId !== id));
+    };
+
     return (
-        <div className="letterbox-container">
-            <header className="letterbox-header">
+        <div 
+            className={`letterbox-container ${focusedId ? 'is-focusing' : ''}`}
+            onClick={handlePageClick} // 여기서 모든 클릭을 감지
+        >
+            <header className="letterbox-header" onClick={(e) => e.stopPropagation()}>
                     <MailTabs 
                         activeIndex={activeIndex} 
                         setActiveIndex={(index) => {
@@ -83,7 +99,11 @@ const Letterbox = () => {
                         <p>로딩 중...</p>
                     ) : (
                         currentItems.map((letter) => (
-                            <LetterCard key={letter.letterId} data={letter} />
+                            <LetterCard key={letter.letterId} data={letter} 
+                            isFocused={focusedId === letter.letterId} 
+                            setFocusedId={setFocusedId}
+                            onDelete={deleteLetter}
+                            />  
                         ))
                     )}
                 </main>
