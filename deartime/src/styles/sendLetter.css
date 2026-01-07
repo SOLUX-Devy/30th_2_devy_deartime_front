@@ -1,0 +1,109 @@
+.page-container {
+    width: 100%;
+    min-height: 100vh;
+    background-image: url('../assets/background.svg');
+    display: flex;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.glass-card {
+  justify-content: center;   
+  align-items: center;
+  display: flex;
+  gap: 50px;
+  padding: 60px 80px;
+  border-radius: 100px;
+  width: 750px;
+  height: 480px;
+  backdrop-filter: blur(20px); /* 배경만 흐리게 */
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.15);
+  margin-top: 30px;
+  justify-content: center;   
+  align-items: center;     
+  
+  /* 내부 요소들이 블러의 영향을 받지 않도록 보장 */
+  position: relative;
+  z-index: 1;
+}
+
+.theme-sidebar, .letter-editor {
+  position: relative;
+  z-index: 2;
+}
+
+.input-group {
+  flex: 1;                 
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-area {
+  flex: 1;                  /* ⭐ 제일 크게 */
+}
+
+.text-input {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.theme-option {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  margin-left: 70px;
+  margin-top: 30px;
+}
+
+.theme-option.active {
+  border-color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* 오른쪽 편지 에디터 스타일링 */
+.letter-editor {
+  width: 380px;
+  height: 460px;
+  border-radius: 20px;
+  padding: 40px;
+  background-size: cover;
+  background-position: center;
+  margin-left: 20px;
+}
+
+.editor-footer {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+}
+
+
+.send-btn {
+  width: 100px;
+  height: 48px;
+  border-radius: 10px;
+  border: 1.5px solid #2A4280;
+  background: rgba(255, 255, 255, 0);
+  color: white;
+}
+
