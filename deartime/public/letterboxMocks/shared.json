@@ -1,0 +1,48 @@
+{
+    "status": 200,
+    "success": true,
+    "message": "대화 기록을 불러오는데 성공했습니다.",
+    "data": {
+        "data": [
+            {
+                "letterId": 1,
+                "senderNickname": "송이",
+                "receiverNickname": "솔룩스",
+                "title": "첫 편지입니다",
+                "summary": "17148 test test test test test test test",
+                "themeCode": "DEFAULT",
+                "sentAt": "2025-12-15T00:32:08.164649",
+                "isRead": true,
+                "isBookmarked": true
+            },
+            {
+                "letterId": 5,
+                "senderNickname": "솔룩스",
+                "receiverNickname": "송이",
+                "title": "2 편지입니다",
+                "summary": "내일 만나요! 오늘도 좋은 하루 보내요! 화이팅~ 아자아자 개발 힘냅시다 :)",
+                "themeCode": "DEFAULT",
+                "sentAt": "2025-12-15T00:53:36.700224",
+                "isRead": false,
+                "isBookmarked": true
+            },
+            {
+                "letterId": 9,
+                "senderNickname": "송이",
+                "receiverNickname": "솔룩스",
+                "title": "3 편지입니다",
+                "summary": "오늘 날씨가 참 좋네요. 이런 날에는 산책을 가야 제맛이죠. 같이 가실래요? 헤헤",
+                "themeCode": "DEFAULT",
+                "sentAt": "2025-12-15T01:14:05.235799",
+                "isRead": true,
+                "isBookmarked": false
+            }
+        ],
+        "currentPage": 0,
+        "totalPages": 8,
+        "totalElements": 15,
+        "pageSize": 2,
+        "isFirst": true,
+        "isLast": false
+    }
+}
