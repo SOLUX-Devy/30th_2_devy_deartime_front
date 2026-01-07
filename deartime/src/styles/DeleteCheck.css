@@ -1,0 +1,41 @@
+.check-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* 뒷배경을 어둡게 */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.check-content {
+    background-color: #050a21; /* 이미지 속 진한 네이비색 */
+    padding: 40px 30px;
+    border-radius: 24px; /* 부드러운 곡률 */
+    text-align: center;
+    width: 380px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.check-title {
+    color: white; font-size: 22px; margin-bottom: 20px;
+}
+
+.check-subtitle {
+    color: #cbd5e0; font-size: 15px; margin-bottom: 35px;
+    line-height: 1.5;
+}
+
+.check-buttons {
+    display: flex; gap: 15px; justify-content: center;
+}
+
+.check-btn {
+    flex: 1; padding: 14px 0; border-radius: 12px;
+    font-size: 17px; font-weight: 600; cursor: pointer;
+    background: transparent; border: 1px solid #2d3748; color: white;
+    transition: all 0.2s;
+}
+
+/* 이미지 속 버튼 스타일링 */
+.check-btn.cancel:hover { background: rgba(255, 255, 255, 0.1); }
+.check-btn.delete { border: 1px solid #1a365d; }
+.check-btn.delete:hover { background: #1a365d; }
