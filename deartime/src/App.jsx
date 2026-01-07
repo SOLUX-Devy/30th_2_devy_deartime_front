@@ -9,6 +9,7 @@ import Home from "./pages/home.jsx";
 /*개발 후 주석 풀어서 사용해주세요! -나연 */
 /*import Gallery from "./pages/gallery";*/
 import Letterbox from "./pages/letterboxPage";
+import SendLetterPage from "./pages/sendLetterPage";
 import Timecapsule from "./pages/timecapsule";
 import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
@@ -23,9 +24,10 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
-
+        <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
         {/* <Route path="/gallery" element={<Gallery />} /> */}
         <Route path="/letterbox" element={<Letterbox />} />
+
         <Route path="/timecapsule" element={<Timecapsule />} />
         <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
         <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
