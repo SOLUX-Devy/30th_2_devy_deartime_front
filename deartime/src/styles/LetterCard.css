@@ -1,5 +1,5 @@
 .letter-card {
-    /* 가로 세로 비율 유지 (가장 중요한 부분) */
+    /* 가로 세로 비율 유지*/
     aspect-ratio: 9 / 10;
     box-sizing: border-box;
     
@@ -49,7 +49,7 @@
     
     /* 텍스트 생략 처리 */
     display: -webkit-box;
-    -webkit-line-clamp: 5; /* 카드가 작아질 수 있으므로 줄 수를 하나 줄이는 것도 방법 */
+    -webkit-line-clamp: 5; 
     -webkit-box-orient: vertical;
     overflow: hidden;
 

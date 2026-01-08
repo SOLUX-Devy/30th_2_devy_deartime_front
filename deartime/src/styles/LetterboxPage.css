@@ -96,8 +96,8 @@
 .tc-pagination-info {
     font-size: 14px;
     color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 12px;
-    margin-right:50px;
+    margin-bottom: 20px;
+    margin-top:30px;
     display: block;
     text-align: right;
 }
