@@ -1,20 +1,33 @@
 .letter-card {
+    /* 가로 세로 비율 유지 (가장 중요한 부분) */
     aspect-ratio: 9 / 10;
-    padding: 24px;
+    box-sizing: border-box;
+    
+    /* 패딩을 유동적으로 조절하거나 약간 줄임 (카드가 작아질 때 대비) */
+    padding: 6% 8%; 
+    
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    
+    /* 배경 이미지 최적화 */
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+    
+    overflow: hidden; 
+    
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     position: relative;
-    color: #333; 
+    
+    width: 100%;
 }
 
 /* 테마별 텍스트 색상 대응 */
 .letter-card.theme-DEFAULT { color: #ffffff; }
 .letter-card.theme-PINK { color: #4a4a4a; }
+.letter-card.theme-GREY { color: #4a4a4a; }
 
 .card-top {
     display: flex;
@@ -30,14 +43,17 @@
 }
 
 .summary-text {
-    font-size: 0.rem;
-    line-height: 1.6;
+    font-size: 0.95rem; 
+    line-height: 1.5;
     margin-top: 15px;
-    /* 50자 제한은 JS에서 처리하지만, 넘칠 경우를 대비한 CSS */
+    
+    /* 텍스트 생략 처리 */
     display: -webkit-box;
-    -webkit-line-clamp: 6;
+    -webkit-line-clamp: 5; /* 카드가 작아질 수 있으므로 줄 수를 하나 줄이는 것도 방법 */
     -webkit-box-orient: vertical;
     overflow: hidden;
+
+    word-break: keep-all; 
 }
 
 .card-bottom {
