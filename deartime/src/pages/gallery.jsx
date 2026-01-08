@@ -1,6 +1,5 @@
 import '../styles/gallery.css';
 import React, { useMemo, useState, useRef, useEffect } from "react";
-// [수정] useLocation을 추가하여 상세 페이지에서 보낸 상태값을 받습니다.
 import { useNavigate, useLocation } from "react-router-dom"; 
 import bg from "../assets/background_nostar.png";
 import { Pencil, Trash2, MoreVertical, Star } from "lucide-react";
@@ -8,29 +7,41 @@ import AlbumCreateModal from "../components/AlbumCreateModal";
 
 const Gallery = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // [추가] 현재 위치 상태값 접근
+  const location = useLocation(); 
   const fileInputRef = useRef(null);
 
   const tabs = ["RECORD", "ALBUM"];
 
-  // [수정] 초기 탭 인덱스 설정
-  // AlbumDetail에서 navigate('/gallery', { state: { activeTab: 1 } })로 보낸 값을 확인합니다.
+  // 앨범 상세에서 돌아왔을 때의 탭 상태 복구
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
-  // --- [데이터 상태] ---
+  // 사진 목록 데이터 관리
   const [photos, setPhotos] = useState([
     { id: 1, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '너무 즐거웠다!', isFavorite: false },
     { id: 2, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '그냥 웃음이 끊이지 않았던 날', isFavorite: true },
     { id: 3, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '하이디라오 먹고 싶다~', isFavorite: false },
   ]);
 
+  // 앨범 목록 데이터 관리
   const [albums, setAlbums] = useState([
     { id: 101, title: '즐겨찾기', count: 9, coverUrl: 'https://via.placeholder.com/300', isFavorite: true },
     { id: 102, title: '우리 가족', count: 1234, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
     { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
   ]);
 
-  // --- [UI 상태 제어] ---
+  // [추가] 상세 페이지에서 수정된 커버 이미지를 반영하는 로직
+  useEffect(() => {
+    if (location.state?.updatedAlbum) {
+      const { id, coverUrl } = location.state.updatedAlbum;
+      setAlbums(prev => prev.map(album => 
+        album.id === id ? { ...album, coverUrl: coverUrl } : album
+      ));
+      
+      // 반영 후 state 초기화 (뒤로가기 시 중복 실행 방지)
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,14 +52,10 @@ const Gallery = () => {
     return () => window.removeEventListener('click', handleClick);
   }, [menu]);
 
-  // --- [핸들러 함수] ---
-
-  // 앨범 클릭 시 상세 페이지 이동
   const handleAlbumClick = (album) => {
     navigate(`/album/${album.id}`, { state: { album } });
   };
 
-  // 사진 업로드 핸들러
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -66,7 +73,6 @@ const Gallery = () => {
     }
   };
 
-  // 사진 즐겨찾기 토글
   const togglePhotoFavorite = (e, photoId) => {
     e.stopPropagation();
     setPhotos(prev => prev.map(p => 
@@ -74,7 +80,6 @@ const Gallery = () => {
     ));
   };
 
-  // 앨범 즐겨찾기 토글
   const toggleAlbumFavorite = (e, albumId) => {
     e.stopPropagation(); 
     setAlbums(prev => prev.map(album => 
@@ -118,7 +123,6 @@ const Gallery = () => {
     }
   };
 
-  // --- [데이터 정렬 및 그룹화] ---
   const groupedPhotos = useMemo(() => {
     return photos.reduce((acc, photo) => {
       const date = photo.date;
@@ -178,7 +182,6 @@ const Gallery = () => {
 
       <div className="gallery-content-wrapper">
         {activeIndex === 0 ? (
-          /* --- RECORD 탭 --- */
           Object.keys(groupedPhotos).map((date) => (
             <section key={date} className="date-group">
               <h2 className="date-title">{date}</h2>
@@ -190,22 +193,11 @@ const Gallery = () => {
                     <div className="img-box">
                       <img src={photo.url} alt="" />
                       <button className="fav-star-btn photo-star" onClick={(e) => togglePhotoFavorite(e, photo.id)}>
-                        <Star 
-                          size={18} 
-                          fill={photo.isFavorite ? "#FFD700" : "none"} 
-                          stroke={photo.isFavorite ? "#FFD700" : "white"} 
-                          strokeWidth={2} 
-                        />
+                        <Star size={18} fill={photo.isFavorite ? "#FFD700" : "none"} stroke={photo.isFavorite ? "#FFD700" : "white"} strokeWidth={2} />
                       </button>
                     </div>
                     {editingId === photo.id ? (
-                      <input 
-                        className="edit-title-input" 
-                        defaultValue={photo.title} 
-                        autoFocus 
-                        onKeyDown={(e) => handleEditComplete(e, photo.id)} 
-                        onBlur={() => setEditingId(null)} 
-                      />
+                      <input className="edit-title-input" defaultValue={photo.title} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
                     ) : (
                       <p className="photo-title">{photo.title}</p>
                     )}
@@ -215,38 +207,20 @@ const Gallery = () => {
             </section>
           ))
         ) : (
-          /* --- ALBUM 탭 --- */
           <div className="album-section">
             <div className="album-grid">
               {sortedAlbums.map((album) => (
-                <div 
-                  key={album.id} 
-                  className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}
-                  onClick={() => handleAlbumClick(album)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <div key={album.id} className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`} onClick={() => handleAlbumClick(album)} style={{ cursor: 'pointer' }} >
                   <div className="album-img-box">
                     <img src={album.coverUrl} alt="" />
                     <button className="fav-star-btn" onClick={(e) => toggleAlbumFavorite(e, album.id)}>
-                      <Star 
-                        size={24} 
-                        fill={album.isFavorite ? "#FFD700" : "none"} 
-                        stroke={album.isFavorite ? "#FFD700" : "white"} 
-                        strokeWidth={2} 
-                      />
+                      <Star size={24} fill={album.isFavorite ? "#FFD700" : "none"} stroke={album.isFavorite ? "#FFD700" : "white"} strokeWidth={2} />
                     </button>
                   </div>
                   <div className="album-info">
                     <div className="album-info-top">
                       {editingId === album.id ? (
-                        <input 
-                          className="edit-title-input" 
-                          defaultValue={album.title} 
-                          autoFocus 
-                          onKeyDown={(e) => handleEditComplete(e, album.id)} 
-                          onBlur={() => setEditingId(null)}
-                          onClick={(e) => e.stopPropagation()} 
-                        />
+                        <input className="edit-title-input" defaultValue={album.title} autoFocus onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} onClick={(e) => e.stopPropagation()} />
                       ) : (
                         <h3>{album.title}</h3>
                       )}
