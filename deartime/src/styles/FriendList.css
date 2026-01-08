@@ -1,0 +1,93 @@
+/* src/pages/FriendList.css */
+
+.friendlist-container {
+  width: 100%;
+  min-height: 100vh;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  color: white;
+  padding: 20px 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== 상단 좌측/우측 배치 ===== */
+.friend-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+/* ===== 상단 세부 네비 ===== */
+.friend-topnav {
+  display: flex;
+  gap: 50px;
+  margin-bottom: 0px;
+  margin-left: 60px;
+  margin-top: 10px;
+}
+
+.friend-tab {
+  position: relative;
+  font-size: 20px;
+  padding-bottom: 6px;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.2s ease;
+}
+
+/* 항목 1개라 항상 활성 */
+.friend-tab.active {
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* 밑줄 (원본과 동일한 느낌) */
+.friend-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #0E77BC;
+  transform: scaleX(1);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+/* ===== 상단 우측 버튼 영역 ===== */
+.friend-topbar-right {
+  margin-right: 60px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* 버튼 스타일: timecapsule의 tc-create-btn 그대로 */
+.friend-invite-btn {
+  width: 130px;
+  height: 45px;
+  border-radius: 12px;
+  border: 1px solid #2A4280;
+  background: rgba(0, 0, 0, 0.15);
+  color: white;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.friend-invite-btn:hover {
+  background-color: rgba(42, 66, 128, 0.85);
+}
+
+/* 아래 내용 영역(placeholder) */
+.friendlist-body {
+  flex: 1;
+}

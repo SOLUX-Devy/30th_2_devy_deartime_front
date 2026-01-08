@@ -99,7 +99,7 @@ export default function Header() {
             <NavLink to="/gallery" className={itemClass}>갤러리</NavLink>
             <NavLink to="/letterbox" className={itemClass}>우체통</NavLink>
             <NavLink to="/timecapsule" className={itemClass}>타임캡슐</NavLink>
-            <NavLink to="/freind" className={itemClass}>친구목록</NavLink>
+            <NavLink to="/friend" className={itemClass}>친구목록</NavLink>
           </nav>
         </div>
 

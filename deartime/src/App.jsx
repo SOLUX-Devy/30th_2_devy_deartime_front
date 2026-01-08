@@ -13,7 +13,8 @@ import SendLetterPage from "./pages/sendLetterPage";
 import Timecapsule from "./pages/timecapsule";
 import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
-/*import Freind from "./pages/freind"; */
+import FriendList from "./pages/FriendList"; 
+import FriendInvite from "./components/FriendInvite";
 
 export default function App() {
   return (
@@ -24,15 +25,19 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
+
         {/* <Route path="/gallery" element={<Gallery />} /> */}
+
+        <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
         <Route path="/letterbox" element={<Letterbox />} />
 
         <Route path="/timecapsule" element={<Timecapsule />} />
         <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
         <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
-        {/* <Route path="/freind" element={<Freind />} /> */}
-        
+
+        <Route path="/friend" element={<FriendList />} />
+        <Route path="/friend/invite" element={<FriendInvite />} />
+
       </Routes>
     </BrowserRouter>
   );
