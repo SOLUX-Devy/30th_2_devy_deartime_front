@@ -9,7 +9,6 @@ const AlbumDetail = () => {
   const fileInputRef = useRef(null);
 
   const albumData = location.state?.album;
-
   const [albumPhotos, setAlbumPhotos] = useState([]);
 
   if (!albumData) {
@@ -22,7 +21,6 @@ const AlbumDetail = () => {
       id: Date.now() + Math.random(),
       url: URL.createObjectURL(file)
     }));
-    
     setAlbumPhotos(prev => [...newPhotos, ...prev]);
     e.target.value = "";
   };
@@ -30,8 +28,9 @@ const AlbumDetail = () => {
   return (
     <div className="album-detail-container">
       <div className="detail-top-nav">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          &lt; RECORD
+        {/* [수정됨] 클릭 시 Gallery의 ALBUM 탭(인덱스 1)으로 이동 */}
+        <button className="back-btn" onClick={() => navigate("/gallery", { state: { activeTab: 1 } })}>
+          &lt; ALBUM
         </button>
         <span className="album-nav-title">ALBUM</span>
         <button className="create-header-btn">생성</button>
@@ -43,7 +42,6 @@ const AlbumDetail = () => {
 
       <div className="album-content-area">
         <div className="photo-grid">
-          {/* 1번째 칸: 사진 추가 버튼 */}
           <div className="grid-item add-btn-item" onClick={() => fileInputRef.current.click()}>
             <Plus size={40} color="#ffffff" strokeWidth={1} />
             <input 
@@ -56,7 +54,6 @@ const AlbumDetail = () => {
             />
           </div>
 
-          {/* 추가된 사진들 리스트 */}
           {albumPhotos.map((photo) => (
             <div key={photo.id} className="grid-item photo-item">
               <img src={photo.url} alt="album-content" />

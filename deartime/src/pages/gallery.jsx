@@ -1,16 +1,21 @@
 import '../styles/gallery.css';
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// [수정] useLocation을 추가하여 상세 페이지에서 보낸 상태값을 받습니다.
+import { useNavigate, useLocation } from "react-router-dom"; 
 import bg from "../assets/background_nostar.png";
 import { Pencil, Trash2, MoreVertical, Star } from "lucide-react";
 import AlbumCreateModal from "../components/AlbumCreateModal"; 
 
 const Gallery = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // [추가] 현재 위치 상태값 접근
   const fileInputRef = useRef(null);
 
   const tabs = ["RECORD", "ALBUM"];
-  const [activeIndex, setActiveIndex] = useState(0);
+
+  // [수정] 초기 탭 인덱스 설정
+  // AlbumDetail에서 navigate('/gallery', { state: { activeTab: 1 } })로 보낸 값을 확인합니다.
+  const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
   // --- [데이터 상태] ---
   const [photos, setPhotos] = useState([
@@ -40,7 +45,6 @@ const Gallery = () => {
 
   // 앨범 클릭 시 상세 페이지 이동
   const handleAlbumClick = (album) => {
-    // navigate를 통해 id와 함께 album 전체 객체를 state로 전달합니다.
     navigate(`/album/${album.id}`, { state: { album } });
   };
 
@@ -72,7 +76,7 @@ const Gallery = () => {
 
   // 앨범 즐겨찾기 토글
   const toggleAlbumFavorite = (e, albumId) => {
-    e.stopPropagation(); // 앨범 상세 이동 방지
+    e.stopPropagation(); 
     setAlbums(prev => prev.map(album => 
       album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album
     ));
@@ -84,7 +88,7 @@ const Gallery = () => {
   };
 
   const handleAlbumMenuClick = (e, albumId) => {
-    e.stopPropagation(); // 앨범 상세 이동 방지
+    e.stopPropagation(); 
     const rect = e.currentTarget.getBoundingClientRect();
     setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album' });
   };
@@ -218,7 +222,7 @@ const Gallery = () => {
                 <div 
                   key={album.id} 
                   className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}
-                  onClick={() => handleAlbumClick(album)} // 상세 페이지 이동
+                  onClick={() => handleAlbumClick(album)}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="album-img-box">
