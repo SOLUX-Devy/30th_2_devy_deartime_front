@@ -3,7 +3,7 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_nostar.png";
 import { Pencil, Trash2, MoreVertical, Star } from "lucide-react";
-import AlbumCreateModal from "./AlbumCreateModal"; 
+import AlbumCreateModal from "../components/AlbumCreateModal"; 
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -21,17 +21,16 @@ const Gallery = () => {
 
   const [albums, setAlbums] = useState([
     { id: 101, title: '즐겨찾기', count: 9, coverUrl: 'https://via.placeholder.com/300', isFavorite: true },
-    { id: 102, title: '우리 가족', count: 1234, coverUrl: 'https://via.placeholder.com/300' },
-    { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300' },
+    { id: 102, title: '우리 가족', count: 1234, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
+    { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
   ]);
 
   // --- [UI 상태 제어] ---
-  // 메뉴 상태를 하나로 통합하여 사진(photo)과 앨범(album) 모두 대응합니다.
   const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 메뉴 닫기 로직
+  // 메뉴 외 영역 클릭 시 닫기
   useEffect(() => {
     const handleClick = () => setMenu({ ...menu, show: false });
     window.addEventListener('click', handleClick);
@@ -40,20 +39,27 @@ const Gallery = () => {
 
   // --- [핸들러 함수] ---
 
-  // 사진 우클릭 메뉴 열기
+  // 즐겨찾기 토글 함수
+  const toggleFavorite = (e, albumId) => {
+    e.stopPropagation(); // 앨범 클릭 이벤트 방지
+    setAlbums(prev => prev.map(album => 
+      album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album
+    ));
+  };
+
+  // 사진 우클릭 메뉴
   const handlePhotoContextMenu = (e, photoId) => {
     e.preventDefault();
     setMenu({ show: true, x: e.pageX, y: e.pageY, targetId: photoId, type: 'photo' });
   };
 
-  // 앨범 점 세개 클릭 메뉴 열기 (디자인 시안 반영)
+  // 앨범 점 세개 클릭 메뉴
   const handleAlbumMenuClick = (e, albumId) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
-    // 아이콘 바로 아래에 메뉴가 나타나도록 위치 계산
     setMenu({ 
       show: true, 
-      x: rect.left - 150, 
+      x: rect.left - 160, 
       y: rect.bottom + 10, 
       targetId: albumId, 
       type: 'album' 
@@ -84,6 +90,7 @@ const Gallery = () => {
     }
   };
 
+  // --- [데이터 정렬 및 그룹화] ---
   const groupedPhotos = useMemo(() => {
     return photos.reduce((acc, photo) => {
       const date = photo.date;
@@ -92,24 +99,32 @@ const Gallery = () => {
       return acc;
     }, {});
   }, [photos]);
+  
+  // 즐겨찾기가 true인 앨범을 최상단(앞으로) 정렬
+  const sortedAlbums = useMemo(() => {
+    return [...albums].sort((a, b) => {
+      if (a.isFavorite === b.isFavorite) return 0;
+      return a.isFavorite ? -1 : 1;
+    });
+  }, [albums]);
 
   return (
     <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
       <AlbumCreateModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onCreate={(data) => setAlbums([{id: Date.now(), ...data, count: 0}, ...albums])} 
+        onCreate={(data) => setAlbums([{id: Date.now(), ...data, count: 0, isFavorite: false}, ...albums])} 
       />
 
-      {/* [효과] 메뉴 활성 시 배경 어둡게 처리 */}
+      {/* 배경 어둡게 처리 */}
       {menu.show && <div className="context-menu-overlay" />}
 
-      {/* [UI] 사진/앨범 공용 커스텀 메뉴 (image_1b03ae.png 디자인 반영) */}
+      {/* 커스텀 메뉴 */}
       {menu.show && (
         <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }}>
           <div className="menu-item" onClick={handleEditStart}>
             <Pencil size={20} color="white" />
-            <span>{menu.type === 'photo' ? '텍스트 수정' : '이름 수정'}</span>
+            <span>{menu.type === 'photo' ? '텍스트 수정' : '제목 수정'}</span>
           </div>
           <div className="menu-divider" />
           <div className="menu-item delete" onClick={handleDelete}>
@@ -142,7 +157,9 @@ const Gallery = () => {
               <h2 className="date-title">{date}</h2>
               <div className="photo-grid">
                 {groupedPhotos[date].map((photo) => (
-                  <div key={photo.id} className={`photo-item ${menu.show && menu.targetId === photo.id && menu.type === 'photo' ? 'spotlight' : ''}`} onContextMenu={(e) => handlePhotoContextMenu(e, photo.id)}>
+                  <div key={photo.id} 
+                       className={`photo-item ${menu.show && menu.targetId === photo.id && menu.type === 'photo' ? 'spotlight' : ''}`} 
+                       onContextMenu={(e) => handlePhotoContextMenu(e, photo.id)}>
                     <div className="img-box"><img src={photo.url} alt="" /></div>
                     {editingId === photo.id ? (
                       <input className="edit-title-input" defaultValue={photo.title} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
@@ -155,18 +172,31 @@ const Gallery = () => {
             </section>
           ))
         ) : (
-          /* --- ALBUM 탭 (4열 그리드 및 스포트라이트 적용) --- */
+          /* --- ALBUM 탭 (정렬된 sortedAlbums 사용) --- */
           <div className="album-section">
             <div className="album-grid">
-              {albums.map((album) => (
+              {sortedAlbums.map((album) => (
                 <div 
                   key={album.id} 
                   className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}
                 >
                   <div className="album-img-box">
                     <img src={album.coverUrl} alt="" />
-                    {album.isFavorite && <Star className="fav-star-icon" size={24} fill="#FFD700" color="#FFD700" />}
+                    
+                    {/* 즐겨찾기 별 버튼 */}
+                    <button 
+                      className="fav-star-btn" 
+                      onClick={(e) => toggleFavorite(e, album.id)}
+                    >
+                      <Star 
+                        size={24} 
+                        fill={album.isFavorite ? "#FFD700" : "none"} 
+                        stroke={album.isFavorite ? "#FFD700" : "white"} 
+                        strokeWidth={2}
+                      />
+                    </button>
                   </div>
+                  
                   <div className="album-info">
                     <div className="album-info-top">
                       {editingId === album.id ? (
@@ -174,7 +204,6 @@ const Gallery = () => {
                       ) : (
                         <h3>{album.title}</h3>
                       )}
-                      {/* 점 세개 클릭 시 메뉴 트리거 */}
                       <button className="album-menu-trigger" onClick={(e) => handleAlbumMenuClick(e, album.id)}>
                         <MoreVertical size={24} color="white" />
                       </button>

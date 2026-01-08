@@ -1,18 +1,95 @@
-/* 앨범 생성 모달 컨테이너 */
+/* 1. 최상위 루트: 화면 전체를 덮고 중앙 정렬을 수행 */
+.modal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;         /* 중앙 정렬을 위한 Flex박스 */
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  z-index: 3000;         /* 갤러리 요소들보다 위에 위치 */
+}
+
+/* 2. 배경 오버레이: 배경을 어둡게 만듦 */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* 배경 어둡기 조절 */
+  cursor: pointer;
+}
+
+/* 3. 앨범 생성 모달 컨테이너 (보내주신 설정 반영) */
 .album-modal-container {
   position: relative;
   width: 480px;
-  background-color: #050E25;
+  background-color: #050E25; /* 보내주신 배경색 */
+  border: 1px solid #2A4280; /* 테두리 추가로 통일감 부여 */
   border-radius: 20px;
   padding: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  z-index: 3001;
+  z-index: 3001; /* 오버레이보다 위 */
 }
 
-/* 표지 사진 변경 버튼 */
+/* 상단 X 닫기 버튼 위치 조정 */
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-title {
+  color: white;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+/* 콘텐츠 영역 */
+.modal-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* 표지 사진 영역 */
+.cover-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.cover-preview {
+  width: 150px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2A4280;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.cover-preview:hover {
+  opacity: 0.8;
+}
+
+.cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 표지 사진 변경 버튼 (보내주신 설정 반영) */
 .change-cover-btn {
   background: none;
   border: 1px solid #2A4280;
@@ -28,7 +105,34 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* 생성 버튼 */
+/* 앨범 제목 입력 영역 */
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  color: #8A9BB8;
+  font-size: 14px;
+}
+
+.album-title-input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2A4280;
+  border-radius: 10px;
+  padding: 12px;
+  color: white;
+  outline: none;
+}
+
+/* 생성 버튼 (보내주신 설정 반영) */
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 .submit-btn {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid #2A4280;
@@ -37,6 +141,7 @@
   border-radius: 12px;
   font-size: 18px;
   cursor: pointer;
+  width: 100%; /* 너비를 꽉 채우거나 조절 가능 */
   transition: background 0.3s ease;
 }
 

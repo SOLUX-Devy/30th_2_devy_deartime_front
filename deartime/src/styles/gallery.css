@@ -6,25 +6,23 @@
   overflow: hidden;
   background-size: cover;
   background-position: center;
-  position: relative; /* 오버레이 위치 기준 */
+  position: relative; 
 }
 
-/* [추가된 오버레이 스타일: 어둡기 정도를 조절하려면 background의 0.5 숫자를 바꾸세요] */
 .context-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5); /* 0에 가까울수록 밝고, 1에 가까울수록 검정색입니다 */
-  z-index: 900; /* 콘텐츠보다는 위, 우클릭 메뉴보다는 아래 */
+  background: rgba(0, 0, 0, 0.5); 
+  z-index: 900;
   transition: background 0.3s ease;
 }
 
-/* [추가된 스포트라이트 스타일: 선택된 사진을 오버레이 위로 올림] */
 .photo-item.spotlight {
   position: relative;
-  z-index: 950; /* 오버레이(900)보다 높게 설정 */
+  z-index: 950; 
 }
 
 .tc-topbar {
@@ -34,7 +32,7 @@
   padding: 40px 60px 20px 60px;
   flex-shrink: 0;
   position: relative;
-  z-index: 100; /* 상단바 기본 위치 */
+  z-index: 100;
 }
 
 .tab-group {
@@ -149,10 +147,32 @@
   object-fit: cover;
 }
 
-.fav-star-icon {
+.fav-star-btn {
   position: absolute;
   top: 15px;
   right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+}
+
+.fav-star-btn:hover {
+  transform: scale(1.2); 
+}
+
+.fav-star-btn:active {
+  transform: scale(0.9); 
+}
+
+.fav-star-btn.active {
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));
 }
 
 .album-info-top {
@@ -223,28 +243,76 @@
   width: 100%;
   margin-top: 5px;
 }
-/* 주변을 어둡게 만드는 막 */
+
 .context-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.6); /* 이 숫자를 높이면 더 어두워집니다 (0.0 ~ 1.0) */
-  z-index: 900; /* 콘텐츠보다는 위, 메뉴보다는 아래 */
+  background: rgba(0, 0, 0, 0.6); 
+  z-index: 900; 
 }
 
-/* 우클릭된 사진만 어둠 위로 올림 */
 .photo-item.spotlight {
   position: relative;
-  z-index: 950; /* 오버레이(900)보다 높게 설정 */
-  transform: scale(1.02); /* 약간 크게 보이게 하여 강조 효과 증대 */
+  z-index: 950;
+  transform: scale(1.02); 
   transition: transform 0.2s ease;
 }
 
-/* 우클릭 커스텀 메뉴 (가장 위에 배치) */
+/* 우클릭 커스텀 메뉴 컨테이너 */
 .custom-context-menu {
   position: absolute;
   z-index: 1000;
-  /* ... 나머지 스타일 ... */
+  background-color: #0F1839; 
+  border: 1.5px solid #2A4280; 
+  border-radius: 24px; 
+  padding: 12px 0;
+  min-width: 200px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  gap: 16px; 
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.menu-item span {
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* 구분선 스타일 */
+.menu-divider {
+  height: 1px;
+  background-color: #2A4280; 
+  margin: 4px 0;
+  opacity: 0.6;
+}
+
+.menu-item.delete span {
+  color: #FF4D4D; 
+}
+
+.photo-item.spotlight, .album-item.spotlight {
+  position: relative;
+  z-index: 950;
+  transform: scale(1.03);
+  transition: all 0.3s ease;
+  filter: brightness(1.1); 
+}
+
+.album-item {
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
