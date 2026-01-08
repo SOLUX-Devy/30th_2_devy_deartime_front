@@ -149,22 +149,23 @@
 
 .fav-star-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
   background: none;
+  border-radius: 50%;
+  padding: 6px;
   border: none;
   cursor: pointer;
-  z-index: 10;
-  padding: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, filter 0.2s ease;
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s ease;
 }
 
 .fav-star-btn:hover {
-  transform: scale(1.2); 
+  transform: scale(1.1);
+  background: none;
 }
 
 .fav-star-btn:active {
@@ -261,6 +262,15 @@
   transition: transform 0.2s ease;
 }
 
+.photo-item .img-box {
+  position: relative; /* ★ 별 버튼의 '기준점' 역할 */
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+}
+
 /* 우클릭 커스텀 메뉴 컨테이너 */
 .custom-context-menu {
   position: absolute;
@@ -316,3 +326,20 @@
 .album-item {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
+
+.photo-star {
+  top: 8px;
+  right: 8px;
+  padding: 4px;
+}
+.album-menu-trigger {
+  background: none;
+  border: none;       
+  padding: 0;
+  cursor: pointer;       
+  display: flex;       
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s; 
+}
+
