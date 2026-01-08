@@ -38,6 +38,12 @@ const Gallery = () => {
 
   // --- [핸들러 함수] ---
 
+  // 앨범 클릭 시 상세 페이지 이동
+  const handleAlbumClick = (album) => {
+    // navigate를 통해 id와 함께 album 전체 객체를 state로 전달합니다.
+    navigate(`/album/${album.id}`, { state: { album } });
+  };
+
   // 사진 업로드 핸들러
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -56,7 +62,7 @@ const Gallery = () => {
     }
   };
 
-  // 사진 즐겨찾기 토글 (단순 토글, 정렬X)
+  // 사진 즐겨찾기 토글
   const togglePhotoFavorite = (e, photoId) => {
     e.stopPropagation();
     setPhotos(prev => prev.map(p => 
@@ -64,9 +70,9 @@ const Gallery = () => {
     ));
   };
 
-  // 앨범 즐겨찾기 토글 (정렬 적용됨)
+  // 앨범 즐겨찾기 토글
   const toggleAlbumFavorite = (e, albumId) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 앨범 상세 이동 방지
     setAlbums(prev => prev.map(album => 
       album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album
     ));
@@ -78,7 +84,7 @@ const Gallery = () => {
   };
 
   const handleAlbumMenuClick = (e, albumId) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 앨범 상세 이동 방지
     const rect = e.currentTarget.getBoundingClientRect();
     setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album' });
   };
@@ -91,7 +97,10 @@ const Gallery = () => {
     }
   };
 
-  const handleEditStart = () => setEditingId(menu.targetId);
+  const handleEditStart = (e) => {
+    e.stopPropagation();
+    setEditingId(menu.targetId);
+  };
 
   const handleEditComplete = (e, id) => {
     if (e.key === 'Enter') {
@@ -176,7 +185,6 @@ const Gallery = () => {
                        onContextMenu={(e) => handlePhotoContextMenu(e, photo.id)}>
                     <div className="img-box">
                       <img src={photo.url} alt="" />
-                      {/* 별 버튼을 이미지 위에 상시 배치 */}
                       <button className="fav-star-btn photo-star" onClick={(e) => togglePhotoFavorite(e, photo.id)}>
                         <Star 
                           size={18} 
@@ -187,7 +195,13 @@ const Gallery = () => {
                       </button>
                     </div>
                     {editingId === photo.id ? (
-                      <input className="edit-title-input" defaultValue={photo.title} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
+                      <input 
+                        className="edit-title-input" 
+                        defaultValue={photo.title} 
+                        autoFocus 
+                        onKeyDown={(e) => handleEditComplete(e, photo.id)} 
+                        onBlur={() => setEditingId(null)} 
+                      />
                     ) : (
                       <p className="photo-title">{photo.title}</p>
                     )}
@@ -201,10 +215,14 @@ const Gallery = () => {
           <div className="album-section">
             <div className="album-grid">
               {sortedAlbums.map((album) => (
-                <div key={album.id} className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}>
+                <div 
+                  key={album.id} 
+                  className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}
+                  onClick={() => handleAlbumClick(album)} // 상세 페이지 이동
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="album-img-box">
                     <img src={album.coverUrl} alt="" />
-                    {/* 별 버튼을 앨범 커버 위에 상시 배치 */}
                     <button className="fav-star-btn" onClick={(e) => toggleAlbumFavorite(e, album.id)}>
                       <Star 
                         size={24} 
@@ -217,7 +235,14 @@ const Gallery = () => {
                   <div className="album-info">
                     <div className="album-info-top">
                       {editingId === album.id ? (
-                        <input className="edit-title-input" defaultValue={album.title} autoFocus onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} />
+                        <input 
+                          className="edit-title-input" 
+                          defaultValue={album.title} 
+                          autoFocus 
+                          onKeyDown={(e) => handleEditComplete(e, album.id)} 
+                          onBlur={() => setEditingId(null)}
+                          onClick={(e) => e.stopPropagation()} 
+                        />
                       ) : (
                         <h3>{album.title}</h3>
                       )}

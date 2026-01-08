@@ -1,0 +1,107 @@
+/* src/pages/AlbumDetail.css */
+
+.album-detail-container {
+  background-color: #0d1b3e; /* 배경색 */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 40px 40px 40px;
+  color: white;
+}
+
+/* 상단 네비바 */
+.detail-top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.album-nav-title {
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 2px solid #ffffff;
+  padding-bottom: 5px;
+}
+
+.create-header-btn {
+  border: 1px solid white;
+  background: none;
+  color: white;
+  padding: 6px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 상단 배너 영역 */
+.album-banner {
+  width: 100%;
+  height: 280px; /* 이미지의 회색 박스 비율 반영 */
+  background-color: #d9d9d9;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 사진 그리드 영역 */
+.album-content-area {
+  flex: 1;
+  overflow-y: auto; /* 사진이 많아지면 스크롤 발생 */
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* 8열 구성 */
+  gap: 12px;
+}
+
+.grid-item {
+  aspect-ratio: 1 / 1;
+  background-color: #d9d9d9; /* 회색 박스 */
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.grid-item:hover {
+  transform: scale(1.02);
+}
+
+/* 추가 버튼 스타일 */
+.add-btn-item {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 스크롤바 커스텀 (선택사항) */
+.album-content-area::-webkit-scrollbar {
+  width: 6px;
+}
+.album-content-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
