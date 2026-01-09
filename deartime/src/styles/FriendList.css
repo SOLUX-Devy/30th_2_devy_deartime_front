@@ -87,7 +87,135 @@
   background-color: rgba(42, 66, 128, 0.85);
 }
 
+/* ===== 검색 줄 (검색창 + 33명의 친구 같은 라인) ===== */
+.friend-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap : 30px;
+
+  margin-left: 60px;
+  margin-right: 60px;
+  margin-top: 25px; /* 상단 탭 아래 간격 */
+  margin-bottom: 20px;
+}
+
+/* 검색 영역(밑줄) */
+.friend-search {
+  width: 300px;              /* 필요하면 조절 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 50px;
+}
+
+.friend-search-input {
+  flex : 1;
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: white;
+  font-size: 18px;
+  font-weight: 400;
+
+  height : 28px;
+  line-height: 28px;
+  padding: 0;
+}
+
+.friend-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* finder 아이콘 버튼 */
+.friend-search-btn {
+  position: static;
+  right: 0;
+  top: 2px;
+
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+.friend-search-btn:hover {
+  opacity: 1;
+}
+
+.friend-search-icon {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 오른쪽 텍스트: 33명의 친구 */
+.friend-count {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 300;
+
+  /* 검색줄과 같은 높이감 맞추기 */
+  transform: translateY(6px);
+}
+
+
 /* 아래 내용 영역(placeholder) */
 .friendlist-body {
   flex: 1;
+}
+
+/* ===== 친구 카드 그리드 ===== */
+.friend-grid {
+  margin-left: 120px;   /* ✅ 양 끝 마진 120px */
+  margin-right: 120px;
+  margin-top: 15px;
+
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* ✅ 한 줄 5개 */
+  column-gap: 60px;
+  row-gap: 30px;
+}
+
+/* ===== 반응형 (TimeCapsule과 동일한 방식: 칸 수를 줄임) ===== */
+@media (max-width: 1400px) {
+  .friend-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1150px) {
+  .friend-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .friend-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 60px;
+    margin-right: 60px;
+  }
+}
+
+@media (max-width: 520px) {
+  .friend-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+}
+
+.friend-grid {
+  justify-items: center;
 }
