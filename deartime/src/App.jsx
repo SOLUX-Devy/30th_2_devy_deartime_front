@@ -1,6 +1,7 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
+import { Outlet } from "react-router-dom";
 
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
@@ -13,31 +14,44 @@ import SendLetterPage from "./pages/sendLetterPage";
 import Timecapsule from "./pages/timecapsule";
 import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
-import FriendList from "./pages/FriendList"; 
+import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
+
+/** ✅ Header 고정 + 아래만 스크롤 되는 레이아웃 */
+function AppLayout() {
+  return (
+    <div className="app-root">
+      <Header />
+      <main className="app-scroll-area">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      {/* 모든 페이지에 공통으로 들어가는 헤더 */}
-      <Header /> 
       <Routes>
+        {/* ✅ 로그인/회원가입은 헤더 없이 쓰고 싶으면 Layout 밖에 둠 */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/home" element={<Home />} />
 
-        {/* <Route path="/gallery" element={<Gallery />} /> */}
+        {/* ✅ 헤더 포함 + 스크롤 영역 적용 */}
+        <Route element={<AppLayout />}>
+          <Route path="/home" element={<Home />} />
 
-        <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
-        <Route path="/letterbox" element={<Letterbox />} />
+          {/* <Route path="/gallery" element={<Gallery />} /> */}
+          <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
+          <Route path="/letterbox" element={<Letterbox />} />
 
-        <Route path="/timecapsule" element={<Timecapsule />} />
-        <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
-        <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
+          <Route path="/timecapsule" element={<Timecapsule />} />
+          <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
+          <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
 
-        <Route path="/friend" element={<FriendList />} />
-        <Route path="/friend/invite" element={<FriendInvite />} />
-
+          <Route path="/friend" element={<FriendList />} />
+          <Route path="/friend/invite" element={<FriendInvite />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
