@@ -179,11 +179,11 @@
 .friend-grid {
   margin-left: 120px;   /* ✅ 양 끝 마진 120px */
   margin-right: 120px;
-  margin-top: 15px;
+  margin-top: 25px;
 
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr)); /* ✅ 한 줄 5개 */
-  column-gap: 60px;
+  column-gap: 50px;
   row-gap: 30px;
 }
 
