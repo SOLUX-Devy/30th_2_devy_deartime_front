@@ -1,9 +1,12 @@
 // deartime/src/pages/timecapsuleCreate.jsx
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_star.png";
 import noPhoto from "../assets/nophoto.png";
 import "../styles/timecapsuleCreate.css";
+
+/* ✅ 친구 선택 모달 */
+import FriendSelect from "../components/FriendSelect";
 
 function formatTodayYYYYMMDD() {
   const d = new Date();
@@ -16,34 +19,28 @@ function formatTodayYYYYMMDD() {
 export default function TimeCapsuleCreatePage() {
   const navigate = useNavigate();
 
-  const mockReceiver = useMemo(
-    () => ({
-      id: 9,
-      nickname: "슬록스",
-    }),
-    []
-  );
-
   // ✅ 상태
   const [receiver, setReceiver] = useState(null);
   const [openDate, setOpenDate] = useState(formatTodayYYYYMMDD());
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // ✅ 이미지 업로드 (미리보기)
+  // ✅ FriendSelect 모달 열림 여부
+  const [showFriendSelect, setShowFriendSelect] = useState(false);
+
+  // ✅ 이미지 업로드
   const fileRef = useRef(null);
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
   const imageSrc = previewUrl || noPhoto;
 
-  // ✅ 여기!! 렌더 전에 유효성 계산
   const isFormValid =
     !!receiver &&
     openDate?.trim() &&
     title.trim().length > 0 &&
     content.trim().length > 0 &&
-    !!pickedFile; // 이미지까지 필수
+    !!pickedFile;
 
   const onClickImageBox = () => {
     fileRef.current?.click();
@@ -51,9 +48,7 @@ export default function TimeCapsuleCreatePage() {
 
   const onChangeFile = (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) return;
+    if (!file || !file.type.startsWith("image/")) return;
 
     if (previewUrl) URL.revokeObjectURL(previewUrl);
 
@@ -67,11 +62,7 @@ export default function TimeCapsuleCreatePage() {
     setReceiver(null);
   };
 
-  const onMockSelectReceiver = () => {
-    setReceiver(mockReceiver);
-  };
-
-  const onSubmit = async () => {
+  const onSubmit = () => {
     if (!isFormValid) return;
 
     console.log({
@@ -113,7 +104,7 @@ export default function TimeCapsuleCreatePage() {
                 <button
                   type="button"
                   className="tc-create-receiver"
-                  onClick={onMockSelectReceiver}
+                  onClick={() => setShowFriendSelect(true)}
                   aria-label="select receiver"
                 >
                   {receiver ? (
@@ -131,9 +122,12 @@ export default function TimeCapsuleCreatePage() {
                       </span>
                     </>
                   ) : (
-                    <span className="tc-create-receiver__placeholder">
-                      선택하세요
-                    </span>
+                    <>
+                      <span className="tc-create-receiver__placeholder">
+                        선택하세요
+                      </span>
+                      <span className="tc-create-receiver__chev">{">"}</span>
+                    </>
                   )}
                 </button>
               </div>
@@ -141,14 +135,13 @@ export default function TimeCapsuleCreatePage() {
               {/* 개봉일 */}
               <div className="tc-create-field">
                 <div className="tc-create-label">타임캡슐 개봉일</div>
-
                 <div className="tc-create-dateWrap">
                   <input
                     type="date"
                     className="tc-create-date"
                     value={openDate}
-                    onChange={(e) => setOpenDate(e.target.value)}
                     min={formatTodayYYYYMMDD()}
+                    onChange={(e) => setOpenDate(e.target.value)}
                   />
                 </div>
               </div>
@@ -156,7 +149,6 @@ export default function TimeCapsuleCreatePage() {
 
             {/* 메인 */}
             <div className="tc-create-main">
-              {/* 좌측 이미지 */}
               <div className="tc-create-left">
                 <div
                   className="tc-create-imageBox"
@@ -170,13 +162,12 @@ export default function TimeCapsuleCreatePage() {
                     ref={fileRef}
                     type="file"
                     accept="image/*"
-                    style={{ display: "none" }}
+                    hidden
                     onChange={onChangeFile}
                   />
                 </div>
               </div>
 
-              {/* 우측 입력 */}
               <div className="tc-create-right">
                 <input
                   className="tc-create-input"
@@ -184,7 +175,6 @@ export default function TimeCapsuleCreatePage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="캡슐 제목을 입력하세요"
                 />
-
                 <textarea
                   className="tc-create-textarea"
                   value={content}
@@ -208,6 +198,25 @@ export default function TimeCapsuleCreatePage() {
           </div>
         </div>
       </div>
+
+      {/* ✅ FriendSelect 모달 */}
+      {showFriendSelect && (
+        <FriendSelect
+          onClose={() => setShowFriendSelect(false)}
+          onSelect={(friend) => {
+            // ✅ 여기서 receiver 구조를 "nickname"으로 통일
+            setReceiver({
+              id: friend.friendId,
+              nickname: friend.friendNickname,
+              profileImageUrl: friend.friendProfileImageUrl,
+              bio: friend.friendBio,
+              requestedAt: friend.requestedAt,
+              raw: friend,
+            });
+            setShowFriendSelect(false);
+          }}
+        />
+      )}
     </div>
   );
 }

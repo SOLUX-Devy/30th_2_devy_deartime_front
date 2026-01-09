@@ -80,7 +80,7 @@ export default function FriendList() {
             className="friend-search-input"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="친구들 검색하세요"
+            placeholder="친구를 검색하세요"
           />
           <button type="button" className="friend-search-btn" aria-label="search">
             <img className="friend-search-icon" src={finder} alt="" />

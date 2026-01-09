@@ -1,7 +1,6 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Header from "./components/Header";
-import { Outlet } from "react-router-dom";
 
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
@@ -16,6 +15,10 @@ import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
 import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
+
+/* ✅ 여기 추가: FriendSelectPage import */
+import FriendSelectPage from "./components/FriendSelect"; 
+// 만약 pages에 있으면: import FriendSelectPage from "./pages/FriendSelect";
 
 /** ✅ Header 고정 + 아래만 스크롤 되는 레이아웃 */
 function AppLayout() {
@@ -51,6 +54,7 @@ export default function App() {
 
           <Route path="/friend" element={<FriendList />} />
           <Route path="/friend/invite" element={<FriendInvite />} />
+
         </Route>
       </Routes>
     </BrowserRouter>
