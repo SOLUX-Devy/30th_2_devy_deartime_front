@@ -29,7 +29,6 @@
     
     /* 이미지가 잘릴 때 중앙을 기준으로 정렬 */
     background-position: center center;
-    
     background-repeat: no-repeat;
     
     padding: 30px 40px 50px 40px;
@@ -55,16 +54,15 @@
     flex: 1;
     overflow-y: auto; /* 내용이 많으면 내부에서 스크롤 생성 */
     margin : 5px 0;
-    scrollbar-width: thin;
 }
 
 .letter-content-wrapper::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
+    background-color: transparent;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+.letter-content-wrapper::-webkit-scrollbar-track {
+    border-radius: 20px;
 }
 
 .detail-text {
@@ -76,7 +74,7 @@
 .close-btn {
     position: absolute;
     top: 0.3em;
-    right: 0.3em;
+    right: 0.4em;
     
     background: none;
     border: none;
@@ -109,6 +107,24 @@
 
 .letterbox-container .letter-paper.theme-GREY { 
     color: #2c3e50; 
+}
+/*디자인별 스크롤바 디자인*/
+/* DEFAULT 테마는 기존 배경 사용 */
+
+/* PINK 테마 (연분홍 배경) */
+.theme-PINK .letter-content-wrapper::-webkit-scrollbar-track {
+    background: #FFF0F5;
+}
+.theme-PINK .letter-content-wrapper::-webkit-scrollbar-thumb {
+    background-color: #eed8fb;
+}
+
+/* GREY 테마 (다크그레이 배경) */
+.theme-GREY .letter-content-wrapper::-webkit-scrollbar-track {
+    background: #425b73;
+}
+.theme-GREY .letter-content-wrapper::-webkit-scrollbar-thumb {
+    background-color: #95a5a6;
 }
 
 .divider {
