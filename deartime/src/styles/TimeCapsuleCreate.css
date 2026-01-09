@@ -261,11 +261,11 @@
 }
 
 .tc-create-send:hover {
-  background-color: rgba(42, 66, 128, 0.85);
+  background-color: rgba(42, 66, 128, 1);
 }
 
 .tc-create-send:disabled {
-  opacity: 0.45;
+  opacity: 1;
   cursor: not-allowed;
   filter: grayscale(20%);
 }

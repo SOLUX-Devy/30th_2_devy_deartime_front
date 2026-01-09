@@ -173,12 +173,12 @@ export default function FriendCard({ friend, onRequestDelete }) {
           width: 200px;
           height: 250px;
           border-radius: 15px;
-          background: rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(14, 119, 188, 0.5);
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding-top: 26px;
+          padding-top: 30px;
           box-sizing: border-box;
           cursor: pointer;
           user-select: none;
@@ -203,9 +203,9 @@ export default function FriendCard({ friend, onRequestDelete }) {
         }
 
         .friend-name {
-          margin-top: 14px;
+          margin-top: 15px;
           font-size: 16px;
-          font-weight: 600;
+          font-weight: 500;
           color: white;
         }
 
@@ -217,7 +217,7 @@ export default function FriendCard({ friend, onRequestDelete }) {
         }
 
         .friend-bio {
-          margin-top: 10px;
+          margin-top: 23px;
           width: 160px;
           font-size: 12px;
           font-weight: 300;
