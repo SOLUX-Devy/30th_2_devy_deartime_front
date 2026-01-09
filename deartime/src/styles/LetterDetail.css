@@ -65,6 +65,10 @@
     border-radius: 20px;
 }
 
+.letter-content-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+}
+
 .detail-text {
     line-height: 1.7; 
     white-space: pre-wrap; /* 줄바꿈(\n) 반영 */
