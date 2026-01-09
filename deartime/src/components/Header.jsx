@@ -24,9 +24,7 @@ export default function Header() {
   const [notifications, setNotifications] = useState(
     MOCK_NOTIFICATIONS?.data?.content || []
   );
-  const [userProfile] = useState(
-    MOCK_USER_PROFILE?.data || null
-  );
+  const [userProfile] = useState(MOCK_USER_PROFILE?.data || null);
 
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -66,11 +64,7 @@ export default function Header() {
   const splitNotiContent = (content) => {
     const match = content.match(/(.+님이)\s(.+)/);
     if (!match) return { title: content, body: null };
-
-    return {
-      title: match[1],
-      body: match[2],
-    };
+    return { title: match[1], body: match[2] };
   };
 
   /* =========================
@@ -87,8 +81,7 @@ export default function Header() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   /* =========================
@@ -109,9 +102,7 @@ export default function Header() {
 
       // 임시 UI 처리 (연동 전)
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === noti.id ? { ...n, isRead: true } : n
-        )
+        prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
       );
     } catch (error) {
       console.error("[TODO] 친구 요청 처리 실패", error);
@@ -132,10 +123,18 @@ export default function Header() {
             </NavLink>
 
             <nav className="nav">
-              <NavLink to="/gallery" className={itemClass}>갤러리</NavLink>
-              <NavLink to="/letterbox" className={itemClass}>우체통</NavLink>
-              <NavLink to="/timecapsule" className={itemClass}>타임캡슐</NavLink>
-              <NavLink to="/freind" className={itemClass}>친구목록</NavLink>
+              <NavLink to="/gallery" className={itemClass}>
+                갤러리
+              </NavLink>
+              <NavLink to="/letterbox" className={itemClass}>
+                우체통
+              </NavLink>
+              <NavLink to="/timecapsule" className={itemClass}>
+                타임캡슐
+              </NavLink>
+              <NavLink to="/friend" className={itemClass}>
+                친구목록
+              </NavLink>
             </nav>
           </div>
 
@@ -146,9 +145,10 @@ export default function Header() {
               <button
                 className="icon-img-btn"
                 onClick={() => {
-                  setIsNotiOpen(!isNotiOpen);
+                  setIsNotiOpen((v) => !v);
                   setIsProfileOpen(false);
                 }}
+                type="button"
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
                 {notifications.some((n) => !n.isRead) && (
@@ -187,17 +187,15 @@ export default function Header() {
                               <div className="noti-actions">
                                 <button
                                   className="noti-btn accept"
-                                  onClick={() =>
-                                    handleFriendRequest(noti, "accepted")
-                                  }
+                                  onClick={() => handleFriendRequest(noti, "accepted")}
+                                  type="button"
                                 >
                                   수락
                                 </button>
                                 <button
                                   className="noti-btn reject"
-                                  onClick={() =>
-                                    handleFriendRequest(noti, "rejected")
-                                  }
+                                  onClick={() => handleFriendRequest(noti, "rejected")}
+                                  type="button"
                                 >
                                   거절
                                 </button>
@@ -221,9 +219,11 @@ export default function Header() {
               <div
                 className="profile-trigger"
                 onClick={() => {
-                  setIsProfileOpen(!isProfileOpen);
+                  setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);
                 }}
+                role="button"
+                tabIndex={0}
               >
                 <div className="profile-circle-nav">
                   <img
@@ -259,10 +259,13 @@ export default function Header() {
                       setIsProfileManageOpen(true);
                       setIsProfileOpen(false);
                     }}
+                    type="button"
                   >
                     프로필 관리
                   </button>
-                  <button className="p-btn">로그아웃</button>
+                  <button className="p-btn" type="button">
+                    로그아웃
+                  </button>
                 </div>
               )}
             </div>
