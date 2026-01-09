@@ -299,14 +299,14 @@ margin-top: 10px;
   background: rgba(255, 255, 255, 0.00);
 }
 
-/* ===== 버튼 Hover ===== */
+
 .p-btn:hover,
 .noti-btn:hover {
-  background-color: rgba(42, 66, 128, 0.8); /* #2A4280 / 80% */
+  background-color: rgba(42, 66, 128, 0.8); 
 }
 
-/* ===== 버튼 Active (클릭) ===== */
+
 .p-btn:active,
 .noti-btn:active {
-  background-color: #0E77BC; /* 100% */
+  background-color: #0E77BC; 
 }
