@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, X, Camera } from "lucide-react"; 
 import "../styles/AlbumDetail.css";
+import bg from "../assets/background_nostar.png";
 
 const AlbumDetail = () => {
   const location = useLocation();
@@ -46,7 +47,7 @@ const AlbumDetail = () => {
     }
   };
 
-  // [수정] 뒤로가기 핸들러: 변경된 커버 이미지를 상위 컴포넌트로 전달
+  // 뒤로가기 핸들러
   const handleBack = () => {
     navigate("/gallery", { 
       state: { 
@@ -57,58 +58,59 @@ const AlbumDetail = () => {
   };
 
   return (
-    <div className="album-detail-container">
-      {/* 상단 네비바 */}
-      <div className="detail-top-nav">
-        <button className="back-btn" onClick={handleBack}>
-          &lt; ALBUM
-        </button>
-        {/* [수정] ALBUM 대신 실제 앨범 제목 표시 */}
-        <span className="album-nav-title">{albumData.title}</span>
-      </div>
-
-      {/* 상단 커버 영역 */}
-      <div className="album-banner" onClick={() => coverInputRef.current.click()}>
-        <img src={currentCover} alt="Album Cover" className="banner-img" />
-        <div className="banner-overlay">
-          <Camera size={32} color="white" />
-          <span>커버 사진 변경</span>
+    <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
+      <div className="album-detail-container">
+        {/* 상단 네비바 */}
+        <div className="detail-top-nav">
+          <button className="back-btn" onClick={handleBack}>
+            &lt; ALBUM
+          </button>
+          <span className="album-nav-title">{albumData.title}</span>
         </div>
-        <input 
-          type="file" 
-          ref={coverInputRef} 
-          style={{ display: "none" }} 
-          accept="image/*" 
-          onChange={handleCoverEdit} 
-        />
-      </div>
 
-      <div className="album-content-area">
-        <div className="photo-grid1">
-          {/* 사진 추가 버튼 */}
-          <div className="grid-item add-btn-item" onClick={() => photoInputRef.current.click()}>
-            <Plus size={40} color="#ffffff" strokeWidth={1} />
-            <input 
-              type="file" 
-              ref={photoInputRef} 
-              style={{ display: "none" }} 
-              multiple 
-              accept="image/*" 
-              onChange={handlePhotoUpload} 
-            />
+        {/* 상단 커버 영역 */}
+        <div className="album-banner" onClick={() => coverInputRef.current.click()}>
+          <img src={currentCover} alt="Album Cover" className="banner-img" />
+          <div className="banner-overlay">
+            <camera size={32} color="white" />
+            <span>커버 사진 변경</span>
           </div>
-
-          {/* 사진 리스트 */}
-          {albumPhotos.map((photo) => (
-            <div key={photo.id} className="grid-item photo-item1">
-              <img src={photo.url} alt="album-content" />
-              <button className="delete-photo-btn" onClick={() => handleDeletePhoto(photo.id)}>
-                <X size={16} color="white" />
-              </button>
-            </div>
-          ))}
+          <input 
+            type="file" 
+            ref={coverInputRef} 
+            style={{ display: "none" }} 
+            accept="image/*" 
+            onChange={handleCoverEdit} 
+          />
         </div>
-      </div>
+
+        <div className="album-content-area">
+          <div className="photo-grid1">
+            {/* 사진 추가 버튼 */}
+            <div className="grid-item add-btn-item" onClick={() => photoInputRef.current.click()}>
+              <plus size={40} color="#ffffff" strokeWidth={1} />
+              <input 
+                type="file" 
+                ref={photoInputRef} 
+                style={{ display: "none" }} 
+                multiple 
+                accept="image/*" 
+                onChange={handlePhotoUpload} 
+              />
+            </div>
+
+            {/* 사진 리스트 */}
+            {albumPhotos.map((photo) => (
+              <div key={photo.id} className="grid-item photo-item1">
+                <img src={photo.url} alt="album-content" />
+                <button className="delete-photo-btn" onClick={() => handleDeletePhoto(photo.id)}>
+                  <x size={16} color="white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div> 
     </div>
   );
 };

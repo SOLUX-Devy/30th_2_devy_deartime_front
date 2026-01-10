@@ -13,9 +13,9 @@ import SendLetterPage from "./pages/sendLetterPage";
 import Timecapsule from "./pages/timecapsule";
 import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
-import AlbumDetail from "./pages/AlbumDetail";
 import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
+import AlbumDetail from "./pages/AlbumDetail";
 
 /* ✅ 여기 추가: FriendSelectPage import */
 import FriendSelectPage from "./components/FriendSelect"; 
@@ -45,13 +45,20 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />
 
-        {/* <Route path="/gallery" element={<Gallery />} /> */}
-        <Route path="/letterbox" element={<Letterbox />} />
-        <Route path="/timecapsule" element={<Timecapsule />} />
-        <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
-        <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
-        {/* <Route path="/freind" element={<Freind />} /> */}
-        
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+
+          <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
+          <Route path="/letterbox" element={<Letterbox />} />
+
+          <Route path="/timecapsule" element={<Timecapsule />} />
+          <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
+          <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
+
+          <Route path="/friend" element={<FriendList />} />
+          <Route path="/friend/invite" element={<FriendInvite />} />
+
+        </Route>
       </Routes>
     </BrowserRouter>
   );

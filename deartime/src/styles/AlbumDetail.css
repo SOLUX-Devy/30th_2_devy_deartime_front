@@ -1,13 +1,13 @@
 /* src/pages/AlbumDetail.css */
 
 .album-detail-container {
-  background-color: #0d1b3e; /* 배경색 */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 0 40px 40px 40px;
   color: white;
 }
+
 
 /* 상단 네비바 */
 .detail-top-nav {
