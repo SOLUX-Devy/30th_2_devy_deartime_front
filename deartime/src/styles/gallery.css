@@ -15,16 +15,16 @@
   position: relative; 
 }
 
-/* 우클릭 메뉴 활성화 시 뒷배경 어둡게 처리 */
 .context-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.6); 
-  z-index: 900; 
-}
+  background: rgba(0, 0, 0, 0.6); /* [사진2] 느낌을 위해 불투명도 조절 */
+  z-index: 900; /* 콘텐츠보다는 위, 스포트라이트 대상보다는 아래 */
+  backdrop-filter: blur(5px); /* [사진2]처럼 배경을 더 흐리게 처리 */
+} 
 
 /* 상단 탭 및 버튼 바 */
 .tc-topbar {
@@ -190,44 +190,43 @@
 /* 커스텀 우클릭 메뉴 컨테이너 */
 .custom-context-menu {
   position: absolute;
-  z-index: 1000;
-  background-color: #0F1839; 
-  border: 1.5px solid #2A4280; 
-  border-radius: 24px; 
-  padding: 12px 0;
-  min-width: 200px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1100; /* 오버레이와 스포트라이트보다 위에 위치 */
+  background-color: #151D3B; 
+  border: 1px solid #3A5290; 
+  border-radius: 20px; 
+  padding: 8px 0;
+  min-width: 180px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
   overflow: hidden;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 14px 24px;
+  padding: 12px 20px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  gap: 16px; 
+  gap: 12px; 
 }
 
 .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .menu-item span {
   color: white;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
 }
 
 .menu-divider {
   height: 1px;
-  background-color: #2A4280; 
+  background-color: rgba(255, 255, 255, 0.1); 
   margin: 4px 0;
-  opacity: 0.6;
 }
 
 .menu-item.delete span {
-  color: #FF4D4D; 
+  color: #FF5A5A; 
 }
 
 /* 수정 모드 시 텍스트 입력창 */
@@ -245,10 +244,10 @@
 /* 메뉴 호출 시 대상 강조(Spotlight) 효과 */
 .photo-item.spotlight, .album-item.spotlight {
   position: relative;
-  z-index: 950;
-  transform: scale(1.03);
+  z-index: 1000; /* 오버레이(900)보다 높게 설정하여 강조 */
+  transform: scale(1.02);
   transition: all 0.3s ease;
-  filter: brightness(1.1); 
+  pointer-events: none; /* 강조된 상태에서 사진 클릭 방지 (중요) */
 }
 
 /* 앨범 메뉴 트리거 버튼 */
@@ -258,4 +257,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: 1001; /* 이미지보다 위에 두어 메뉴 조작 가능하게 함 */
+  pointer-events: auto; /* 메뉴 버튼은 클릭 가능하게 유지 */
 }

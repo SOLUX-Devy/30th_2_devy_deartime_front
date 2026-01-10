@@ -29,33 +29,26 @@ const Gallery = () => {
     { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
   ]);
 
-  // [추가] 상세 페이지에서 수정된 커버 이미지를 반영하는 로직
-  useEffect(() => {
-    if (location.state?.updatedAlbum) {
-      const { id, coverUrl } = location.state.updatedAlbum;
-      setAlbums(prev => prev.map(album => 
-        album.id === id ? { ...album, coverUrl: coverUrl } : album
-      ));
-      
-      // 반영 후 state 초기화 (뒤로가기 시 중복 실행 방지)
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
+  // 우클릭 메뉴 위치 및 대상 관리
   const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null });
+  // 현재 제목 수정 중인 ID 관리
   const [editingId, setEditingId] = useState(null);
+  // 앨범 생성 모달 열림 상태 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 화면 클릭 시 우클릭 메뉴 닫기 처리
   useEffect(() => {
     const handleClick = () => setMenu({ ...menu, show: false });
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, [menu]);
 
+  // 앨범 클릭 시 상세 페이지 이동 및 데이터 전달
   const handleAlbumClick = (album) => {
     navigate(`/album/${album.id}`, { state: { album } });
   };
 
+  // 선택한 파일을 읽어 사진 리스트에 추가
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -73,6 +66,7 @@ const Gallery = () => {
     }
   };
 
+  // 사진 즐겨찾기 상태 변경
   const togglePhotoFavorite = (e, photoId) => {
     e.stopPropagation();
     setPhotos(prev => prev.map(p => 
@@ -80,6 +74,7 @@ const Gallery = () => {
     ));
   };
 
+  // 앨범 즐겨찾기 상태 변경
   const toggleAlbumFavorite = (e, albumId) => {
     e.stopPropagation(); 
     setAlbums(prev => prev.map(album => 
@@ -87,17 +82,20 @@ const Gallery = () => {
     ));
   };
 
+  // 사진에서 우클릭 메뉴 열기
   const handlePhotoContextMenu = (e, photoId) => {
     e.preventDefault();
     setMenu({ show: true, x: e.pageX, y: e.pageY, targetId: photoId, type: 'photo' });
   };
 
+  // 앨범에서 더보기 버튼 클릭 시 메뉴 열기
   const handleAlbumMenuClick = (e, albumId) => {
     e.stopPropagation(); 
     const rect = e.currentTarget.getBoundingClientRect();
     setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album' });
   };
 
+  // 데이터 삭제 처리 (사진 또는 앨범)
   const handleDelete = () => {
     if (menu.type === 'photo') {
       setPhotos(prev => prev.filter(p => p.id !== menu.targetId));
@@ -106,11 +104,13 @@ const Gallery = () => {
     }
   };
 
+  // 제목 수정 모드 활성화
   const handleEditStart = (e) => {
     e.stopPropagation();
     setEditingId(menu.targetId);
   };
 
+  // 엔터 키 입력 시 수정 사항 저장
   const handleEditComplete = (e, id) => {
     if (e.key === 'Enter') {
       const newTitle = e.target.value;
@@ -123,6 +123,7 @@ const Gallery = () => {
     }
   };
 
+  // 날짜별로 사진 목록 그룹화 연산
   const groupedPhotos = useMemo(() => {
     return photos.reduce((acc, photo) => {
       const date = photo.date;
@@ -132,6 +133,7 @@ const Gallery = () => {
     }, {});
   }, [photos]);
   
+  // 즐겨찾기 우선순위로 앨범 정렬 연산
   const sortedAlbums = useMemo(() => {
     return [...albums].sort((a, b) => {
       if (a.isFavorite === b.isFavorite) return 0;
@@ -141,16 +143,21 @@ const Gallery = () => {
 
   return (
     <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
+      
+      {/* 앨범 생성 모달 팝업 */}
       <AlbumCreateModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onCreate={(data) => setAlbums([{id: Date.now(), ...data, count: 0, isFavorite: false}, ...albums])} 
       />
 
+      {/* 보이지 않는 파일 선택 입력창 */}
       <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileUpload} />
 
+      {/* 우클릭 메뉴 활성 시 배경 어둡게 처리 */}
       {menu.show && <div className="context-menu-overlay" />}
 
+      {/* 텍스트 수정/삭제 커스텀 메뉴 */}
       {menu.show && (
         <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }}>
           <div className="menu-item" onClick={handleEditStart}>
@@ -165,6 +172,7 @@ const Gallery = () => {
         </div>
       )}
 
+      {/* 상단 네비게이션 및 제어바 */}
       <div className="tc-topbar">
         <div className="tab-group">
           {tabs.map((tab, idx) => (
@@ -180,8 +188,10 @@ const Gallery = () => {
         </div>
       </div>
 
+      {/* 선택된 탭에 따른 콘텐츠 영역 */}
       <div className="gallery-content-wrapper">
         {activeIndex === 0 ? (
+          /* RECORD 탭: 날짜별 사진 리스트 표시 */
           Object.keys(groupedPhotos).map((date) => (
             <section key={date} className="date-group">
               <h2 className="date-title">{date}</h2>
@@ -193,11 +203,22 @@ const Gallery = () => {
                     <div className="img-box">
                       <img src={photo.url} alt="" />
                       <button className="fav-star-btn photo-star" onClick={(e) => togglePhotoFavorite(e, photo.id)}>
-                        <Star size={18} fill={photo.isFavorite ? "#FFD700" : "none"} stroke={photo.isFavorite ? "#FFD700" : "white"} strokeWidth={2} />
+                        <Star 
+                          size={18} 
+                          fill={photo.isFavorite ? "#FFD700" : "none"} 
+                          stroke={photo.isFavorite ? "#FFD700" : "white"} 
+                          strokeWidth={2} 
+                        />
                       </button>
                     </div>
                     {editingId === photo.id ? (
-                      <input className="edit-title-input" defaultValue={photo.title} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
+                      <input 
+                        className="edit-title-input" 
+                        defaultValue={photo.title} 
+                        autoFocus 
+                        onKeyDown={(e) => handleEditComplete(e, photo.id)} 
+                        onBlur={() => setEditingId(null)} 
+                      />
                     ) : (
                       <p className="photo-title">{photo.title}</p>
                     )}
@@ -207,20 +228,38 @@ const Gallery = () => {
             </section>
           ))
         ) : (
+          /* ALBUM 탭: 앨범 그리드 표시 */
           <div className="album-section">
             <div className="album-grid">
               {sortedAlbums.map((album) => (
-                <div key={album.id} className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`} onClick={() => handleAlbumClick(album)} style={{ cursor: 'pointer' }} >
+                <div 
+                  key={album.id} 
+                  className={`album-item ${menu.show && menu.targetId === album.id && menu.type === 'album' ? 'spotlight' : ''}`}
+                  onClick={() => handleAlbumClick(album)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="album-img-box">
                     <img src={album.coverUrl} alt="" />
                     <button className="fav-star-btn" onClick={(e) => toggleAlbumFavorite(e, album.id)}>
-                      <Star size={24} fill={album.isFavorite ? "#FFD700" : "none"} stroke={album.isFavorite ? "#FFD700" : "white"} strokeWidth={2} />
+                      <Star 
+                        size={24} 
+                        fill={album.isFavorite ? "#FFD700" : "none"} 
+                        stroke={album.isFavorite ? "#FFD700" : "white"} 
+                        strokeWidth={2} 
+                      />
                     </button>
                   </div>
                   <div className="album-info">
                     <div className="album-info-top">
                       {editingId === album.id ? (
-                        <input className="edit-title-input" defaultValue={album.title} autoFocus onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} onClick={(e) => e.stopPropagation()} />
+                        <input 
+                          className="edit-title-input" 
+                          defaultValue={album.title} 
+                          autoFocus 
+                          onKeyDown={(e) => handleEditComplete(e, album.id)} 
+                          onBlur={() => setEditingId(null)}
+                          onClick={(e) => e.stopPropagation()} 
+                        />
                       ) : (
                         <h3>{album.title}</h3>
                       )}
