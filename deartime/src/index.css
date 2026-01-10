@@ -16,3 +16,70 @@ body {
 #root {
   width: 100%; /* 앱이 전체 너비를 사용하도록 설정 */
 }
+
+/* ===== body 자체는 스크롤 X ===== */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ===== 전체 앱 레이아웃 ===== */
+.app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== 실제 스크롤 영역 ===== */
+.app-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+
+  /* 헤더 침범 X */
+  padding-top: 0;
+
+  /* 오른쪽 여백 */
+}
+
+/* ========================= */
+/* ===== 스크롤바 디자인 ===== */
+/* ========================= */
+
+/* 네모(전체) */
+.app-scroll-area::-webkit-scrollbar {
+  width: 10px;
+  background: transparent; /* 네모 투명 */
+}
+
+/* 화살표 제거 */
+.app-scroll-area::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 작대기(track) */
+.app-scroll-area::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    #20315E 0%,
+    #2A4280 100%
+  );
+}
+
+/* 동그라미(thumb) */
+.app-scroll-area::-webkit-scrollbar-thumb {
+  background: #DCDCDC;
+  border-radius: 999px;
+
+  /* W10 안에서 W8처럼 보이게 */
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* 코너 제거 */
+.app-scroll-area::-webkit-scrollbar-corner {
+  background: transparent;
+}

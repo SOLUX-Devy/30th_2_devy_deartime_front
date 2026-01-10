@@ -131,6 +131,18 @@
   color: rgba(255, 255, 255, 0.95);
 }
 
+.tc-create-receiver__chev {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.tc-create-receiver:hover .tc-create-receiver__chev {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+
 /* 개봉일 */
 .tc-create-dateWrap {
   display: flex;
@@ -261,15 +273,22 @@
 }
 
 .tc-create-send:hover {
-  background-color: rgba(42, 66, 128, 0.85);
+  background-color: rgba(42, 66, 128, 1);
 }
 
 .tc-create-send:disabled {
-  opacity: 0.45;
   cursor: not-allowed;
-  filter: grayscale(20%);
+  pointer-events: none;            /* ✅ 아예 클릭 불가 */
+  
+  background: rgba(0, 0, 0, 0.35);  /* ✅ 더 어둡게 */
+  border-color: rgba(255, 255, 255, 0.08);
+
+  color: rgba(255, 255, 255, 0.35); /* ✅ 글씨 확 죽이기 */
+  box-shadow: none;
+
+  filter: none;
 }
 
 .tc-create-send:disabled:hover {
-  transform: none; /* hover 효과 있으면 방지 */
+  background: rgba(0, 0, 0, 0.35);
 }

@@ -298,3 +298,15 @@ margin-top: 10px;
   border: 1px solid #2A4280;
   background: rgba(255, 255, 255, 0.00);
 }
+
+
+.p-btn:hover,
+.noti-btn:hover {
+  background-color: rgba(42, 66, 128, 0.8); 
+}
+
+
+.p-btn:active,
+.noti-btn:active {
+  background-color: #0E77BC; 
+}
