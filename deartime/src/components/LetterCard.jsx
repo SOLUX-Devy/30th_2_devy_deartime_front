@@ -7,11 +7,13 @@ import LetterDetail from '../components/LetterDetail';
 import bgDarkBlue from '../assets/bg-dark-blue.png';
 import bgLightPink from '../assets/bg-light-pink.png';
 import bgLightGrey from '../assets/bg-light-grey.png';
+import bgLightBlue from '../assets/bg-light-blue.png';
 
 const THEME_IMAGES = {
     DEFAULT: bgDarkBlue, 
     PINK: bgLightPink,
-    GREY: bgLightGrey
+    GREY: bgLightGrey, 
+    BLUE: bgLightBlue
 };
 
 const LetterCard = ({ data, isFocused, setFocusedId, onDelete, onToggleBookmark, onMarkAsRead }) => {

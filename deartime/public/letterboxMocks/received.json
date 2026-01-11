@@ -15,7 +15,7 @@
         "senderNickname": "테스터_A",
         "title": "첫 편지입니다",
         "summary": "17148",
-        "themeCode": "PINK",
+        "themeCode": "BLUE",
         "sentAt": "2025-12-15T00:32:08.164649",
         "isRead": true,
         "isBookmarked": true
@@ -35,7 +35,7 @@
         "senderNickname": "테스터_A",
         "title": "첫 편지입니다",
         "summary": "17148",
-        "themeCode": "DEFAULT",
+        "themeCode": "GREY",
         "sentAt": "2025-12-15T00:32:08.164649",
         "isRead": true,
         "isBookmarked": true

@@ -28,6 +28,7 @@
 .letter-card.theme-DEFAULT { color: #ffffff; }
 .letter-card.theme-PINK { color: #4a4a4a; }
 .letter-card.theme-GREY { color: #4a4a4a; }
+.letter-card.theme-BLUE { color: #2c3e50; }
 
 .card-top {
     display: flex;
