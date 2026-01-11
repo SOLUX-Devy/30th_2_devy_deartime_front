@@ -103,6 +103,7 @@
 }
 
 .detail-text {
+    padding-top:1em;
     line-height: 1.7; 
     white-space: pre-wrap; /* 줄바꿈(\n) 반영 */
     word-break: break-all;
