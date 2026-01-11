@@ -1,0 +1,309 @@
+/* src/components/FriendSelect.css */
+
+.fs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ✅ 모달은 column flex */
+.fs-modal {
+  width: 1000px;
+  height: 650px;
+  border-radius: 20px;
+  background: #000d32;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+  margin-top: 75px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 */
+.fs-header {
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.fs-title {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+.fs-close {
+  position: absolute;
+  right: 34px;
+  top: 22px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 44px;
+  font-weight: 100;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+/* ✅ 검색줄 + 우측 버튼 row (좌우 50px) */
+.fs-topRow {
+  margin-left: 50px;
+  margin-right: 50px;
+  margin-top: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.fs-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 30px;
+}
+
+/* ✅ 검색(밑줄) */
+.fs-search {
+  width: 300px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* ✅ input 세로 정렬 */
+.fs-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: #fff;
+  font-size: 17px;
+  font-weight: 400;
+  font-family: inherit;
+
+  -webkit-appearance: none;
+  appearance: none;
+
+  height: 34px;
+  line-height: 34px;
+  padding: 0 0 4px 0;
+  margin: 0;
+  box-sizing: border-box;
+
+  display: block;
+  caret-color: #fff;
+}
+
+.fs-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.fs-search-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0.9;
+  padding: 0;
+}
+
+.fs-search-btn:hover {
+  opacity: 1;
+}
+
+.fs-search-icon {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  display: block;
+  transform: translateY(-4px);
+}
+
+.fs-count {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 300;
+  transform: translateY(6px);
+}
+
+/* ✅ 우측 버튼 */
+.fs-confirm-btn {
+  width: 120px;
+  height: 40px;
+  border-radius: 12px;
+
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 16px;
+  font-weight: 400;
+
+  cursor: not-allowed;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+
+.fs-confirm-btn.active {
+  background: #c5e8ec;
+  color: rgba(0, 13, 50, 0.95);
+  cursor: pointer;
+}
+
+.fs-confirm-btn.active:hover {
+  transform: translateY(-1px);
+}
+
+.fs-confirm-btn:disabled {
+  pointer-events: none;
+}
+
+/* ✅ 카드 그리드: 좌우 마진 60px + 스크롤 */
+.fs-grid {
+  flex: 1;
+  margin-left: 60px;
+  margin-right: 60px;
+  margin-top: 30px;
+  margin-bottom: 26px;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  overflow-y: auto;
+}
+
+/* ========================= */
+/* FriendSelect Scrollbar   */
+/* app-scroll-area 스타일 참고 */
+/* ========================= */
+
+/* 네모(전체 영역) */
+.fs-grid::-webkit-scrollbar {
+  width: 9px;
+  background: transparent;
+}
+
+/* 화살표 제거 */
+.fs-grid::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 트랙 (작대기) */
+.fs-grid::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 49, 94, 0.55) 0%,
+    rgba(42, 66, 128, 0.55) 100%
+  );
+  border-radius: 999px;
+}
+
+/* 썸 (동그라미) */
+.fs-grid::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85);
+  border-radius: 999px;
+
+  /* Windows에서 얇아 보이게 */
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* 호버 */
+.fs-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 220, 220, 1);
+}
+
+/* 코너 제거 */
+.fs-grid::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
+/* ✅ 슬롯: "겹테두리" 방지 (부모는 아무 테두리/라운드/클리핑 X) */
+.fs-cardSlot {
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1px;
+}
+
+.fs-cardSlot:hover .friend-card {
+  box-shadow: 0 0 0 1px rgba(197, 232, 236, 0.7),
+              0 6px 18px rgba(0, 0, 0, 0.25);
+  filter: brightness(1.08);
+}
+
+/* ✅ FriendCard만 보이게: 스케일만 적용 */
+.fs-cardInner {
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+
+
+/* ✅ 선택 시: 카드 배경 자체 변경 */
+.fs-cardSlot.selected .friend-card {
+  background: rgba(197, 232, 236, 0.6) !important; /* #C5E8EC 60% */
+  border-color: rgba(197, 232, 236, 0.9) !important; /* 테두리도 같이 */
+}
+
+
+/* ✅ 반응형: width/height 계산 다시 넣지 말고, 칼럼만 변경 */
+@media (max-width: 1300px) {
+  .fs-modal {
+    width: 92vw;
+    height: 78vh;
+  }
+  .fs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .fs-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .fs-topRow {
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .fs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

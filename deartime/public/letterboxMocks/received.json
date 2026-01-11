@@ -1,0 +1,94 @@
+{
+    "data": [
+        {
+        "letterId": 1,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": false,
+        "isBookmarked": false
+        },
+        {
+        "letterId": 2,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "PINK",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 3,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "PINK",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 4,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 5,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 6,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        }, 
+        {
+        "letterId": 7,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 8,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        },
+        {
+        "letterId": 9,
+        "senderNickname": "테스터_A",
+        "title": "첫 편지입니다",
+        "summary": "17148",
+        "themeCode": "DEFAULT",
+        "sentAt": "2025-12-15T00:32:08.164649",
+        "isRead": true,
+        "isBookmarked": true
+        }
+    ]
+}

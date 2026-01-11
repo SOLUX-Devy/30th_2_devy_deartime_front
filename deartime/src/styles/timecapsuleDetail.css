@@ -1,0 +1,192 @@
+.tc-detail-page {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.tc-detail-overlay {
+  height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tc-detail-modal {
+  width: 828px;
+  height: 610px;
+
+  border-radius: 12px;
+  background: linear-gradient(180deg, #081126 0%, #060f22 100%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.tc-detail-modal__header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tc-detail-modal__title {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 22px;
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin-top: 40px;
+}
+
+.tc-detail-modal__close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 40px;
+  font-weight: 100;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tc-detail-modal__body {
+  height: calc(100% - 70px);
+  padding: 40px 40px 50px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 상단 row */
+.tc-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 55px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tc-detail-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tc-detail-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.tc-detail-value {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+}
+
+.tc-detail-date {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  padding: 6px 0;
+}
+
+.tc-detail-date::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.65;
+}
+
+/* 메인 */
+.tc-detail-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 34px;
+  padding-top: 10px;
+}
+
+.tc-detail-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tc-detail-imageBox {
+  width: 350px;
+  height: 350px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  margin-top: 10px;
+}
+
+.tc-detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tc-detail-createdAt {
+  color: rgba(255, 255, 255, 1);
+  font-size: 12px;
+  font-weight: 100;
+  margin-left: 4px;
+  margin-top: 10px;
+}
+
+.tc-detail-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tc-detail-input {
+  height: 46px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  padding: 0 6px;
+}
+
+.tc-detail-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  padding: 10px 6px;
+  resize: none;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+
+/* 상태 */
+.tc-detail-loading,
+.tc-detail-error {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.tc-detail-error__msg {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.tc-detail-error__sub {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}

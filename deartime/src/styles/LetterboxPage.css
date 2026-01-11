@@ -15,12 +15,78 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
+    padding: 0 3em;
 }
 
 .letter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
+    gap: 20px;
+    /* 8개가 다 안 차도 높이를 유지하여 페이지네이션 위치 고정 */
+    min-height: 500px; 
+    align-content: start;
 }
 
+.tc-pagination {
+    margin-top: auto; /* 위쪽 여백을 최대로 하여 아래로 밀어냄 */
+    padding: 28px 0;
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+}
+
+.tc-page {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    cursor: pointer;
+    border: none; 
+    transition: all 0.2s ease;
+}
+
+.tc-page.active {
+    background: #0E77BC;
+    color: white;
+    font-weight: 700;
+}
+
+.tc-page:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/*SendButton Styles*/
+.tc-topbar-right {
+    margin-right: 60px;
+    margin-top: 6px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.tc-create-btn {
+    width: 130px;
+    height: 45px;
+    border-radius: 12px;
+    border: 1px solid rgba(14, 119, 188, 0.6);
+    background: rgba(0, 0, 0, 0.15);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease; /* 부드러운 호버 효과를 위해 추가 */
+}
+
+.tc-create-btn:hover {
+    background-color: #2A4280;
+    opacity: 0.85;
+}
+
+.tc-pagination-info {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+    display: block;
+    text-align: right;
+}

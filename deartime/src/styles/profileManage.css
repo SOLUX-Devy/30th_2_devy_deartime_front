@@ -1,0 +1,168 @@
+/* ===== overlay ===== */
+.profile-manage-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  z-index: 1000;
+
+  background: url("../assets/background.svg") center / cover no-repeat;
+
+  padding-top: 90px;
+  padding-bottom: 20px;
+
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* ===== 카드 ===== */
+.profile-manage-modal {
+  width: 450px;              /* signup-card와 동일 */
+  max-height: 90vh;
+
+  background: #000D32;
+  border: 1px solid #2A4280;
+  border-radius: 20px;
+
+  padding: 40px;             /* ✅ 핵심 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  box-sizing: border-box;
+}
+
+/* ===== 헤더 ===== */
+.profile-manage-header {
+  width: 100%;
+  text-align: center;
+
+  color: #fff;
+  font-family: "Josefin Slab";
+  font-size: 20px;
+  font-weight: 700;
+
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+
+  background: none;
+  border: none;
+
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* ===== 프로필 이미지 ===== */
+.profile-manage-image {
+  margin: 8px 0 12px;
+}
+
+.profile-manage-image img {
+  width: 85px;
+  height: 85px;
+
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+}
+
+/* ===== 폼 ===== */
+.profile-manage-form {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.input-group input,
+.input-group textarea {
+  width: 100%;
+  height: 40px;              /* signup 기준 */
+  padding: 0 16px;
+
+  border-radius: 12px;       /* 둥글기 통일 */
+  border: 1px solid #2A4280;
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* ===== 대리인 한 줄 ===== */
+.delegate-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 8px;
+}
+
+/* 대리인 텍스트 */
+.delegate-label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 친구 선택 버튼 */
+.action-btn {
+  height: 40px;
+  padding: 0 14px;
+  width: 150px;
+
+  border-radius: 10px;
+  border: none;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+background: #D6DEE6;
+}
+
+
+/* ===== 저장 버튼 ===== */
+.save-row {
+  display: flex;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  width: 100px;
+  height: 40px;
+
+  border-radius: 10px;
+  border: 1.5px solid #2A4280;
+
+  background: transparent;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: rgba(42, 66, 128, 0.3);
+}
