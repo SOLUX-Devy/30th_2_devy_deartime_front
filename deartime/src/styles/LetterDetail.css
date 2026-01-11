@@ -32,7 +32,7 @@
     
     background-repeat: no-repeat;
     
-    padding: 30px 40px 40px 40px;
+    padding: 35px 45px 45px 45px;
     padding-bottom: clamp(35px, 8%, 45px);
     box-sizing: border-box;
     display: flex;
@@ -96,7 +96,7 @@
 
 
 .detail-title {
-    font-size: 1.8em;
+    font-size: 1.5em;
     font-weight: bold;
     margin-top:0.3em;
     margin-bottom: 0.5em;
@@ -109,14 +109,14 @@
     word-break: break-all;
 }
 
-.close-btn {
+.detail-overlay .close-btn {
     position: absolute;
-    top: 0.3em;
-    right: 0.4em;
+    top: 0.7rem; 
+    right: 1rem;
+    font-size: 2rem;
     
     background: none;
     border: none;
-    font-size: 32px;
     line-height: 1;
     cursor: pointer;
     
@@ -129,8 +129,7 @@
     align-items: center;
 }
 
-.close-btn:hover {
-    color: #af2222;
+.detail-overlay .close-btn:hover {
     transform: rotate(90deg); 
 }
 
@@ -164,11 +163,11 @@
     background: #FFF0F5;
 }
 .theme-PINK .letter-content-wrapper::-webkit-scrollbar-thumb {
-    background-color: #d5c1df;
+    background-color: rgb(229, 203, 224);
 }
 
 .theme-PINK .letter-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgb(229, 203, 224);
+    background: #d6b7e5;
 }
 
 
