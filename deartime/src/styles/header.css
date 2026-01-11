@@ -363,8 +363,3 @@ margin-top: 10px;
 .noti-dropdown::-webkit-scrollbar-corner {
   background: transparent;
 }
-
-/* 코너 제거 */
-.fs-grid::-webkit-scrollbar-corner {
-  background: transparent;
-}
