@@ -317,11 +317,6 @@ margin-top: 10px;
 /* app-scroll-area 스타일 참고 */
 /* ========================= */
 
-/* ========================= */
-/* 알림창(noti-dropdown) 스크롤바 */
-/* ========================= */
-
-/* 1. 스크롤바 전체 너비 */
 .noti-dropdown::-webkit-scrollbar {
   width: 9px;
   background: transparent;
@@ -361,10 +356,5 @@ margin-top: 10px;
 
 /* 6. 우측 하단 코너 제거 */
 .noti-dropdown::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* 코너 제거 */
-.fs-grid::-webkit-scrollbar-corner {
   background: transparent;
 }
