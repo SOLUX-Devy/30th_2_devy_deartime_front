@@ -4,14 +4,17 @@ import LetterCard from '../components/LetterCard';
 import MailTabs from '../components/MailTabs'; 
 import SendButton from '../components/SendButton'; 
 import SharedMailbox from '../components/SharedMailbox';
+import FriendSelect from "../components/FriendSelect";
 
 const Letterbox = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [page, setPage] = useState(1);
 
-    const [letters, setLetters] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [letters, setLetters] = useState([]); // 편지 데이터 상태
+    const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
     const [focusedId, setFocusedId] = useState(null); // 현재 포커스된 카드 ID 관리
+
+    const [selectedFriend, setSelectedFriend] = useState(null); // 친구 선택 상태
 
     const handlePageClick = () => {
         if (focusedId) {
@@ -126,8 +129,20 @@ const Letterbox = () => {
             </header>
             <div className="letterbox-content">
                 {activeIndex === 3 ? (
-                    // '우리의 우체통' 전용 컴포넌트 실행
-                    <SharedMailbox />
+                    !selectedFriend ? (
+                        /* 팀원분이 만든 친구 선택 컴포넌트 활용 */
+                        /* 팝업 형태이므로, 닫기(onClose)와 선택(onSelect) 로직만 연결해주면 됩니다. */
+                        <FriendSelect 
+                            onClose={() => setActiveIndex(0)} // 닫으면 '받은 편지함'으로 이동하거나
+                            onSelect={(friend) => setSelectedFriend(friend)} // 선택 시 친구 정보 저장
+                        />
+                    ) : (
+                        /* 친구가 선택된 후에는 SharedMailbox 실행 */
+                        <SharedMailbox 
+                            selectedFriend={selectedFriend} 
+                            onBack={() => setSelectedFriend(null)} 
+                        />
+                    )
                 ) : (
                     <>
                 <span className="tc-pagination-info">

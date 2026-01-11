@@ -7,7 +7,8 @@
 }
 
 .letterbox-content {
-    max-width: 80%;
+    max-width: 1200px; 
+    width: 90%;       
     margin: 0 auto;
 }
 
@@ -16,14 +17,23 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding: 0 3em;
+    width: 100%;
 }
 
 .letter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    /* 8개가 다 안 차도 높이를 유지하여 페이지네이션 위치 고정 */
+    /* 창 크기에 상관없이 무조건 4칸 고정 */
+    /* minmax(0, 1fr)로 카드가 부모 너비에 맞춰 줄어들게 설정 */
+    grid-template-columns: repeat(4, minmax(0, 1fr)); 
+    
+    /* 이미지에 명시된 간격 적용 */
+    column-gap: 20px;
+    row-gap: 30px;
+    
+    /* 그리드 자체의 좌우 여백 설정 (이미지 기준) */
+    width: 100%; 
+    margin: 15px 0 0 0;
+
     min-height: 500px; 
     align-content: start;
 }
@@ -58,9 +68,9 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-/*SendButton Styles*/
+/*SendButton 스타일*/
 .tc-topbar-right {
-    margin-right: 60px;
+    margin-right: 0; /* 부모인 letterbox-header에서 padding으로 잡았으므로 0으로 조정 가능 */
     margin-top: 6px;
     display: flex;
     align-items: flex-end;
@@ -86,7 +96,8 @@
 .tc-pagination-info {
     font-size: 14px;
     color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    margin-top:30px;
     display: block;
     text-align: right;
 }

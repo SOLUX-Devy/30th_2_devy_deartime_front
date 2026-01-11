@@ -1,3 +1,5 @@
+
+
 .shared-mailbox-container {
     display: flex;
     flex-direction: column;
@@ -9,7 +11,7 @@
     display: flex;
     align-items: center;
     gap: 2em;
-    padding: 5px 0;
+    padding: 3px 0;
 }
 
 .user-tag {
@@ -24,6 +26,7 @@
     gap: 8px;
     width:10em;
     height:2em;
+    margin-left: calc(-1 * (50vw - 50%) + 60px);
 }
 
 /* X 버튼 스타일 리셋 및 커스텀 */
