@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/sendLetter.css';
 import theme1 from '../assets/bg-dark-blue.png';
 import theme2 from '../assets/bg-light-blue.png';
@@ -42,6 +43,7 @@ const SendLetter = () => {
   // 현재 선택된 테마
   const currentTheme = themes.find(t => t.id === selectedThemeId);
   const buttonTheme = currentTheme.button;
+  const navigate = useNavigate(); //navigate 훅 추가
 
   // 친구 추가 모달
   const [isFriendSelectOpen, setIsFriendSelectOpen] = useState(false);
@@ -91,7 +93,10 @@ const SendLetter = () => {
           >
             <div className="editor-header">
               <h3>편지</h3>
-              <button className="close-btn">✕</button>
+              <button 
+                className="close-btn" 
+                onClick={() => navigate(-1)} // -1은 '뒤로 가기'
+              >✕</button>
             </div>
 
             <div className="input-group">
