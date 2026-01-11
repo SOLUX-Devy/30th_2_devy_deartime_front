@@ -4,6 +4,7 @@ import theme1 from '../assets/bg-dark-blue.png';
 import theme2 from '../assets/bg-light-blue.png';
 import theme3 from '../assets/bg-light-grey.png';
 import theme4 from '../assets/bg-light-pink.png';
+import FriendSelect from "../components/FriendSelect";
 
 const SendLetter = () => {
   // 4가지 테마 정의
@@ -42,9 +43,19 @@ const SendLetter = () => {
   const currentTheme = themes.find(t => t.id === selectedThemeId);
   const buttonTheme = currentTheme.button;
 
+  // 친구 추가 모달
+  const [isFriendSelectOpen, setIsFriendSelectOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+
   const handleFriendListClick = () => {
-    alert("친구 추가는 준비중입니다");
+    setIsFriendSelectOpen(true);
   };
+
+  const handleFriendSelect = (friend) => {
+    setSelectedFriend(friend);   
+    setIsFriendSelectOpen(false); 
+  };
+
 
   const isFormValid = title.trim() !== '' && content.trim() !== '';
 
@@ -56,6 +67,7 @@ const SendLetter = () => {
   };
 
   return (
+    <>
     <div className="page-container">
       <div className="content-wrapper">
         <div className="glass-card">
@@ -85,6 +97,14 @@ const SendLetter = () => {
             <div className="input-group">
               <div className="input-row">
                 <span className="label">받는 사람</span>
+                <span className={`
+                  receiver-name
+                  ${selectedFriend ? 'selected' : 'placeholder'}
+                  ${currentTheme.text === 'dark' ? 'dark' : 'light'}
+                `}
+                >
+                  {selectedFriend ? selectedFriend.friendNickname : "선택 안 됨"}
+                </span>
                 <button className="arrow-btn" onClick={handleFriendListClick}>〉</button>
               </div>
 
@@ -124,10 +144,17 @@ const SendLetter = () => {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>
+    {/* 친구 선택 모달 */}
+    {isFriendSelectOpen && (
+        <FriendSelect
+          onClose={() => setIsFriendSelectOpen(false)}
+          onSelect={handleFriendSelect}
+        />
+      )}
+    </>
   );
 };
 

@@ -1,8 +1,20 @@
+import { useState } from "react";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/profileManage.css";
+import FriendSelect from "../components/FriendSelect";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
+
+  const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
+  const [selectedDelegate, setSelectedDelegate] = useState(null);
+
+  const handleDelegateSelect = (friend) => {
+    setSelectedDelegate(friend);
+    setIsDelegateSelectOpen(false);
+  };
+
   return (
+    <>
     <div className="profile-manage-overlay">
       <div className="profile-manage-modal">
         {/* 헤더 */}
@@ -61,8 +73,14 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <div className="delegate-row">
             <span className="delegate-label">대리인</span>
 
-            <button className="action-btn primary">
-                친구 선택 →
+            <button
+              className="action-btn primary"
+              onClick={() => setIsDelegateSelectOpen(true)}
+              type="button"
+            >
+              {selectedDelegate
+                ? `대리인: ${selectedDelegate.friendNickname}`
+                : "대리인 선택"}
             </button>
             </div>
 
@@ -74,5 +92,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         </div>
       </div>
     </div>
+    {/* 대리인 선택 모달 */}
+    {isDelegateSelectOpen && (
+        <FriendSelect
+          onClose={() => setIsDelegateSelectOpen(false)}
+          onSelect={handleDelegateSelect}
+        />
+      )}
+    </>
   );
 }

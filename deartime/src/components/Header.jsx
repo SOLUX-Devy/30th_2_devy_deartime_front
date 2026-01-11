@@ -18,9 +18,7 @@ import ProfileManageModal from "../components/ProfileManageModal";
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
-  /* =========================
-      STATE
-  ========================= */
+
   const [notifications, setNotifications] = useState(
     MOCK_NOTIFICATIONS?.data?.content || []
   );
