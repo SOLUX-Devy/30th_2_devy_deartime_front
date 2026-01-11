@@ -206,6 +206,7 @@ margin-top: 10px;
 .noti-title {
   text-align: center;
   font-size: 18px;
+  margin-top: 20px;
 }
 
 .noti-item {
@@ -316,45 +317,44 @@ margin-top: 10px;
 /* app-scroll-area 스타일 참고 */
 /* ========================= */
 
-/* 네모(전체 영역) */
-.fs-grid::-webkit-scrollbar {
+.noti-dropdown::-webkit-scrollbar {
   width: 9px;
   background: transparent;
 }
 
-/* 화살표 제거 */
-.fs-grid::-webkit-scrollbar-button {
+/* 2. 상하단 화살표 제거 */
+.noti-dropdown::-webkit-scrollbar-button {
   display: none;
   width: 0;
   height: 0;
 }
 
-/* 트랙 (작대기) */
-.fs-grid::-webkit-scrollbar-track {
+/* 3. 트랙 (스크롤바 뒷배경) */
+.noti-dropdown::-webkit-scrollbar-track {
   background: linear-gradient(
     to bottom,
     rgba(32, 49, 94, 0.55) 0%,
     rgba(42, 66, 128, 0.55) 100%
   );
-  border-radius: 999px;
+  border-radius: 999px; /* 둥글게 */
 }
 
-/* 썸 (동그라미) */
-.fs-grid::-webkit-scrollbar-thumb {
-  background: rgba(220, 220, 220, 0.85);
+/* 4. 썸 (움직이는 막대) */
+.noti-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85); /* 밝은 회색 */
   border-radius: 999px;
 
-  /* Windows에서 얇아 보이게 */
+  /* 막대 주변에 투명 테두리를 줘서 얇상해 보이게 함 */
   border: 1px solid transparent;
   background-clip: padding-box;
 }
 
-/* 호버 */
-.fs-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(220, 220, 220, 1);
+/* 5. 막대에 마우스 올렸을 때 */
+.noti-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 1); /* 완전 흰색 */
 }
 
-/* 코너 제거 */
-.fs-grid::-webkit-scrollbar-corner {
+/* 6. 우측 하단 코너 제거 */
+.noti-dropdown::-webkit-scrollbar-corner {
   background: transparent;
 }
