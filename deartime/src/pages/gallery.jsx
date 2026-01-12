@@ -5,41 +5,70 @@ import { Pencil, Trash2, MoreVertical, Star } from "lucide-react";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 import backgroundImg from "../assets/background_nostar.png";
 
-
 const Gallery = () => {
   const navigate = useNavigate();
   const location = useLocation(); 
   const fileInputRef = useRef(null);
+  const touchTimerRef = useRef(null); // 롱탭 타이머 관리용
 
   const tabs = ["RECORD", "ALBUM"];
 
+  // 탭 상태 관리
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
+  // 사진 데이터
   const [photos, setPhotos] = useState([
     { id: 1, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '너무 즐거웠다!', isFavorite: false },
     { id: 2, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '그냥 웃음이 끊이지 않았던 날', isFavorite: true },
     { id: 3, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '하이디라오 먹고 싶다~', isFavorite: false },
   ]);
 
+  // 앨범 데이터
   const [albums, setAlbums] = useState([
     { id: 101, title: '즐겨찾기', count: 9, coverUrl: 'https://via.placeholder.com/300', isFavorite: true },
     { id: 102, title: '우리 가족', count: 1234, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
     { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
   ]);
 
+  // 메뉴 및 수정 상태
   const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 화면 클릭 시 우클릭 메뉴 닫기 처리
+  // 화면 클릭 시 우클릭 메뉴 닫기
   useEffect(() => {
     const handleClick = () => setMenu(prev => ({ ...prev, show: false }));
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
+  // --- 모바일 롱탭(꾹 누르기) 핸들러 ---
+  const handleTouchStart = (e, id, type) => {
+    const touch = e.touches[0];
+    const { pageX, pageY } = touch;
+
+    // 0.5초 동안 누르고 있으면 메뉴 표시
+    touchTimerRef.current = setTimeout(() => {
+      setMenu({
+        show: true,
+        x: pageX,
+        y: pageY,
+        targetId: id,
+        type: type
+      });
+      if (navigator.vibrate) navigator.vibrate(50); // 진동 피드백
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
+  // --- 기존 핸들러 함수들 ---
   const handleAlbumClick = (album) => {
-    // 수정 중이 아닐 때만 이동 가능
     if (editingId) return;
     navigate(`/album/${album.id}`, { state: { album } });
   };
@@ -63,16 +92,12 @@ const Gallery = () => {
 
   const togglePhotoFavorite = (e, photoId) => {
     e.stopPropagation();
-    setPhotos(prev => prev.map(p => 
-      p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
-    ));
+    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p));
   };
 
   const toggleAlbumFavorite = (e, albumId) => {
     e.stopPropagation(); 
-    setAlbums(prev => prev.map(album => 
-      album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album
-    ));
+    setAlbums(prev => prev.map(album => album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album));
   };
 
   const handlePhotoContextMenu = (e, photoId) => {
@@ -95,14 +120,11 @@ const Gallery = () => {
     setMenu(prev => ({ ...prev, show: false }));
   };
 
-  // 제목 수정 모드 활성화 (메뉴는 닫고 하이라이트는 유지됨)
   const handleEditStart = (e) => {
     e.stopPropagation();
     setEditingId(menu.targetId);
-    setMenu(prev => ({ ...prev, show: false }));
+    setMenu(prev => ({ ...prev, show: false })); // 수정 시작 시 메뉴 닫기
   };
-
-  
 
   const handleEditComplete = (e, id) => {
     if (e.key === 'Enter') {
@@ -138,7 +160,6 @@ const Gallery = () => {
     <div className="gallery-container">
       <img src={backgroundImg} alt="background" className="background-img" />
       
-      
       <AlbumCreateModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
@@ -147,7 +168,7 @@ const Gallery = () => {
 
       <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileUpload} />
 
-      {/* 우클릭 메뉴가 떴을 때 혹은 수정 중일 때 하이라이트 오버레이 표시 */}
+      {/* 오버레이: 메뉴 활성화 또는 수정 중일 때 표시 */}
       {(menu.show || editingId !== null) && <div className="context-menu-overlay" />}
 
       {/* 커스텀 메뉴 */}
@@ -165,7 +186,7 @@ const Gallery = () => {
         </div>
       )}
 
-      {/* 상단바 */}
+      {/* 상단 네비바 */}
       <div className="tc-topbar">
         <div className="tab-group">
           {tabs.map((tab, idx) => (
@@ -183,6 +204,7 @@ const Gallery = () => {
 
       <div className="gallery-content-wrapper">
         {activeIndex === 0 ? (
+          /* RECORD 탭 */
           Object.keys(groupedPhotos).map((date) => (
             <section key={date} className="date-group">
               <h2 className="date-title">{date}</h2>
@@ -190,9 +212,14 @@ const Gallery = () => {
                 {groupedPhotos[date].map((photo) => {
                   const isSpotlight = (menu.show && menu.targetId === photo.id) || (editingId === photo.id);
                   return (
-                    <div key={photo.id} 
-                         className={`photo-item ${isSpotlight ? 'spotlight' : ''}`} 
-                         onContextMenu={(e) => handlePhotoContextMenu(e, photo.id)}>
+                    <div 
+                      key={photo.id} 
+                      className={`photo-item ${isSpotlight ? 'spotlight' : ''}`} 
+                      onContextMenu={(e) => handlePhotoContextMenu(e, photo.id)}
+                      onTouchStart={(e) => handleTouchStart(e, photo.id, 'photo')}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchMove={handleTouchEnd}
+                    >
                       <div className="img-box">
                         <img src={photo.url} alt="" />
                         <button className="fav-star-btn photo-star" onClick={(e) => togglePhotoFavorite(e, photo.id)}>
@@ -222,6 +249,7 @@ const Gallery = () => {
             </section>
           ))
         ) : (
+          /* ALBUM 탭 */
           <div className="album-section">
             <div className="album-grid">
               {sortedAlbums.map((album) => {
@@ -231,6 +259,13 @@ const Gallery = () => {
                     key={album.id} 
                     className={`album-item ${isSpotlight ? 'spotlight' : ''}`}
                     onClick={() => handleAlbumClick(album)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMenu({ show: true, x: e.pageX, y: e.pageY, targetId: album.id, type: 'album' });
+                    }}
+                    onTouchStart={(e) => handleTouchStart(e, album.id, 'album')}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchMove={handleTouchEnd}
                     style={{ cursor: editingId === album.id ? 'default' : 'pointer' }}
                   >
                     <div className="album-img-box">
