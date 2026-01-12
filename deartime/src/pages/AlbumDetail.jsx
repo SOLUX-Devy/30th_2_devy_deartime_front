@@ -20,7 +20,6 @@ const AlbumDetail = () => {
     return <div className="error-msg">앨범 정보를 찾을 수 없습니다.</div>;
   }
 
-  // 커버 수정 핸들러
   const handleCoverEdit = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -29,7 +28,6 @@ const AlbumDetail = () => {
     }
   };
 
-  // 사진 업로드 핸들러
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     const newPhotos = files.map(file => ({
@@ -40,14 +38,12 @@ const AlbumDetail = () => {
     e.target.value = "";
   };
 
-  // 사진 삭제 핸들러
   const handleDeletePhoto = (photoId) => {
     if (window.confirm("이 사진을 앨범에서 삭제하시겠습니까?")) {
       setAlbumPhotos(prev => prev.filter(photo => photo.id !== photoId));
     }
   };
 
-  // 뒤로가기 핸들러
   const handleBack = () => {
     navigate("/gallery", { 
       state: { 
@@ -72,7 +68,8 @@ const AlbumDetail = () => {
         <div className="album-banner" onClick={() => coverInputRef.current.click()}>
           <img src={currentCover} alt="Album Cover" className="banner-img" />
           <div className="banner-overlay">
-            <camera size={32} color="white" />
+            {/* 대문자로 수정 */}
+            <Camera size={32} color="white" />
             <span>커버 사진 변경</span>
           </div>
           <input 
@@ -88,7 +85,8 @@ const AlbumDetail = () => {
           <div className="photo-grid1">
             {/* 사진 추가 버튼 */}
             <div className="grid-item add-btn-item" onClick={() => photoInputRef.current.click()}>
-              <plus size={40} color="#ffffff" strokeWidth={1} />
+              {/* 대문자로 수정 */}
+              <Plus size={40} color="#ffffff" strokeWidth={1} />
               <input 
                 type="file" 
                 ref={photoInputRef} 
@@ -103,8 +101,12 @@ const AlbumDetail = () => {
             {albumPhotos.map((photo) => (
               <div key={photo.id} className="grid-item photo-item1">
                 <img src={photo.url} alt="album-content" />
-                <button className="delete-photo-btn" onClick={() => handleDeletePhoto(photo.id)}>
-                  <x size={16} color="white" />
+                <button className="delete-photo-btn" onClick={(e) => {
+                  e.stopPropagation(); // 그리드 클릭 이벤트 전파 방지
+                  handleDeletePhoto(photo.id);
+                }}>
+                  {/* 대문자로 수정 */}
+                  <X size={16} color="white" />
                 </button>
               </div>
             ))}

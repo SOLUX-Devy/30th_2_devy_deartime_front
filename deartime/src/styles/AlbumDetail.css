@@ -1,5 +1,6 @@
 /* src/pages/AlbumDetail.css */
 
+/* 전체 컨테이너 */
 .album-detail-container {
   min-height: 100vh;
   display: flex;
@@ -8,8 +9,7 @@
   color: white;
 }
 
-
-/* 상단 네비바 */
+/* --- 상단 네비바 --- */
 .detail-top-nav {
   display: flex;
   justify-content: space-between;
@@ -23,6 +23,11 @@
   color: #ffffff;
   font-size: 18px;
   cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
 }
 
 .album-nav-title {
@@ -32,125 +37,9 @@
   padding-bottom: 5px;
 }
 
-.create-header-btn {
-  border: 1px solid white;
-  background: none;
-  color: white;
-  padding: 6px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* 상단 배너 영역 */
+/* --- 상단 배너(커버) 영역 --- */
 .album-banner {
-  width: 100%;
-  height: 280px; /* 이미지의 회색 박스 비율 반영 */
-  background-color: #d9d9d9;
-  border-radius: 20px;
-  overflow: hidden;
-  margin-bottom: 30px;
-}
-
-.banner-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 사진 그리드 영역 */
-.album-content-area {
-  flex: 1;
-  overflow-y: auto; /* 사진이 많아지면 스크롤 발생 */
-}
-
-.photo-grid1 {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr); /* 8열 구성 */
-  gap: 12px;
-}
-
-.grid-item {
-  aspect-ratio: 1 / 1;
-  background-color: #d9d9d9; /* 회색 박스 */
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.grid-item:hover {
-  transform: scale(1.02);
-}
-
-/* 추가 버튼 스타일 */
-.add-btn-item {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-}
-
-.photo-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 스크롤바 커스텀 (선택사항) */
-.album-content-area::-webkit-scrollbar {
-  width: 6px;
-}
-.album-content-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-/* 기존 스타일에 아래 내용을 추가하거나 수정하세요 */
-
-.photo-item1 {
-  position: relative; /* 삭제 버튼의 기준점 */
-}
-
-/* 삭제 버튼 스타일 */
-.delete-photo-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 배경 */
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0; /* 기본적으로 숨김 */
-  transition: opacity 0.2s, background-color 0.2s;
-  z-index: 10;
-}
-
-/* 사진에 마우스를 올렸을 때만 삭제 버튼 노출 */
-.photo-item:hover .delete-photo-btn {
-  opacity: 1;
-}
-
-.delete-photo-btn:hover {
-  background-color: rgba(255, 77, 77, 0.8); /* 호버 시 붉은색 */
-}
-
-.photo-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* 기존 스타일에 아래 내용 추가/수정 */
-
-.album-banner {
-  position: relative; /* 오버레이 배치를 위해 필요 */
+  position: relative; /* 오버레이 배치를 위한 기준점 */
   width: 100%;
   height: 280px;
   background-color: #d9d9d9;
@@ -160,6 +49,12 @@
   cursor: pointer;
 }
 
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* 커버 수정용 오버레이 */
 .banner-overlay {
   position: absolute;
@@ -167,7 +62,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* 마우스 올렸을 때 살짝 어둡게 */
+  background-color: rgba(0, 0, 0, 0.4); /* 마우스 올렸을 때 어둡게 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -187,8 +82,86 @@
   font-weight: 500;
 }
 
-.banner-img {
+/* --- 사진 그리드 영역 --- */
+.album-content-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.photo-grid1 {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* 8열 구성 */
+  gap: 12px;
+}
+
+/* 그리드 공통 아이템 (회색 박스) */
+.grid-item {
+  aspect-ratio: 1 / 1;
+  background-color: #d9d9d9;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.grid-item:hover {
+  transform: scale(1.02);
+}
+
+/* 사진 추가 버튼 아이템 (+) */
+.add-btn-item {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+.add-btn-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 개별 사진 아이템 */
+.photo-item1 img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+/* 삭제 버튼 스타일 (X) */
+.delete-photo-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0; /* 평소에는 숨김 */
+  transition: opacity 0.2s, background-color 0.2s;
+  z-index: 10;
+}
+
+.photo-item1:hover .delete-photo-btn {
+  opacity: 1;
+}
+
+.delete-photo-btn:hover {
+  background-color: rgba(255, 77, 77, 0.9); /* 호버 시 빨간색 */
+}
+
+/* --- 스크롤바 커스텀 --- */
+.album-content-area::-webkit-scrollbar {
+  width: 6px;
+}
+.album-content-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
