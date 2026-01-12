@@ -7,7 +7,7 @@ import Signup from "./pages/signup.jsx";
 import Home from "./pages/home.jsx";
 
 /*개발 후 주석 풀어서 사용해주세요! -나연 */
-/*import Gallery from "./pages/gallery";*/
+import Gallery from "./pages/gallery";
 import Letterbox from "./pages/letterboxPage";
 import SendLetterPage from "./pages/sendLetterPage";
 import Timecapsule from "./pages/timecapsule";
@@ -15,6 +15,7 @@ import TimeCapsuleCreate from "./pages/TimeCapsuleCreate";
 import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
 import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
+import AlbumDetail from "./pages/AlbumDetail";
 
 /* ✅ 여기 추가: FriendSelectPage import */
 import FriendSelectPage from "./components/FriendSelect"; 
@@ -44,7 +45,9 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/home" element={<Home />} />
 
-          {/* <Route path="/gallery" element={<Gallery />} /> */}
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+
           <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
           <Route path="/letterbox" element={<Letterbox />} />
 
