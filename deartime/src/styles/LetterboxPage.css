@@ -102,6 +102,17 @@
     text-align: right;
 }
 
+.letter-card-placeholder {
+    /* LetterCard와 동일한 비율을 주어 높이를 일치시키기 */
+    aspect-ratio: 9 / 10; 
+    width: 100%; 
+    
+    box-sizing: border-box;
+    
+    visibility: hidden; 
+    pointer-events: none; /* 클릭 차단 */
+}
+
 /*우리의 우체통 초기 화면*/
 .shared-mailbox-empty {
     display: flex;

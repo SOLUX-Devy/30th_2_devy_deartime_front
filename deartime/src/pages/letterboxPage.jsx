@@ -79,6 +79,8 @@ const Letterbox = () => {
         return letters.slice(firstIdx, lastIdx);
     }, [safePage, letters]);
 
+    const emptySlotsCount = pageSize - currentItems.length;
+
     //삭제 로직 : 특정 ID 제외 나머지만 남김
     const deleteLetter = (id) => {
         // filter 함수를 사용하는 것이 가장 Efficient(효율적)합니다.
@@ -208,20 +210,27 @@ const Letterbox = () => {
                         {isLoading ? (
                         <p>로딩 중...</p>
                         ) : (
-                        currentItems.map((letter) => (
-                            <LetterCard 
-                            key={letter.letterId} 
-                            data={letter} 
-                            isFocused={focusedId === letter.letterId} 
-                            setFocusedId={setFocusedId}
-                            onDelete={deleteLetter}
-                            onToggleBookmark={handleToggleBookmark} 
-                            onMarkAsRead={handleMarkAsRead}
-                            />  
-                        ))
+                            <>
+                                {/* 실제 데이터 렌더링 */}
+                                {currentItems.map((letter) => (
+                                    <LetterCard 
+                                        key={letter.letterId} 
+                                        data={letter} 
+                                        isFocused={focusedId === letter.letterId} 
+                                        setFocusedId={setFocusedId}
+                                        onDelete={deleteLetter}
+                                        onToggleBookmark={handleToggleBookmark} 
+                                        onMarkAsRead={handleMarkAsRead}
+                                    />  
+                                ))}
+
+                                {/* 부족한 개수만큼 빈 카드(Placeholder) 생성 */}
+                                {activeIndex !== 3 && Array.from({ length: emptySlotsCount }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="letter-card-placeholder" />
+                                ))}
+                            </>
                         )}
                     </main>
-
                     {/* 페이지네이션 */}
                     {totalPages > 1 && (
                         <div className="tc-pagination">
