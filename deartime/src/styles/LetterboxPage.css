@@ -93,10 +93,10 @@
 }
 
 .tc-pagination-info {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    color: rgba(255, 255, 255);
     margin-bottom: 20px;
-    margin-top:30px;
+    margin-top:35px;
     display: block;
     text-align: right;
 }
@@ -167,3 +167,4 @@
   background-color: #D6DEE6 !important;
   color: #333 !important;
 }
+

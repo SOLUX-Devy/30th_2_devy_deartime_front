@@ -1,6 +1,7 @@
-// src/pages/FriendList.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+
 import bg from "../assets/background_nostar.png";
 import finder from "../assets/finder.png";
 
@@ -36,26 +37,112 @@ export default function FriendList() {
   // ✅ 검색어
   const [keyword, setKeyword] = useState("");
 
-  // ✅ 친구 목록(accepted만 있다고 했으니 그대로 사용)
-  const friends = useMemo(() => {
-    const list = mockFriendListResponse?.data?.friends ?? [];
-    return list;
-  }, []);
+  // ✅ 친구 목록 state (삭제 반영하려면 state여야 함)
+  const [friendsData, setFriendsData] = useState(
+    mockFriendListResponse?.data?.friends ?? []
+  );
+
+  // ✅ 컨텍스트 메뉴 상태 (Gallery랑 동일 구조)
+  const [menu, setMenu] = useState({
+    show: false,
+    x: 0,
+    y: 0,
+    targetId: null,
+  });
+
+  // ✅ 롱프레스 타이머
+  const longPressTimerRef = useRef(null);
+  const isLongPressActive = useRef(false);
+
+  const pressTargetElRef = useRef(null);
 
   // ✅ 검색 필터
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
-    if (!k) return friends;
-    return friends.filter((f) =>
+    if (!k) return friendsData;
+    return friendsData.filter((f) =>
       (f.friendNickname || "").toLowerCase().includes(k)
     );
-  }, [friends, keyword]);
+  }, [friendsData, keyword]);
 
-  // ✅ count 표시(검색 결과 기준으로 보여주고 싶으면 filteredFriends.length로 바꾸면 됨)
-  const countText = `${mockFriendListResponse.data.count}명의 친구`;
+  // ✅ 상단 count 텍스트 (검색 결과 기준 원하면 filteredFriends.length로 바꾸면 됨)
+  const countText = `${friendsData.length}명의 친구`;
+
+  // ✅ 메뉴 닫기: 바깥 클릭 / ESC / 스크롤 / 리사이즈
+  useEffect(() => {
+    if (!menu.show) return;
+
+    const close = () => setMenu((prev) => ({ ...prev, show: false }));
+    const onKey = (e) => e.key === "Escape" && close();
+    const onScroll = () => close();
+    const onResize = () => close();
+
+    window.addEventListener("click", close);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [menu.show]);
+
+  // ✅ 롱프레스 시작(모바일/마우스 공통)
+  const startPress = (e, id) => {
+    if (e.type === "mousedown" && e.button !== 0) return;
+
+    pressTargetElRef.current = e.currentTarget;
+    isLongPressActive.current = false;
+
+    longPressTimerRef.current = setTimeout(() => {
+      const el = pressTargetElRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+      isLongPressActive.current = true;
+    }, 500);
+  };
+
+  const cancelPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    pressTargetElRef.current = null;
+  };
+
+  // ✅ 우클릭
+  const handleContextMenu = (e, id) => {
+    e.preventDefault();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+    isLongPressActive.current = true;
+  };
+
+  // ✅ 삭제
+  const handleDelete = () => {
+    if (!menu.targetId) return;
+
+    setFriendsData((prev) => prev.filter((f) => f.friendId !== menu.targetId));
+    setMenu((prev) => ({ ...prev, show: false }));
+  };
 
   return (
-    <div className="friendlist-container" style={{ backgroundImage: `url(${bg})` }}>
+    <div
+      className="friendlist-container"
+      style={{ backgroundImage: `url(${bg})` }}
+    >
       {/* 상단 영역 */}
       <div className="friend-topbar">
         <div className="friend-topnav">
@@ -82,7 +169,11 @@ export default function FriendList() {
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="친구를 검색하세요"
           />
-          <button type="button" className="friend-search-btn" aria-label="search">
+          <button
+            type="button"
+            className="friend-search-btn"
+            aria-label="search"
+          >
             <img className="friend-search-icon" src={finder} alt="" />
           </button>
         </div>
@@ -90,18 +181,48 @@ export default function FriendList() {
         <div className="friend-count">{countText}</div>
       </div>
 
-      {/* ✅ 카드 그리드(제한 없이 아래로) */}
+      {/* ✅ 오버레이 (Gallery랑 동일: menu.show면 표시) */}
+      {menu.show && (
+        <div
+          className="context-menu-overlay"
+          onClick={() => setMenu((prev) => ({ ...prev, show: false }))}
+        />
+      )}
+
+      {/* ✅ 삭제 메뉴 (1개짜리) */}
+      {menu.show && (
+        <div
+          className="custom-context-menu"
+          style={{ top: menu.y, left: menu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="menu-item delete" onClick={handleDelete}>
+            <Trash2 size={20} color="#FF4D4D" />
+            <span>삭제</span>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ 카드 그리드 */}
       <div className="friend-grid">
-        {filteredFriends.map((f) => (
-          <FriendCard
-            key={f.friendId}
-            friend={f}
-            onRequestDelete={(friend) => {
-              // TODO: 여기서 삭제 확인 모달 or API 연결
-              console.log("delete:", friend.friendId);
-            }}
-          />
-        ))}
+        {filteredFriends.map((f) => {
+          const isSpotlight = menu.show && menu.targetId === f.friendId;
+
+          return (
+            <div
+              key={f.friendId}
+              className={`friend-item ${isSpotlight ? "spotlight" : ""}`}
+              onContextMenu={(e) => handleContextMenu(e, f.friendId)}
+              onMouseDown={(e) => startPress(e, f.friendId)}
+              onMouseUp={cancelPress}
+              onMouseLeave={cancelPress}
+              onTouchStart={(e) => startPress(e, f.friendId)}
+              onTouchEnd={cancelPress}
+            >
+              <FriendCard friend={f} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
