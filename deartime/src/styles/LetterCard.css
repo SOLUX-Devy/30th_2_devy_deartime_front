@@ -70,9 +70,28 @@
     font-weight: bold;
 }
 
+/* 즐겨찾기 */
 .bookmark-icon {
-    font-size: 1.2rem;
-    color: #ffd700;
+    cursor: pointer;
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.4); 
+    
+    display: inline-block;
+    transition: all 0.2s ease; 
+}
+
+.bookmark-icon::before {
+    content: '☆';
+}
+
+.bookmark-icon:hover::before {
+    content: '★';
+    color: #ffed8af3; 
+}
+
+.bookmark-icon.active::before {
+    content: '★';
+    color: #FFD700; 
 }
 
 /*삭제 관련 css*/
