@@ -129,20 +129,20 @@
   right: 0;
   top: 48px;
   width: 250px;
-    height: 350px;
+  height: 350px;
 
   border-radius: 15px;
-border: 1px solid #2A4280;
-background: #0F1839;
-color: #FFF;
-text-align: center;
-font-family: Inter;
-font-size: 13px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-display: flex;
-  flex-direction: column;   /* ⭐ 세로 정렬 */
+  border: 1px solid #2A4280;
+  background: #0F1839;
+  color: #FFF;
+  text-align: center;
+  font-family: Inter;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  display: flex;
+  flex-direction: column;   
   align-items: center;
 }
 
@@ -158,18 +158,18 @@ display: flex;
 }
 
 .profile-circle-large {
-  width: 96px;        /* 가로 */
-  height: 96px;       /* 세로 (가로랑 같아야 함) */
-  border-radius: 50%; /* 🔥 동그랗게 */
-  overflow: hidden;   /* 이미지 넘치는 부분 자르기 */
-  margin: 12px auto;  /* 가운데 정렬 */
+  width: 96px;       
+  height: 96px;       
+  border-radius: 50%; 
+  overflow: hidden;   
+  margin: 12px auto;  
 }
 
 /* 이미지 */
 .profile-circle-large img {
   width: 100%;
   height: 100%;
-  object-fit: cover;  /* 비율 유지하면서 꽉 채움 */
+  object-fit: cover; 
   display: block;
 }
 
@@ -214,6 +214,7 @@ margin-top: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   align-items: center;
   display: flex;
+  margin-left: -25px;
 }
 
 .noti-item:last-child {
