@@ -119,6 +119,7 @@
     align-items: center;
     height: 50vh;
     text-align: center;
+    margin-top:30px;
 }
 
 .empty-content p {
@@ -131,8 +132,8 @@
     background-color: #D1E9E9; 
     color: #333;             
     
-    width: 10em;
-    height: 2em;
+    width: 12em !important;
+    height: 3em !important;
     padding: 7px 14px 7px 17px;
     border-radius: 8px;
     
@@ -156,6 +157,13 @@
     transition: color 0.2s;
 }
 
-.friend-select-trigger:hover .arrow {
-    color: #d5282b;
+.arrow:hover  {
+    color: #d5282b;       
+    transform: scale(1.1); 
+}
+
+/* 친구 선택 버튼(선택 전 화면에서만 등장) */
+.friend-select-trigger {
+  background-color: #D6DEE6 !important;
+  color: #333 !important;
 }
