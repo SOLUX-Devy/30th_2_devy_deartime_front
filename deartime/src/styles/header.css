@@ -433,3 +433,35 @@
 .noti-dropdown::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ===============================
+   📱 Tablet (iPad / iPad Pro)
+   로고 ↔ nav 간격만 조절
+=============================== */
+@media (max-width: 1024px) {
+  .left-section {
+    gap: 6rem; /* 기존 12rem → 축소 */
+  }
+  .nav {
+    gap: 5rem;
+  }
+  .nav .item {
+    font-size: 14px;
+  }
+}
+
+/* ===============================
+   📱 Small Tablet
+=============================== */
+@media (max-width: 768px) {
+  .left-section {
+    gap: 4rem;
+  }
+  .nav {
+    gap: 3.5rem;
+  }
+  .nav .item {
+    font-size: 13px;
+  }
+}
+
