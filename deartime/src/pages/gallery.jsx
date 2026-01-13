@@ -195,7 +195,7 @@ const Gallery = () => {
       )}
 
       {/* 상단 네비게이션 및 제어 툴바 */}
-      <div className="tc-topbar">
+      <div className="tc-topbar1">
         <div className="tab-group">
           {tabs.map((tab, idx) => (
             <span key={tab} className={`tab-item ${activeIndex === idx ? 'active' : ''}`} onClick={() => setActiveIndex(idx)}>
@@ -203,7 +203,7 @@ const Gallery = () => {
             </span>
           ))}
         </div>
-        <div className="tc-topbar-right">
+        <div className="tc-topbar1-right">
           <button className="tc-create-btn" onClick={() => activeIndex === 0 ? fileInputRef.current.click() : setIsModalOpen(true)}>
             {activeIndex === 0 ? '업로드' : '생성'}
           </button>

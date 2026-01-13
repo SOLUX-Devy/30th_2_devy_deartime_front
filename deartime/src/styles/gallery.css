@@ -33,7 +33,7 @@
 } 
 
 /* 상단 탭 및 버튼 바 */
-.tc-topbar {
+.tc-topbar1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
