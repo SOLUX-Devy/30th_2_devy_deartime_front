@@ -16,6 +16,8 @@ const Letterbox = () => {
 
     const [selectedFriend, setSelectedFriend] = useState(null); // 친구 선택 상태
 
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false); // 친구 선택기 열림 상태
+
     const handlePageClick = () => {
         if (focusedId) {
             setFocusedId(null);
@@ -77,6 +79,8 @@ const Letterbox = () => {
         return letters.slice(firstIdx, lastIdx);
     }, [safePage, letters]);
 
+    const emptySlotsCount = pageSize - currentItems.length;
+
     //삭제 로직 : 특정 ID 제외 나머지만 남김
     const deleteLetter = (id) => {
         // filter 함수를 사용하는 것이 가장 Efficient(효율적)합니다.
@@ -115,75 +119,136 @@ const Letterbox = () => {
                         activeIndex={activeIndex} 
                         setActiveIndex={(index) => {
                             setPage(1);
-                            // index가 3(우리의 우체통)이면 false, 아니면 true
-                            if (index === 3) {
-                                setIsLoading(false);
-                            } else {
-                                setIsLoading(true);
-                            }
+                            setIsLoading(index !== 3);
                             setActiveIndex(index);
+                            // 🌟 탭 전환 시 팝업 상태와 선택된 친구 초기화 (필요시)
+                            if (index !== 3) {
+                                setIsSelectorOpen(false);
+                                setSelectedFriend(null);
+                            }
                         }} 
-                        setPage={setPage} 
                     />
                     <SendButton />
             </header>
             <div className="letterbox-content">
                 {activeIndex === 3 ? (
-                    !selectedFriend ? (
-                        /* 팀원분이 만든 친구 선택 컴포넌트 활용 */
-                        /* 팝업 형태이므로, 닫기(onClose)와 선택(onSelect) 로직만 연결해주면 됩니다. */
-                        <FriendSelect 
-                            onClose={() => setActiveIndex(0)} // 닫으면 '받은 편지함'으로 이동하거나
-                            onSelect={(friend) => setSelectedFriend(friend)} // 선택 시 친구 정보 저장
-                        />
-                    ) : (
-                        /* 친구가 선택된 후에는 SharedMailbox 실행 */
-                        <SharedMailbox 
-                            selectedFriend={selectedFriend} 
-                            onBack={() => setSelectedFriend(null)} 
-                        />
-                    )
-                ) : (
+                    /* 우리의 우체통 (Index 3) */
                     <>
-                <span className="tc-pagination-info">
-                    {totalElements}개 중 {startItem}-{endItem}
-                </span>
+                    {!selectedFriend ? (
+                        /* 친구 선택 전: 초기 화면 */
+                        <div className="shared-mailbox-container">
+                            
+                            {!selectedFriend && (
+                                <header className="shared-header">
+                                <button 
+                                    className="friend-select-trigger user-tag" // 두 클래스 모두 적용
+                                    onClick={() => setIsSelectorOpen(true)}
+                                >
+                                    친구 선택
+                                    <span className="arrow">→</span>
+                                </button>
+                                </header>
+                            )}
 
-                <main className="letter-grid">
-                    {isLoading ? (
-                        <p>로딩 중...</p>
+                            {!selectedFriend ? (
+                                <div className="shared-mailbox-empty">
+                                <div className="empty-content">
+                                    <div className="mail-icon">
+                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                    </div>
+                                    <p>친구를 선택하면 우리의 추억이 펼쳐집니다.</p>
+                                </div>
+                                </div>
+                            ) : (
+                                <SharedMailbox 
+                                selectedFriend={selectedFriend} 
+                                onBack={() => setSelectedFriend(null)} 
+                                />
+                            )}
+
+                            {/* 친구 선택기 팝업 (기존과 동일) */}
+                            {isSelectorOpen && (
+                                <FriendSelect 
+                                onClose={() => setIsSelectorOpen(false)} 
+                                onSelect={(friend) => {
+                                    setSelectedFriend(friend);
+                                    setIsSelectorOpen(false);
+                                }} 
+                                />
+                            )}
+                            </div>
                     ) : (
-                        currentItems.map((letter) => (
-                            <LetterCard 
-                                key={letter.letterId} data={letter} 
-                                isFocused={focusedId === letter.letterId} 
-                                setFocusedId={setFocusedId}
-                                onDelete={deleteLetter}
-                                onToggleBookmark={handleToggleBookmark} 
-                                onMarkAsRead={handleMarkAsRead}
-                            />  
-                        ))
+                        /* 친구 선택 후: 공유 우체통 화면 */
+                        <SharedMailbox 
+                        selectedFriend={selectedFriend} 
+                        onBack={() => setSelectedFriend(null)} 
+                        />
                     )}
-                </main>
 
-                {/* 페이지네이션 */}
-                {totalPages > 1 && (
-                    <div className="tc-pagination">
+                    {/* 친구 선택기 팝업 (조건에 상관없이 렌더링되도록 위치 조정) */}
+                    {isSelectorOpen && (
+                        <FriendSelect 
+                        onClose={() => setIsSelectorOpen(false)} 
+                        onSelect={(friend) => {
+                            setSelectedFriend(friend);
+                            setIsSelectorOpen(false);
+                        }} 
+                        />
+                    )}
+                    </>
+                ) : (
+                    /* 일반 편지함 (Index 0, 1, 2) */
+                    <>
+                    <span className="tc-pagination-info">
+                        {totalElements}개 중 {startItem}-{endItem}
+                    </span>
+
+                    <main className="letter-grid">
+                        {isLoading ? (
+                        <p>로딩 중...</p>
+                        ) : (
+                            <>
+                                {/* 실제 데이터 렌더링 */}
+                                {currentItems.map((letter) => (
+                                    <LetterCard 
+                                        key={letter.letterId} 
+                                        data={letter} 
+                                        isFocused={focusedId === letter.letterId} 
+                                        setFocusedId={setFocusedId}
+                                        onDelete={deleteLetter}
+                                        onToggleBookmark={handleToggleBookmark} 
+                                        onMarkAsRead={handleMarkAsRead}
+                                    />  
+                                ))}
+
+                                {/* 부족한 개수만큼 빈 카드(Placeholder) 생성 */}
+                                {activeIndex !== 3 && Array.from({ length: emptySlotsCount }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="letter-card-placeholder" />
+                                ))}
+                            </>
+                        )}
+                    </main>
+                    {/* 페이지네이션 */}
+                    {totalPages > 1 && (
+                        <div className="tc-pagination">
                         {pageNumbers.map((p) => (
                             <button
-                                key={p}
-                                type="button"
-                                onClick={() => setPage(p)}
-                                className={`tc-page ${p === safePage ? 'active' : ''}`}
+                            key={p}
+                            type="button"
+                            onClick={() => setPage(p)}
+                            className={`tc-page ${p === safePage ? 'active' : ''}`}
                             >
-                                {p}
+                            {p}
                             </button>
                         ))}
-                    </div>
+                        </div>
+                    )}
+                    </>
                 )}
-                </>
-                )}
-            </div>
+                </div>
         </div>
     );
 };

@@ -156,13 +156,8 @@ const LetterCard = ({ data, isFocused, setFocusedId, onDelete, onToggleBookmark,
                     <span 
                         className={`bookmark-icon ${starred ? 'active' : ''}`} 
                         onClick={handleBookmarkToggle}
-                        style={{ 
-                            cursor: 'pointer', 
-                            color: starred ? '#FFD700' : 'rgba(255, 255, 255, 0.4)',
-                            fontSize: '22px'
-                        }}
                     >
-                        {starred ? '★' : '☆'} 
+                        {/*starred ? '★' : '☆'*/} 
                     </span>
                 </div>
 

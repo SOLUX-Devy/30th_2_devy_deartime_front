@@ -26,9 +26,8 @@
     /* minmax(0, 1fr)로 카드가 부모 너비에 맞춰 줄어들게 설정 */
     grid-template-columns: repeat(4, minmax(0, 1fr)); 
     
-    /* 이미지에 명시된 간격 적용 */
     column-gap: 20px;
-    row-gap: 30px;
+    row-gap: 25px;
     
     /* 그리드 자체의 좌우 여백 설정 (이미지 기준) */
     width: 100%; 
@@ -100,4 +99,63 @@
     margin-top:30px;
     display: block;
     text-align: right;
+}
+
+.letter-card-placeholder {
+    /* LetterCard와 동일한 비율을 주어 높이를 일치시키기 */
+    aspect-ratio: 9 / 10; 
+    width: 100%; 
+    
+    box-sizing: border-box;
+    
+    visibility: hidden; 
+    pointer-events: none; /* 클릭 차단 */
+}
+
+/*우리의 우체통 초기 화면*/
+.shared-mailbox-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    text-align: center;
+}
+
+.empty-content p {
+    color: #ffffff;
+    margin: 20px 0;
+    font-size: 0.95rem;
+}
+
+.friend-select-trigger {
+    background-color: #D1E9E9; 
+    color: #333;             
+    
+    width: 10em;
+    height: 2em;
+    padding: 7px 14px 7px 17px;
+    border-radius: 8px;
+    
+    font-weight: bold;
+    font-size: 1em;
+    
+    /* 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    gap: 8px;
+    margin: 0 auto; 
+    border: none;
+    cursor: pointer;
+}
+
+.friend-select-trigger .arrow {
+    font-size: 1.2rem;
+    color: #333;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.friend-select-trigger:hover .arrow {
+    color: #d5282b;
 }
