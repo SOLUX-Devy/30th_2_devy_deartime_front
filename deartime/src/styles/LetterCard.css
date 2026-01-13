@@ -1,151 +1,78 @@
+/* src/styles/LetterCard.css */
+
+/* 카드 */
 .letter-card {
-    /* 가로 세로 비율 유지*/
-    aspect-ratio: 9 / 10;
-    box-sizing: border-box;
-    
-    /* 패딩을 유동적으로 조절하거나 약간 줄임 (카드가 작아질 때 대비) */
-    padding: 6% 8%; 
-    
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    
-    /* 배경 이미지 최적화 */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    
-    overflow: hidden; 
-    
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-    
-    width: 100%;
+  aspect-ratio: 9 / 10;
+  box-sizing: border-box;
+  padding: 6% 8%;
+
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  overflow: hidden;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 100%;
 }
 
-/* 테마별 텍스트 색상 대응 */
+/* 테마별 텍스트 */
 .letter-card.theme-DEFAULT { color: #ffffff; }
 .letter-card.theme-PINK { color: #4a4a4a; }
 .letter-card.theme-GREY { color: #4a4a4a; }
 .letter-card.theme-BLUE { color: #2c3e50; }
 
 .card-top {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;            
-    padding: 0 5px;            
-    height: 2em;                  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+  height: 2em;
 }
 
 .sender-info {
-    font-size: 1.0rem;
-    font-weight: 600;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .summary-text {
-    font-size: 0.95rem; 
-    line-height: 1.5;
-    margin-top: 15px;
-    
-    /* 텍스트 생략 처리 */
-    display: -webkit-box;
-    -webkit-line-clamp: 5; 
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-top: 15px;
 
-    word-break: keep-all; 
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  word-break: keep-all;
 }
 
 .card-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-    opacity: 0.8;
-}
-
-.status-unread {
-    color: #ff6b6b;
-    font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 /* 즐겨찾기 */
 .bookmark-icon {
-    cursor: pointer;
-    font-size: 22px;
-    color: rgba(255, 255, 255, 0.4); 
-    
-    display: inline-block;
-    transition: all 0.2s ease; 
+  cursor: pointer;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.4);
+  display: inline-block;
+  transition: all 0.2s ease;
 }
+.bookmark-icon::before { content: "☆"; }
+.bookmark-icon:hover::before { content: "★"; color: #ffed8af3; }
+.bookmark-icon.active::before { content: "★"; color: #ffd700; }
 
-.bookmark-icon::before {
-    content: '☆';
-}
-
-.bookmark-icon:hover::before {
-    content: '★';
-    color: #ffed8af3; 
-}
-
-.bookmark-icon.active::before {
-    content: '★';
-    color: #FFD700; 
-}
-
-/*삭제 관련 css*/
-.delete-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 16px; /* 카드와 동일한 곡률 */
-    z-index: 10;
-}
-
-/* 삭제 버튼 스타일 */
-.delete-btn {
-    background: #1a1f3c; 
-    color: #ff4d4d;      
-    border: 1px solid #2A4280;
-    padding: 10px 24px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.trash-icon {
-    font-size: 18px;
-}
-
-.delete-btn:hover, .delete-btn:focus {
-    background: #0E77BC; 
-    color: #EA2E35; 
-    border: 1px solid #2A4280;     
-}
-
-/* 그리드 전체에 포커스된 카드가 있을 때, 모든 카드를 일단 어둡게 함 */
-.letterbox-container.is-focusing .letter-card {
-    filter: brightness(0.6);
-    transition: all 0.3s ease;
-    pointer-events: none; /* 클릭 방지 */
-    cursor: default;
-}
-
-/* 그중에서 'focused' 클래스를 가진 카드만 다시 밝게 만듦 */
-.letterbox-container.is-focusing .letter-card.focused {
-    filter: brightness(1) !important;
-    z-index: 100;           
-    pointer-events: auto; 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);   
-}
+/* ✅ FriendList처럼: 선택 카드 제외 전체 어둡게(페이지 CSS에서 제어) */
+/* 여기서는 카드 자체 스타일만 유지 */

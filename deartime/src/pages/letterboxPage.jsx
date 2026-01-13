@@ -1,255 +1,414 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import '../styles/LetterboxPage.css';
-import LetterCard from '../components/LetterCard';
-import MailTabs from '../components/MailTabs'; 
-import SendButton from '../components/SendButton'; 
-import SharedMailbox from '../components/SharedMailbox';
+// src/pages/letterboxPage.jsx
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import "../styles/LetterboxPage.css";
+
+import LetterCard from "../components/LetterCard";
+import MailTabs from "../components/MailTabs";
+import SendButton from "../components/SendButton";
+import SharedMailbox from "../components/SharedMailbox";
 import FriendSelect from "../components/FriendSelect";
+import DeleteCheck from "../components/DeleteCheck";
 
-const Letterbox = () => {
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [page, setPage] = useState(1);
+import { Trash2 } from "lucide-react";
 
-    const [letters, setLetters] = useState([]); // 편지 데이터 상태
-    const [isLoading, setIsLoading] = useState(true); // 로딩 상태 관리
-    const [focusedId, setFocusedId] = useState(null); // 현재 포커스된 카드 ID 관리
+export default function Letterbox() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [page, setPage] = useState(1);
 
-    const [selectedFriend, setSelectedFriend] = useState(null); // 친구 선택 상태
+  const [letters, setLetters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    const [isSelectorOpen, setIsSelectorOpen] = useState(false); // 친구 선택기 열림 상태
+  // ✅ 선택(spotlight) 카드 id
+  const [focusedId, setFocusedId] = useState(null);
 
-    const handlePageClick = () => {
-        if (focusedId) {
-            setFocusedId(null);
-        }
-    };
+  // ✅ 컨텍스트 메뉴(FriendList 동일)
+  const [menu, setMenu] = useState({
+    show: false,
+    x: 0,
+    y: 0,
+    targetId: null,
+  });
 
-    const pageSize = 8; // 한 페이지에 보여줄 카드 개수
+  // ✅ 삭제 확인 모달
+  const [isDeleteCheckOpen, setIsDeleteCheckOpen] = useState(false);
 
-    // 탭 인덱스별 API 경로 매핑
-    // 실제 서버 연결 시 해당 경로로 변경 필요, 현재는 publick 폴더에 넣어놓은 mock 데이터 사용
-    const getApiUrl = (index) => {
-        switch (index) {
-            case 0: return '/letterboxMocks/received.json'; // 받은 편지
-            case 1: return '/letterboxMocks/sent.json';     // 보낸 편지
-            case 2: return '/letterboxMocks/bookmarks.json'; // 즐겨찾기
-            // 우리의 우체통 부분은 제거
-            default: return '/letterboxMocks/received.json';
-        }
-    };
+  // ✅ 롱프레스
+  const longPressTimerRef = useRef(null);
+  const pressTargetElRef = useRef(null);
+  const justLongPressedRef = useRef(false);
 
-    // activeIndex가 바뀔 때마다 서버(혹은 mock)에 새로 요청
-    useEffect(() => {
-        if (activeIndex === 3) return;
+  // 우리의 우체통(친구 선택)
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
-        // 0, 1, 2일 때만 비동기 fetch 실행
-        const url = getApiUrl(activeIndex);
-        if (!url) return;
+  const pageSize = 8;
 
-        // 실제 Spring Boot 연결 시: fetch(`http://localhost:8080/api/letters/${getApiUrl(activeIndex)}?page=${page}`)
-        fetch(getApiUrl(activeIndex)) 
-            .then((res) => res.json())
-            .then((json) => {
-                setLetters(json.data); // 서버가 준 해당 탭의 데이터로 교체
-                setIsLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setIsLoading(false);
-            });
-    }, [activeIndex]); // 탭이 바뀔 때 실행
+  const getApiUrl = (index) => {
+    switch (index) {
+      case 0:
+        return "/letterboxMocks/received.json";
+      case 1:
+        return "/letterboxMocks/sent.json";
+      case 2:
+        return "/letterboxMocks/bookmarks.json";
+      default:
+        return "/letterboxMocks/received.json";
+    }
+  };
 
-    // 페이지 계산 로직
-    const totalElements = letters.length;
-    const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
-    const safePage = Math.min(page, totalPages);
+  useEffect(() => {
+    if (activeIndex === 3) return;
 
-    const startItem = totalElements === 0 ? 0 : (safePage - 1) * pageSize + 1;
-    const endItem = Math.min(safePage * pageSize, totalElements);
+    const url = getApiUrl(activeIndex);
+    if (!url) return;
 
-    const pageNumbers = useMemo(
-        () => Array.from({ length: totalPages }, (_, i) => i + 1),
-        [totalPages]
+    setIsLoading(true);
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((json) => {
+        setLetters(json.data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setIsLoading(false);
+      });
+  }, [activeIndex]);
+
+  // 페이지 계산
+  const totalElements = letters.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  const startItem = totalElements === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const endItem = Math.min(safePage * pageSize, totalElements);
+
+  const pageNumbers = useMemo(
+    () => Array.from({ length: totalPages }, (_, i) => i + 1),
+    [totalPages]
+  );
+
+  const currentItems = useMemo(() => {
+    const firstIdx = (safePage - 1) * pageSize;
+    const lastIdx = firstIdx + pageSize;
+    return letters.slice(firstIdx, lastIdx);
+  }, [safePage, letters]);
+
+  const emptySlotsCount = pageSize - currentItems.length;
+
+  // 삭제
+  const deleteLetter = (id) => {
+    setLetters((prev) => prev.filter((letter) => letter.letterId !== id));
+  };
+
+  // 즐겨찾기 토글
+  const handleToggleBookmark = (id) => {
+    setLetters((prev) =>
+      prev.map((letter) =>
+        letter.letterId === id
+          ? { ...letter, isBookmarked: !letter.isBookmarked }
+          : letter
+      )
     );
+  };
 
-    // 현재 페이지에 보여줄 데이터 필터링
-    const currentItems = useMemo(() => {
-        const firstIdx = (safePage - 1) * pageSize;
-        const lastIdx = firstIdx + pageSize;
-        return letters.slice(firstIdx, lastIdx);
-    }, [safePage, letters]);
+  // 읽음 처리
+  const handleMarkAsRead = (id) => {
+    setLetters((prev) =>
+      prev.map((letter) =>
+        letter.letterId === id ? { ...letter, isRead: true } : letter
+      )
+    );
+  };
 
-    const emptySlotsCount = pageSize - currentItems.length;
+  // =========================
+  // FriendList 방식: 메뉴 열기/닫기
+  // =========================
+  const closeMenu = () => {
+    setMenu((prev) => ({ ...prev, show: false, targetId: null }));
+    setFocusedId(null);
+  };
 
-    //삭제 로직 : 특정 ID 제외 나머지만 남김
-    const deleteLetter = (id) => {
-        // filter 함수를 사용하는 것이 가장 Efficient(효율적)합니다.
-        setLetters((prevLetters) => prevLetters.filter(letter => letter.letterId !== id));
+  // 메뉴가 열려있으면 ESC/스크롤/리사이즈로 닫기 (FriendList 동일)
+  useEffect(() => {
+    if (!menu.show) return;
+
+    const onKey = (e) => e.key === "Escape" && closeMenu();
+    const onScroll = () => closeMenu();
+    const onResize = () => closeMenu();
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
     };
+  }, [menu.show]);
 
-    //즐겨찾기 토글 로직
-    const handleToggleBookmark = (id) => {
-        setLetters(prevLetters => 
-            prevLetters.map(letter => 
-                letter.letterId === id 
-                    ? { ...letter, isBookmarked: !letter.isBookmarked } 
-                    : letter
-            )
-        );
-    };
+  // 카드 중앙 좌표로 메뉴 띄우기
+  const openMenuAtCardCenter = (el, id) => {
+    const rect = el.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    //읽음 처리 로직
-    const handleMarkAsRead = (id) => {
-        setLetters(prevLetters => 
-            prevLetters.map(letter => 
-                letter.letterId === id 
-                    ? { ...letter, isRead: true } 
-                    : letter
-            )
-        );
-    };
+    setFocusedId(id);
+    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+  };
 
-    return (
-        <div 
-            className={`letterbox-container ${focusedId ? 'is-focusing' : ''}`}
-            onClick={handlePageClick} // 여기서 모든 클릭을 감지
-        >
-            <header className="letterbox-header" onClick={(e) => e.stopPropagation()}>
-                    <MailTabs 
-                        activeIndex={activeIndex} 
-                        setActiveIndex={(index) => {
-                            setPage(1);
-                            setIsLoading(index !== 3);
-                            setActiveIndex(index);
-                            // 🌟 탭 전환 시 팝업 상태와 선택된 친구 초기화 (필요시)
-                            if (index !== 3) {
-                                setIsSelectorOpen(false);
-                                setSelectedFriend(null);
-                            }
-                        }} 
-                    />
-                    <SendButton />
-            </header>
-            <div className="letterbox-content">
-                {activeIndex === 3 ? (
-                    /* 우리의 우체통 (Index 3) */
-                    <>
-                    {!selectedFriend ? (
-                        /* 친구 선택 전: 초기 화면 */
-                        <div className="shared-mailbox-container">
-                            
-                            {!selectedFriend && (
-                                <header className="shared-header">
-                                <button 
-                                    className="friend-select-trigger user-tag" // 두 클래스 모두 적용
-                                    onClick={() => setIsSelectorOpen(true)}
-                                >
-                                    친구 선택
-                                    <span className="arrow">→</span>
-                                </button>
-                                </header>
-                            )}
+  // 우클릭
+  const handleContextMenu = (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openMenuAtCardCenter(e.currentTarget, id);
+  };
 
-                            {!selectedFriend ? (
-                                <div className="shared-mailbox-empty">
-                                <div className="empty-content">
-                                    <div className="mail-icon">
-                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                        <polyline points="22,6 12,13 2,6"></polyline>
-                                    </svg>
-                                    </div>
-                                    <p>친구를 선택하면 우리의 추억이 펼쳐집니다.</p>
-                                </div>
-                                </div>
-                            ) : (
-                                <SharedMailbox 
-                                selectedFriend={selectedFriend} 
-                                onBack={() => setSelectedFriend(null)} 
-                                />
-                            )}
+  // 롱프레스 시작
+  const startPress = (e, id) => {
+    if (e.type === "mousedown" && e.button !== 0) return;
 
-                            {/* 친구 선택기 팝업 (기존과 동일) */}
-                            {isSelectorOpen && (
-                                <FriendSelect 
-                                onClose={() => setIsSelectorOpen(false)} 
-                                onSelect={(friend) => {
-                                    setSelectedFriend(friend);
-                                    setIsSelectorOpen(false);
-                                }} 
-                                />
-                            )}
-                            </div>
-                    ) : (
-                        /* 친구 선택 후: 공유 우체통 화면 */
-                        <SharedMailbox 
-                        selectedFriend={selectedFriend} 
-                        onBack={() => setSelectedFriend(null)} 
-                        />
-                    )}
+    pressTargetElRef.current = e.currentTarget;
+    justLongPressedRef.current = false;
 
-                    {/* 친구 선택기 팝업 (조건에 상관없이 렌더링되도록 위치 조정) */}
-                    {isSelectorOpen && (
-                        <FriendSelect 
-                        onClose={() => setIsSelectorOpen(false)} 
-                        onSelect={(friend) => {
-                            setSelectedFriend(friend);
-                            setIsSelectorOpen(false);
-                        }} 
-                        />
-                    )}
-                    </>
-                ) : (
-                    /* 일반 편지함 (Index 0, 1, 2) */
-                    <>
-                    <span className="tc-pagination-info">
-                        {totalElements}개 중 {startItem}-{endItem}
-                    </span>
+    longPressTimerRef.current = setTimeout(() => {
+      const el = pressTargetElRef.current;
+      if (!el) return;
+      openMenuAtCardCenter(el, id);
+      justLongPressedRef.current = true;
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
 
-                    <main className="letter-grid">
-                        {isLoading ? (
-                        <p>로딩 중...</p>
-                        ) : (
-                            <>
-                                {/* 실제 데이터 렌더링 */}
-                                {currentItems.map((letter) => (
-                                    <LetterCard 
-                                        key={letter.letterId} 
-                                        data={letter} 
-                                        isFocused={focusedId === letter.letterId} 
-                                        setFocusedId={setFocusedId}
-                                        onDelete={deleteLetter}
-                                        onToggleBookmark={handleToggleBookmark} 
-                                        onMarkAsRead={handleMarkAsRead}
-                                    />  
-                                ))}
+  const cancelPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    pressTargetElRef.current = null;
+  };
 
-                                {/* 부족한 개수만큼 빈 카드(Placeholder) 생성 */}
-                                {activeIndex !== 3 && Array.from({ length: emptySlotsCount }).map((_, i) => (
-                                    <div key={`empty-${i}`} className="letter-card-placeholder" />
-                                ))}
-                            </>
-                        )}
-                    </main>
-                    {/* 페이지네이션 */}
-                    {totalPages > 1 && (
-                        <div className="tc-pagination">
-                        {pageNumbers.map((p) => (
-                            <button
-                            key={p}
-                            type="button"
-                            onClick={() => setPage(p)}
-                            className={`tc-page ${p === safePage ? 'active' : ''}`}
-                            >
-                            {p}
-                            </button>
-                        ))}
-                        </div>
-                    )}
-                    </>
-                )}
+  // 롱프레스 직후 “클릭” 무시 (상세보기 열리는 거 방지)
+  const stopClickAfterLongPress = (e, id) => {
+    if (justLongPressedRef.current && focusedId === id) {
+      e.stopPropagation();
+      justLongPressedRef.current = false;
+    }
+  };
+
+  // 메뉴에서 "삭제" 눌렀을 때 → 확인 모달
+  const onClickDeleteMenu = (e) => {
+    e.stopPropagation();
+    setIsDeleteCheckOpen(true);
+  };
+
+  // 확인 모달: 삭제 확정
+  const handleConfirmDelete = () => {
+    if (!menu.targetId) return;
+    deleteLetter(menu.targetId);
+    setIsDeleteCheckOpen(false);
+    closeMenu();
+  };
+
+  // 확인 모달: 취소
+  const handleCancelDelete = () => {
+    setIsDeleteCheckOpen(false);
+    closeMenu();
+  };
+
+  // 페이지 바깥 클릭: 메뉴 닫기
+  const handlePageClick = () => {
+    if (menu.show) closeMenu();
+    else if (focusedId) setFocusedId(null);
+  };
+
+  return (
+    <div
+      className={`letterbox-container ${focusedId ? "is-focusing" : ""}`}
+      onClick={handlePageClick}
+    >
+      <header className="letterbox-header" onClick={(e) => e.stopPropagation()}>
+        <MailTabs
+          activeIndex={activeIndex}
+          setActiveIndex={(index) => {
+            setPage(1);
+            setIsLoading(index !== 3);
+            setActiveIndex(index);
+
+            // 탭 전환 시 팝업 초기화
+            if (index !== 3) {
+              setIsSelectorOpen(false);
+              setSelectedFriend(null);
+            }
+
+            closeMenu();
+          }}
+        />
+        <SendButton />
+      </header>
+
+      <div className="letterbox-content">
+        {activeIndex === 3 ? (
+          <>
+            {!selectedFriend ? (
+              <div className="shared-mailbox-container">
+                <header className="shared-header">
+                  <button
+                    className="friend-select-trigger user-tag"
+                    onClick={() => setIsSelectorOpen(true)}
+                  >
+                    친구 선택
+                    <span className="arrow">→</span>
+                  </button>
+                </header>
+
+                <div className="shared-mailbox-empty">
+                  <div className="empty-content">
+                    <div className="mail-icon">
+                      <svg
+                        width="60"
+                        height="60"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </svg>
+                    </div>
+                    <p>친구를 선택하면 우리의 추억이 펼쳐집니다.</p>
+                  </div>
                 </div>
-        </div>
-    );
-};
-export default Letterbox;
+
+                {isSelectorOpen && (
+                  <FriendSelect
+                    onClose={() => setIsSelectorOpen(false)}
+                    onSelect={(friend) => {
+                      setSelectedFriend(friend);
+                      setIsSelectorOpen(false);
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <SharedMailbox
+                selectedFriend={selectedFriend}
+                onBack={() => setSelectedFriend(null)}
+              />
+            )}
+
+            {isSelectorOpen && (
+              <FriendSelect
+                onClose={() => setIsSelectorOpen(false)}
+                onSelect={(friend) => {
+                  setSelectedFriend(friend);
+                  setIsSelectorOpen(false);
+                }}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <span className="tc-pagination-info">
+              {totalElements}개 중 {startItem}-{endItem}
+            </span>
+
+            {/* ✅ FriendList 동일: 메뉴 열리면 overlay */}
+            {menu.show && (
+              <div
+                className="context-menu-overlay"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeMenu();
+                }}
+              />
+            )}
+
+            {/* ✅ FriendList 동일: 메뉴(삭제 1개) */}
+            {menu.show && (
+              <div
+                className="custom-context-menu"
+                style={{ top: menu.y, left: menu.x }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="menu-item delete" onClick={onClickDeleteMenu}>
+                  <Trash2 size={20} color="#FF4D4D" />
+                  <span>삭제</span>
+                </div>
+              </div>
+            )}
+
+            <main className="letter-grid">
+              {isLoading ? (
+                <p>로딩 중...</p>
+              ) : (
+                <>
+                  {currentItems.map((letter) => {
+                    const isSpotlight = menu.show && menu.targetId === letter.letterId;
+
+                    return (
+                      <div
+                        key={letter.letterId}
+                        className={`letter-item ${isSpotlight ? "spotlight" : ""}`}
+                        onContextMenu={(e) => handleContextMenu(e, letter.letterId)}
+                        onMouseDown={(e) => startPress(e, letter.letterId)}
+                        onMouseUp={cancelPress}
+                        onMouseLeave={cancelPress}
+                        onTouchStart={(e) => startPress(e, letter.letterId)}
+                        onTouchEnd={cancelPress}
+                        onClickCapture={(e) => stopClickAfterLongPress(e, letter.letterId)}
+                      >
+                        <LetterCard
+                          data={letter}
+                          isFocused={focusedId === letter.letterId}
+                          onToggleBookmark={() => handleToggleBookmark(letter.letterId)}
+                          onMarkAsRead={() => handleMarkAsRead(letter.letterId)}
+                        />
+                      </div>
+                    );
+                  })}
+
+                  {Array.from({ length: emptySlotsCount }).map((_, i) => (
+                    <div key={`empty-${i}`} className="letter-card-placeholder" />
+                  ))}
+                </>
+              )}
+            </main>
+
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+              <div className="tc-pagination">
+                {pageNumbers.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPage(p);
+                      closeMenu();
+                    }}
+                    className={`tc-page ${p === safePage ? "active" : ""}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ✅ 삭제 확인 모달 (FriendList 메뉴에서만 열림) */}
+            <DeleteCheck
+              isOpen={isDeleteCheckOpen}
+              onClose={handleCancelDelete}
+              onConfirm={handleConfirmDelete}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

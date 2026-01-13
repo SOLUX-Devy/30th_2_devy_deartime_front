@@ -17,7 +17,7 @@
 .glass-card {
   position: relative;
   width: 800px;
-  height: 550px;
+  height: 600px;
   padding: 60px 80px;
   border-radius: 100px;
 
@@ -75,7 +75,7 @@
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.4); 
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 0px;
 }
 
 .label {
@@ -115,11 +115,10 @@
 
 .text-input {
   flex: 1; /* 높이 100% */
-  margin-top: 15px;
   background: transparent;
   color: #fff;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
   border: none !important;
   outline: none !important;
   resize: none;
@@ -165,8 +164,8 @@
 
 /* 오른쪽 편지 에디터 스타일링 */
 .letter-editor {
-  width: 380px;
-  height: 460px;
+  width: 400px;
+  height: 500px;
   border-radius: 20px;
   padding: 40px;
   background-size: cover;
@@ -189,12 +188,14 @@
 
 
 .send-btn {
-  width: 100px;
-  height: 48px;
+  width: 90px;
+  height: 40px;
   border-radius: 10px;
   border: 1.5px solid #2A4280;
   background: rgba(255, 255, 255, 0);
   color: white;
+  margin-right:15px;
+  margin-top: 10px;
 }
 
 /* 테마별로 색상 다르게 */
@@ -239,7 +240,7 @@
 
 .close-btn {
   font-size: 20px;
-  padding: 18px;
+  padding: 18px 20px;
 }
 
 .textarea-container {
