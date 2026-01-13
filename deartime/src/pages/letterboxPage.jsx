@@ -132,7 +132,7 @@ const Letterbox = () => {
             </header>
             <div className="letterbox-content">
                 {activeIndex === 3 ? (
-                    /* 1. 우리의 우체통 (Index 3) */
+                    /* 우리의 우체통 (Index 3) */
                     <>
                     {!selectedFriend ? (
                         /* 친구 선택 전: 초기 화면 */
@@ -200,7 +200,7 @@ const Letterbox = () => {
                     )}
                     </>
                 ) : (
-                    /* 2. 일반 편지함 (Index 0, 1, 2) */
+                    /* 일반 편지함 (Index 0, 1, 2) */
                     <>
                     <span className="tc-pagination-info">
                         {totalElements}개 중 {startItem}-{endItem}
