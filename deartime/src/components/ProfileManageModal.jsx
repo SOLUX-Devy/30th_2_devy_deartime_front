@@ -4,96 +4,134 @@ import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
-
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState(null);
+
+  const [nickname, setNickname] = useState(userProfile?.nickname || "");
+  const [bio, setBio] = useState(userProfile?.bio || "");
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
   };
 
+  const isSaveDisabled = !nickname.trim();
+
+
+  const handleSave = () => {
+    alert("저장되었습니다");
+    onClose();
+  };
+
   return (
     <>
-    <div className="profile-manage-overlay">
-      <div className="profile-manage-modal">
-        {/* 헤더 */}
-        <div className="profile-manage-header">
-          <span>프로필 관리</span>
-          <button className="close-btn" onClick={onClose}>✕</button>
-        </div>
-
-        {/* 프로필 이미지 */}
-        <div className="profile-manage-image">
-          <img
-            // src={userProfile?.profileImageUrl || DefaultProfile}
-            src={DefaultProfile}
-            alt="profile"
-          />
-        </div>
-
-        {/* 폼 */}
-        <div className="profile-manage-form">
-          {/* 이메일 */}
-          <div className="input-group">
-            <label>이메일</label>
-            <input
-              className="disabled-input"
-              value={userProfile?.email || ""}
-              disabled
-            />
-          </div>
-
-          {/* 닉네임 */}
-          <div className="input-group">
-            <label>닉네임</label>
-            <input value={userProfile?.nickname || ""} readOnly />
-          </div>
-
-          {/* 생년월일 */}
-          <div className="input-group">
-            <label>생년월일</label>
-            <input
-                type="date"
-                value={userProfile?.birthDate || ""}
-                readOnly
-            />
-        </div>
-        
-          {/* 자기소개 */}
-          <div className="input-group">
-            <label>자기소개</label>
-            <textarea
-              value={userProfile?.bio || ""}
-              readOnly
-            />
-          </div>
-
-          {/* 대리인 */}
-            <div className="delegate-row">
-            <span className="delegate-label">대리인</span>
-
-            <button
-              className="action-btn primary"
-              onClick={() => setIsDelegateSelectOpen(true)}
-              type="button"
-            >
-              {selectedDelegate
-                ? `대리인: ${selectedDelegate.friendNickname}`
-                : "대리인 선택"}
+      <div className="profile-manage-overlay">
+        <div className="profile-manage-modal">
+          {/* 헤더 */}
+          <div className="profile-manage-header">
+            <span>프로필 관리</span>
+            <button className="close-btn" onClick={onClose}>
+              ✕
             </button>
+          </div>
+
+          {/* 프로필 이미지 */}
+          <div className="profile-manage-image">
+            <img src={DefaultProfile} alt="profile" />
+          </div>
+
+          {/* 폼 */}
+          <div className="profile-manage-form">
+            {/* 이메일 */}
+            <div className="input-group">
+              <label>이메일</label>
+              <input
+                className="disabled-input"
+                value={userProfile?.email || ""}
+                disabled
+              />
             </div>
 
+            {/* 닉네임 */}
+            <div className="input-group">
+              <label>닉네임</label>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
 
-          {/* 저장 버튼 */}
-          <div className="save-row">
-            <button className="save-btn">저장</button>
+            {/* 생년월일 */}
+            <div className="input-group">
+              <label>생년월일</label>
+              <input
+                type="date"
+                value={userProfile?.birthDate || ""}
+                disabled
+              />
+            </div>
+
+            {/* 자기소개 */}
+            <div className="input-group">
+              <label>자기소개</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+            </div>
+
+            {/* 대리인 */}
+            <div className="delegate-row">
+              <span className="delegate-label">대리인</span>
+              <button
+                className={`action-btn primary ${
+                  selectedDelegate ? "selected" : ""
+                }`}
+                onClick={() => {
+                  if (!selectedDelegate) setIsDelegateSelectOpen(true);
+                }}
+                type="button"
+              >
+                <span className="delegate-text">
+                  {selectedDelegate
+                    ? selectedDelegate.friendNickname
+                    : "친구 선택"}
+                </span>
+
+                {selectedDelegate ? (
+                  <span
+                    className="delegate-remove"
+                    onClick={(e) => {
+                      e.stopPropagation(); // 버튼 클릭 전파 방지
+                      setSelectedDelegate(null);
+                    }}
+                  >
+                    ✕
+                  </span>
+                ) : (
+                  <span className="delegate-arrow">→</span>
+                )}
+              </button>
+            </div>
+
+            {/* 저장 버튼 */}
+            <div className="save-row">
+              <button
+                className={`save-btn ${
+                  isSaveDisabled ? "disabled" : ""
+                }`}
+                disabled={isSaveDisabled}
+                onClick={handleSave}
+              >
+                저장
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    {/* 대리인 선택 모달 */}
-    {isDelegateSelectOpen && (
+
+      {/* 대리인 선택 모달 */}
+      {isDelegateSelectOpen && (
         <FriendSelect
           onClose={() => setIsDelegateSelectOpen(false)}
           onSelect={handleDelegateSelect}

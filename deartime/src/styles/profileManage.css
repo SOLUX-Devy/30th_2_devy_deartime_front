@@ -116,6 +116,58 @@
   font-weight: 600;
   cursor: pointer;
   background: #D6DEE6;
+  display: flex;
+  justify-content: space-between;
+}
+
+.delegate-text {
+  margin-top: 11px;
+  color: #000;
+}
+
+.delegate-arrow {
+  font-size: 0; 
+  display: inline-flex;  /* 내부 요소 가로 정렬 */
+  align-items: center;   /* 수직 중앙 정렬 */
+  vertical-align: middle;
+}
+
+.delegate-arrow::before {
+  content: "";
+  display: block;
+  width: 14px;          /* 꼬리 길이 (조절 가능) */
+  height: 2px;          /* 선 두께 */
+  background-color: #000; /* 색상 */
+  border-radius: 2px;
+}
+
+/* 2. 화살표 머리 (꺾쇠) */
+.delegate-arrow::after {
+  content: "";
+  display: block;
+  width: 8px;           /* 머리 크기 */
+  height: 8px;
+  
+  /* 위쪽, 오른쪽 테두리로 꺾쇠 만듦 */
+  border-top: 2px solid #000; 
+  border-right: 2px solid #000; 
+  
+  /* 45도 회전 */
+  transform: rotate(45deg);
+  
+  /* 꼬리와 자연스럽게 이어지도록 위치 조정 */
+  margin-left: -9px; 
+}
+
+.delegate-remove {
+  font-size: 14px;
+  color: black;
+  cursor: pointer;
+  margin-top: 9px;
+}
+
+.action-btn.selected {
+  background-color: #C5E8EC;
 }
 
 .save-row {
@@ -137,6 +189,15 @@
   cursor: pointer;
 }
 
-.save-btn:hover {
-  background: rgba(42, 66, 128, 0.3);
+.save-btn:not(.disabled):hover {
+  background-color: rgba(42, 66, 128, 0.8); 
+}
+
+.save-btn:not(.disabled):active {
+  background-color: #0E77BC; 
+}
+
+.save-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
