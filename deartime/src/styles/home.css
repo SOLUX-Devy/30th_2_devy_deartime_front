@@ -35,6 +35,7 @@
   display: flex;
   gap: 120px;
   align-items: flex-start; 
+  margin-left:2rem;
 }
 
 /* 모든 카드 공통 */
@@ -91,5 +92,40 @@
   margin-bottom: 40px;
 }
 
+/* ===============================
+   📱 Tablet (iPad / iPad Pro)까지만
+=============================== */
+@media (max-width: 1024px) {
+  .description {
+    font-size: 20px;
+    margin-bottom: 70px;
+  }
+
+  .cards {
+    gap: 60px;              /* 120px → 60px */
+    flex-wrap: wrap;        /* ✅ 줄바꿈 허용 */
+    justify-content: center;/* 가운데로 모으기 */
+  }
+}
+
+/* ===============================
+   📱 Small Tablet (iPad mini 등)
+=============================== */
+@media (max-width: 768px) {
+  .description {
+    font-size: 18px;
+    margin-bottom: 50px;
+  }
+
+  .cards {
+    gap: 36px;
+  }
+
+  /* 카드 자체를 살짝 줄여서 2열/1열에서 안정적으로 보이게 */
+  .card,
+  .card-wrapper {
+    width: 260px; /* 기존 300px */
+  }
+}
 
 

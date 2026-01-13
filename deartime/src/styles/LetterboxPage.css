@@ -1,161 +1,216 @@
+/* src/styles/LetterboxPage.css */
+
 .letterbox-container {
-    width:100%;
-    min-height: 100vh;
-    background: linear-gradient(to bottom, #030715, #233a80);
-    color: white;
-    padding: 20px 0;
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #030715, #233a80);
+  color: white;
+  padding: 20px 0;
+  position: relative;
 }
 
 .letterbox-content {
-    max-width: 1200px; 
-    width: 90%;       
-    margin: 0 auto;
+  max-width: 1200px;
+  width: 90%;
+  margin: 0 auto;
 }
 
 .letterbox-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 .letter-grid {
-    display: grid;
-    /* 창 크기에 상관없이 무조건 4칸 고정 */
-    /* minmax(0, 1fr)로 카드가 부모 너비에 맞춰 줄어들게 설정 */
-    grid-template-columns: repeat(4, minmax(0, 1fr)); 
-    
-    column-gap: 20px;
-    row-gap: 25px;
-    
-    /* 그리드 자체의 좌우 여백 설정 (이미지 기준) */
-    width: 100%; 
-    margin: 15px 0 0 0;
-
-    min-height: 500px; 
-    align-content: start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 20px;
+  row-gap: 25px;
+  width: 100%;
+  margin: 15px 0 0 0;
+  min-height: 500px;
+  align-content: start;
 }
 
+/* 페이지네이션 */
 .tc-pagination {
-    margin-top: auto; /* 위쪽 여백을 최대로 하여 아래로 밀어냄 */
-    padding: 28px 0;
-    display: flex;
-    justify-content: center;
-    gap: 26px;
+  margin-top: auto;
+  padding: 28px 0;
+  display: flex;
+  justify-content: center;
+  gap: 26px;
 }
 
 .tc-page {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 16px;
-    cursor: pointer;
-    border: none; 
-    transition: all 0.2s ease;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
 }
 
 .tc-page.active {
-    background: #0E77BC;
-    color: white;
-    font-weight: 700;
+  background: #0e77bc;
+  color: white;
+  font-weight: 700;
 }
 
 .tc-page:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/*SendButton 스타일*/
-.tc-topbar-right {
-    margin-right: 0; /* 부모인 letterbox-header에서 padding으로 잡았으므로 0으로 조정 가능 */
-    margin-top: 6px;
-    display: flex;
-    align-items: flex-end;
-}
-
-.tc-create-btn {
-    width: 130px;
-    height: 45px;
-    border-radius: 12px;
-    border: 1px solid rgba(14, 119, 188, 0.6);
-    background: rgba(0, 0, 0, 0.15);
-    color: white;
-    font-size: 17px;
-    cursor: pointer;
-    transition: all 0.3s ease; /* 부드러운 호버 효과를 위해 추가 */
-}
-
-.tc-create-btn:hover {
-    background-color: #2A4280;
-    opacity: 0.85;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .tc-pagination-info {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 20px;
-    margin-top:30px;
-    display: block;
-    text-align: right;
+  font-size: 13px;
+  color: rgba(255, 255, 255);
+  margin-bottom: 20px;
+  margin-top: 35px;
+  display: block;
+  text-align: right;
 }
 
 .letter-card-placeholder {
-    /* LetterCard와 동일한 비율을 주어 높이를 일치시키기 */
-    aspect-ratio: 9 / 10; 
-    width: 100%; 
-    
-    box-sizing: border-box;
-    
-    visibility: hidden; 
-    pointer-events: none; /* 클릭 차단 */
+  aspect-ratio: 9 / 10;
+  width: 100%;
+  box-sizing: border-box;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-/*우리의 우체통 초기 화면*/
+/* 우리의 우체통 초기 화면 */
 .shared-mailbox-empty {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 50vh;
-    text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  text-align: center;
+  margin-top: 30px;
 }
 
 .empty-content p {
-    color: #ffffff;
-    margin: 20px 0;
-    font-size: 0.95rem;
+  color: #ffffff;
+  margin: 20px 0;
+  font-size: 0.95rem;
 }
 
 .friend-select-trigger {
-    background-color: #D1E9E9; 
-    color: #333;             
-    
-    width: 10em;
-    height: 2em;
-    padding: 7px 14px 7px 17px;
-    border-radius: 8px;
-    
-    font-weight: bold;
-    font-size: 1em;
-    
-    /* 정렬 */
-    display: flex;
-    align-items: center;
-    justify-content: space-between; 
-    gap: 8px;
-    margin: 0 auto; 
-    border: none;
-    cursor: pointer;
+  background-color: #d1e9e9;
+  color: #333;
+  width: 12em !important;
+  height: 3em !important;
+  padding: 7px 14px 7px 17px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1em;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 auto;
+  border: none;
+  cursor: pointer;
 }
 
 .friend-select-trigger .arrow {
-    font-size: 1.2rem;
-    color: #333;
-    line-height: 1;
-    transition: color 0.2s;
+  font-size: 1.2rem;
+  color: #333;
+  line-height: 1;
+  transition: color 0.2s;
 }
 
-.friend-select-trigger:hover .arrow {
-    color: #d5282b;
+.arrow:hover {
+  color: #d5282b;
+  transform: scale(1.1);
+}
+
+.friend-select-trigger {
+  background-color: #d6dee6 !important;
+  color: #333 !important;
+}
+
+/* =================================================
+   ✅ FriendList 방식: overlay + 컨텍스트 메뉴 + spotlight
+================================================= */
+
+/* 배경 어둡게 처리 (overlay) */
+.context-menu-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 900;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+/* 메뉴 (삭제 1개짜리) */
+.custom-context-menu {
+  position: fixed;
+  z-index: 1100;
+  background: #151d3b;
+  border: 1px solid #3a5290;
+  border-radius: 20px;
+  padding: 0;
+  min-width: 140px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+.custom-context-menu .menu-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  gap: 30px;
+  transition: background-color 0.2s ease;
+  justify-content: center;
+}
+
+.custom-context-menu .menu-item:hover {
+  /* ✅ 요청한 hover: 2A4280 / 80% */
+  background-color: rgba(42, 66, 128, 0.8);
+}
+
+.custom-context-menu .menu-item.delete span {
+  color: #ff4d4d;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* spotlight wrapper (선택된 카드만 위로) */
+.letter-item.spotlight {
+  position: relative;
+  z-index: 1000; /* overlay(900)보다 위 */
+  transform: scale(1.03);
+  transition: transform 0.25s ease;
+  pointer-events: auto;
+}
+
+/* overlay 뜨면 spotlight 아닌 애들 클릭 막기 */
+.letterbox-container:has(.context-menu-overlay) .letter-item:not(.spotlight) {
+  pointer-events: none;
+  opacity: 1; /* 시각적으로는 그대로 */
+}
+
+/* ✅ overlay 뜰 때 전체 카드 어둡게, spotlight(=focusedId)만 원래 밝기 */
+.letterbox-container.is-focusing .letter-card {
+  filter: brightness(0.6);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  cursor: default;
+}
+
+.letterbox-container.is-focusing .letter-card.focused {
+  filter: brightness(1) !important;
+  z-index: 100;
+  pointer-events: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }

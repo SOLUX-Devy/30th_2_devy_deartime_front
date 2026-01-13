@@ -174,15 +174,15 @@
 }
 
 /* ===============================
-   카드 그리드 (✅ 스크롤 없음: 페이지 전체 스크롤 사용)
+   카드 그리드
 ================================ */
 .friend-grid {
-  margin-left: 120px; /* ✅ 양 끝 마진 120px */
+  margin-left: 120px;
   margin-right: 120px;
   margin-top: 25px;
 
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)); /* ✅ 기본 5열 */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   column-gap: 50px;
   row-gap: 30px;
 
@@ -230,4 +230,70 @@
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, 0.55) 100%
   );
+}
+
+/* =================================================
+   ✅✅✅ Gallery 방식 컨텍스트 메뉴/스포트라이트 추가
+================================================= */
+
+/* 배경 어둡게 처리 (overlay) */
+.context-menu-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 900;
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+/* 메뉴 (삭제 1개짜리) */
+.custom-context-menu {
+  position: fixed; /* ✅ 스크롤에도 좌표 유지 */
+  z-index: 1100;
+  background: #151D3B;
+  border: 1px solid #3A5290;
+  border-radius: 20px;
+  padding: 0px 0;
+  min-width: 140px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+
+  transform: translate(-50%, -50%);
+}
+
+.custom-context-menu .menu-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  gap: 30px;
+  transition: background-color 0.2s ease;
+  justify-content: center; 
+}
+
+.custom-context-menu .menu-item:hover {
+  background-color: rgba(42, 66, 128, 0.8);
+}
+
+.custom-context-menu .menu-item.delete span {
+  color: #FF4D4D;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 하이라이트(spotlight) wrapper */
+.friend-item.spotlight {
+  position: relative;
+  z-index: 1000; /* overlay(900)보다 위 */
+  transform: scale(1.03);
+  transition: transform 0.25s ease;
+  pointer-events: auto;
+}
+
+/* overlay 뜨면 spotlight 아닌 애들 클릭 막기 (Gallery랑 동일) */
+.friendlist-container:has(.context-menu-overlay) .friend-item:not(.spotlight) {
+  pointer-events: none;
+  opacity: 1; /* 시각적으로는 그대로 보이게 */
 }

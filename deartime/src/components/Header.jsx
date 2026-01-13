@@ -18,7 +18,6 @@ import ProfileManageModal from "../components/ProfileManageModal";
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
-
   const [notifications, setNotifications] = useState(
     MOCK_NOTIFICATIONS?.data?.content || []
   );
@@ -157,7 +156,7 @@ export default function Header() {
             {/* 알림 */}
             <div ref={notiRef} style={{ position: "relative" }}>
               <button
-                className="icon-img-btn"
+                className={`icon-img-btn ${isNotiOpen ? "is-open" : ""}`}
                 onClick={() => {
                   setIsNotiOpen((v) => !v);
                   setIsProfileOpen(false);
@@ -169,7 +168,6 @@ export default function Header() {
                   <span className="red-dot" />
                 )}
               </button>
-
               {isNotiOpen && (
                 <div className="dropdown noti-dropdown">
                   <h3 className="noti-title">알림</h3>
@@ -201,14 +199,18 @@ export default function Header() {
                               <div className="noti-actions">
                                 <button
                                   className="noti-btn accept"
-                                  onClick={() => handleFriendRequest(noti, "accepted")}
+                                  onClick={() =>
+                                    handleFriendRequest(noti, "accepted")
+                                  }
                                   type="button"
                                 >
                                   수락
                                 </button>
                                 <button
                                   className="noti-btn reject"
-                                  onClick={() => handleFriendRequest(noti, "rejected")}
+                                  onClick={() =>
+                                    handleFriendRequest(noti, "rejected")
+                                  }
                                   type="button"
                                 >
                                   거절
@@ -231,7 +233,8 @@ export default function Header() {
             {/* 프로필 */}
             <div ref={profileRef} style={{ position: "relative" }}>
               <div
-                className="profile-trigger"
+                className={`profile-trigger ${isProfileOpen ? "is-open" : ""}`}
+
                 onClick={() => {
                   setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);

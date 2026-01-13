@@ -59,12 +59,13 @@ const SendLetter = () => {
   };
 
 
-  const isFormValid = title.trim() !== '' && content.trim() !== '';
+  const isFormValid = !!selectedFriend && title.trim() !== '' && content.trim() !== '';
 
   const handleSend = () => {
     if (isFormValid) {
       alert("편지를 보냈습니다!");
       // TODO: 실제 전송 로직 추가
+      navigate(-1);
     }
   };
 
