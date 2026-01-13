@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import DearTimeMini from "../assets/logo.svg";
 import { useState, useEffect, useRef } from "react";
 import NotiIcon from "../assets/noti_bell.svg";
@@ -63,6 +63,22 @@ export default function Header() {
     const match = content.match(/(.+님이)\s(.+)/);
     if (!match) return { title: content, body: null };
     return { title: match[1], body: match[2] };
+  };
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // TODO: 서버 연동 시 여기에 로그아웃 API 호출
+
+    // (JWT 쓰면)
+    // localStorage.removeItem("accessToken");
+    // localStorage.removeItem("refreshToken");
+
+    // 프로필 드롭다운 닫기
+    setIsProfileOpen(false);
+
+    // 로그인(구글) 화면으로 이동
+    navigate("/");
   };
 
   /* =========================
@@ -261,7 +277,11 @@ export default function Header() {
                   >
                     프로필 관리
                   </button>
-                  <button className="p-btn" type="button">
+                  <button
+                    className="p-btn"
+                    type="button"
+                    onClick={handleLogout}
+                  >
                     로그아웃
                   </button>
                 </div>
