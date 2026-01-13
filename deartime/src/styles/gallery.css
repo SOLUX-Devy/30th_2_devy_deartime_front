@@ -1,22 +1,11 @@
-/* [공통 변수 관리] */
-:root {
-  --main-bg-image: url('../assets/background_nostar.png');
-  --primary-blue: #0E77BC;
-  --menu-bg: #151D3B;
-  --menu-border: #3A5290;
-  --danger-red: #FF4D4D;
-}
-
 /* 전체 페이지 레이아웃 */
 .gallery-container {
   width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-size: cover;
-  background-position: center;
-  position: relative; 
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #030715, #233a80);
+  color: white;
+  padding: 20px 0;
+  position: relative;
 }
 
 /* 배경 어둡게 처리 (Spotlight용 오버레이) */
