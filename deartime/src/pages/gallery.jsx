@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom"; 
 import '../styles/gallery.css';
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Pencil, Trash2, MoreVertical } from "lucide-react"; // Star는 CSS 가상요소로 대체했으므로 제외 가능
+import { Pen, Trash2, MoreVertical } from "lucide-react"; // Star는 CSS 가상요소로 대체했으므로 제외 가능
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 
@@ -166,13 +166,13 @@ const Gallery = () => {
       {menu.show && (
         <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
           <div className="menu-item" onClick={handleEditStart}>
-            <Pencil size={20} color="white" />
-            <span>{menu.type === 'photo' ? '텍스트 수정' : '제목 수정'}</span>
-          </div>
+            <Pen size={15} color="white" />
+            <span>{menu.type === 'photo' ? '텍스트 수정' : '이름 수정'}</span>
+          </div>  
           <div className="menu-divider" />
           <div className="menu-item delete" onClick={handleDelete}>
-            <Trash2 size={20} color="#FF4D4D" />
-            <span style={{ color: '#FF4D4D' }}>삭제</span>
+            <Trash2 size={15} color="#FF4D4D" />
+            <span style={{ color: '#FF4D4D'}}>삭제</span>
           </div>
         </div>
       )}
