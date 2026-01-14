@@ -1,19 +1,17 @@
 import { useNavigate, useLocation } from "react-router-dom"; 
 import '../styles/gallery.css';
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Pen, Trash2, MoreVertical } from "lucide-react"; // Star는 CSS 가상요소로 대체했으므로 제외 가능
+import { Pen, Trash2, MoreVertical } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 
 const Gallery = () => {
-  // --- [공통 유틸리티 및 레퍼런스 설정] ---
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const isLongPressActive = useRef(false);
 
-  // --- [탭 및 데이터 상태 관리] ---
   const tabs = ["RECORD", "ALBUM"];
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
@@ -29,8 +27,7 @@ const Gallery = () => {
     { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
   ]);
 
-  // --- [UI 인터랙션 상태 관리] ---
-  const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null }); 
+  const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null, isCentered: false }); 
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -42,12 +39,14 @@ const Gallery = () => {
 
   const startPress = (e, id, type) => {
     if (e.type === 'mousedown' && e.button !== 0) return;
-    const x = e.pageX || (e.touches && e.touches[0].pageX);
-    const y = e.pageY || (e.touches && e.touches[0].pageY);
+    const currentTarget = e.currentTarget;
 
     isLongPressActive.current = false;
     longPressTimerRef.current = setTimeout(() => {
-      setMenu({ show: true, x, y, targetId: id, type });
+      const rect = currentTarget.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      setMenu({ show: true, x, y, targetId: id, type, isCentered: true });
       isLongPressActive.current = true;
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500); 
@@ -103,14 +102,17 @@ const Gallery = () => {
 
   const handleContextMenu = (e, id, type) => {
     e.preventDefault();
-    setMenu({ show: true, x: e.pageX, y: e.pageY, targetId: id, type: type });
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    setMenu({ show: true, x, y, targetId: id, type: type, isCentered: true });
     isLongPressActive.current = true;
   };
 
   const handleAlbumMenuClick = (e, albumId) => {
     e.stopPropagation(); 
     const rect = e.currentTarget.getBoundingClientRect();
-    setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album' });
+    setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album', isCentered: false });
   };
 
   const handleDelete = () => {
@@ -164,7 +166,7 @@ const Gallery = () => {
       {(menu.show || editingId !== null) && <div className="context-menu-overlay" />}
 
       {menu.show && (
-        <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
+        <div className={`custom-context-menu ${menu.isCentered ? 'centered' : ''}`} style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
           <div className="menu-item" onClick={handleEditStart}>
             <Pen size={15} color="white" />
             <span>{menu.type === 'photo' ? '텍스트 수정' : '이름 수정'}</span>
@@ -172,40 +174,20 @@ const Gallery = () => {
           <div className="menu-divider" />
           <div className="menu-item delete" onClick={handleDelete}>
             <Trash2 size={15} color="#FF4D4D" />
-            <span style={{ color: '#FF4D4D'}}>삭제</span>
+            <span>삭제</span>
           </div>
         </div>
       )}
 
-      {/* 상단 영역 (왼쪽: 탭 / 오른쪽: 캡슐 생성 버튼) */}
       <div className="tc-topbar">
-        {/* 상단 세부 네비 */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "50px",  
-            marginBottom: "0px",
-            marginLeft: "60px",
-            marginTop: "14px",
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: "50px", marginLeft: "60px", marginTop: "14px" }}>
           {tabs.map((tab, index) => {
             const isActive = index === activeIndex;
-
             return (
               <span
                 key={tab}
-                onClick={() => {
-                  setActiveIndex(index);
-                  setPage(1);
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.opacity = 1;
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.opacity = 0.7;
-                }}
+                onClick={() => setActiveIndex(index)}
+                className="tab-item-text"
                 style={{
                   position: "relative",
                   fontSize: "23px",
@@ -219,8 +201,6 @@ const Gallery = () => {
                 }}
               >
                 {tab}
-
-                {/* 클릭 시 밑줄 */}
                 <span
                   style={{
                     position: "absolute",
@@ -239,7 +219,6 @@ const Gallery = () => {
           })}
         </div>
 
-        {/* 오른쪽: 캡슐 생성 */}
         <div className="tc-topbar-right">
           <button
             type="button"
@@ -273,15 +252,13 @@ const Gallery = () => {
                     >
                       <div className="img-box">
                         <img src={photo.url} alt="" />
-                        {/* [수정 포인트: 클래스에 isFavorite 조건 추가] */}
                         <button 
                           className={`fav-star-btn photo-star ${photo.isFavorite ? 'active' : ''}`} 
                           onClick={(e) => togglePhotoFavorite(e, photo.id)}
-                        >
-                        </button>
+                        />
                       </div>
                       {editingId === photo.id ? (
-                        <input className="edit-title-input" defaultValue={photo.title} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
+                        <input className="edit-title-input" defaultValue={photo.title} autoFocus onFocus={(e) => e.target.select()} onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
                       ) : (
                         <p className="photo-title">{photo.title}</p>
                       )}
@@ -311,17 +288,15 @@ const Gallery = () => {
                   >
                     <div className="album-img-box">
                       <img src={album.coverUrl} alt="" />
-                      {/* [수정 포인트: 클래스에 isFavorite 조건 추가] */}
                       <button 
                         className={`fav-star-btn ${album.isFavorite ? 'active' : ''}`} 
                         onClick={(e) => toggleAlbumFavorite(e, album.id)}
-                      >
-                      </button>
+                      />
                     </div>
                     <div className="album-info">
                       <div className="album-info-top">
                         {editingId === album.id ? (
-                          <input className="edit-title-input" defaultValue={album.title} autoFocus onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} onClick={(e) => e.stopPropagation()} />
+                          <input className="edit-title-input" defaultValue={album.title} autoFocus onFocus={(e) => e.target.select()} onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} onClick={(e) => e.stopPropagation()} />
                         ) : (
                           <h3>{album.title}</h3>
                         )}

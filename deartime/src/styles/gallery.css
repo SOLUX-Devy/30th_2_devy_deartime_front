@@ -11,8 +11,7 @@
 /* 배경 어둡게 처리 (Spotlight용 오버레이) */
 .context-menu-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.65);
@@ -21,46 +20,18 @@
   pointer-events: auto;
 } 
 
-/* 상단 탭 및 버튼 바 */
-.tc-topbar1 {
+/* 상단 바 - 하단 패딩 제거 */
+.tc-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 40px 60px 20px 60px;
-  flex-shrink: 0;
+  padding: 20px 60px 0 60px; /* 하단 패딩 0 */
   position: relative;
   z-index: 100;
 }
 
-.tab-group {
-  display: flex;
-  gap: 40px;
-}
-
-.tab-item {
-  position: relative;
-  font-family: "Josefin Slab";
-  font-size: 24px;
-  font-weight: 600;
-  font-style: normal;
-  line-height: normal;
-  color: #fff;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.tab-item.active {
-  opacity: 1;
-}
-
-.tab-indicator {
-  position: absolute;
-  left: 0;
-  bottom: -5px;
-  width: 100%;
-  height: 3px;
-  background-color: var(--primary-blue);
+.tc-topbar-right {
+  margin-top: 14px;
 }
 
 .tc-create-btn {
@@ -72,37 +43,23 @@
   color: white;
   cursor: pointer;
   font-size: 17px;
-  font-weight: 400;
 }
 
 .tc-create-btn:hover {
   background-color: rgba(42, 66, 128, 1);
 }
 
-/* 콘텐츠 스크롤 영역 */
+/* 콘텐츠 영역 - 상단 패딩 50px 설정 */
 .gallery-content-wrapper {
   flex: 1;
-  overflow-y: auto;
-  padding: 20px 60px 60px 60px;
+  padding: 40px 120px 60px 120px; /* 상단 50px 간격 고정 */
 }
 
-.gallery-content-wrapper::-webkit-scrollbar {
-  width: 6px;
-}
-
-.gallery-content-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-/* --- RECORD 탭 스타일 --- */
+/* RECORD 탭 날짜 제목 - 상단 마진 제거하여 정확한 50px 확보 */
 .date-title {
   color: #FFF;
-  font-family: Inter;
   font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
+  margin-top: 0; 
   margin-bottom: 20px;
 }
 
@@ -117,7 +74,6 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 0;
   overflow: hidden;
   background-color: #1a1a1a;
 }
@@ -125,8 +81,7 @@
 .photo-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover; 
-  display: block;
+  object-fit: cover;
 }
 
 .photo-title {
@@ -138,7 +93,7 @@
   text-overflow: ellipsis;
 }
 
-/* --- ALBUM 탭 스타일 --- */
+/* ALBUM 탭 */
 .album-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -149,7 +104,6 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 0;
   overflow: hidden;
   margin-bottom: 15px;
 }
@@ -160,10 +114,7 @@
   object-fit: cover;
 }
 
-/* --- ALBUM 탭 스타일 수정 --- */
-
 .fav-star-btn {
-  /* 위치 및 기본 레이아웃 */
   position: absolute;
   top: 8px;
   right: 14px;
@@ -171,43 +122,22 @@
   background: none;
   border: none;
   cursor: pointer;
-  
-  /* bookmark-icon에서 가져온 스타일 */
   font-size: 24px;
   color: rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  padding: 0; /* 버튼 기본 패딩 제거 */
 }
 
-/* 별 아이콘 생성 (빈 별) */
-.fav-star-btn::before { 
-  content: "☆"; 
-}
-
-
-.fav-star-btn:hover::before { 
-  content: "★"; 
-  color: #ffed8af3; 
-}
-
-/* 활성화 상태 (금색 채워진 별) */
-.fav-star-btn.active {
-  transform: scale(1.1); /* 활성 상태에서도 약간 크게 유지하고 싶을 때 */
-}
-
-.fav-star-btn.active::before { 
-  content: "★"; 
-  color: #ffd700; 
-}
+.fav-star-btn::before { content: "☆"; }
+.fav-star-btn:hover::before { content: "★"; color: #ffed8af3; }
+.fav-star-btn.active::before { content: "★"; color: #ffd700; }
 
 .album-info-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
 }
 
 .album-info p {
@@ -215,125 +145,100 @@
   font-size: 14px;
 }
 
-/* --- UI 컴포넌트 --- */
-
-.context-menu-overlay {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.65);
-  z-index: 900;
-  backdrop-filter: blur(4px);
-  pointer-events: auto;
-}
-
-/* 메뉴 (삭제 1개짜리) */
+/* --- 컨텍스트 메뉴 (왼쪽 정렬) --- */
 .custom-context-menu {
   position: fixed;
   z-index: 1100;
-  background: #151d3b;
+  background: #1b254b;
   border: 1px solid #3a5290;
   border-radius: 20px;
-  padding: 0;
-  min-width: 140px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  padding: 8px 0;
+  min-width: 150px; /* 메뉴의 최소 너비 설정 */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* 자식 요소들이 가로로 꽉 차게 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  
+  /* 마우스 포인터 위치 보정 (중앙 정렬 해제) */
+  transform: translate(5px, 5px); 
+}
+
+.custom-context-menu.centered {
   transform: translate(-50%, -50%);
 }
 
-.custom-context-menu .menu-item {
+.menu-item {
   display: flex;
   align-items: center;
-  padding: 15px 20px;
+  justify-content: flex-start; /* 무조건 왼쪽에서 시작 */
+  padding: 10px 16px; /* 좌측 여백을 주어 정렬 조절 */
+  gap: 10px; /* 아이콘과 글자 사이의 간격 */
   cursor: pointer;
-  gap: 30px;
-  transition: background-color 0.2s ease;
+  width: 100%; /* 가로 전체 클릭 가능하도록 */
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+}
+
+/* 아이콘 영역 고정 */
+.menu-icon {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  width: 24px; /* 아이콘들이 차지하는 공간을 통일 */
+  flex-shrink: 0;
 }
 
-.custom-context-menu .menu-item:hover {
-  background-color: rgba(42, 66, 128, 0.8);
+.menu-item span:last-child {
+  font-size: 15px;
+  color: white;
+  font-weight: 500;
+  white-space: nowrap; /* 글자가 줄바꿈되지 않도록 */
 }
 
-.menu-divider { 
-  height: 1px; 
-  background-color: rgba(255, 255, 255, 0.15); 
-  margin: auto 0;
-  width: 90%;
-  align-self: center;
+.menu-item.delete span:last-child {
+  color: #FF4D4D;
 }
 
+/* 호버 효과 */
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 구분선 */
+.menu-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+  width: 100%;
+}
+
+/* 기타 UI */
 .edit-title-input {
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--primary-blue);
+  border: 1px solid #0E77BC;
   color: white;
   padding: 6px 10px;
   width: 100%;
-  margin-top: 5px;
   border-radius: 6px;
   outline: none;
-  font-size: 14px;
-  position: relative;
-  z-index: 1002;
 }
 
-/* [기본 점 세 개 버튼 스타일] */
 .album-menu-trigger {
   background: none;
   border: none;
   cursor: pointer;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
 }
 
-/* 기본 상태 아이콘은 흐릿하게 */
-.album-menu-trigger svg {
-  color: rgba(255, 255, 255, 0.4); 
-  transition: all 0.2s ease;
-}
+.album-menu-trigger svg { color: rgba(255, 255, 255, 0.4); }
 
-/* 평상시(스포트라이트 없을 때) 호버 시에만 밝아짐 */
-.album-item:not(.spotlight) .album-menu-trigger:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
-.album-item:not(.spotlight) .album-menu-trigger:hover svg {
-  color: rgba(255, 255, 255, 1);
-}
-
-/* [하이라이트 상태 스타일] */
 .photo-item.spotlight, .album-item.spotlight {
   position: relative;
-  z-index: 1000; /* 오버레이(900)보다 높게 */
-  transform: scale(1.03); /* 원래 스타일 유지 */
+  z-index: 1000;
+  transform: scale(1.03);
   transition: transform 0.3s ease;
-  pointer-events: auto; /* 하이라이트 아이템만 상호작용 허용 */
-}
-
-/* 선택된 항목 내의 버튼만 오버레이 위로 올림 */
-.album-item.spotlight .album-menu-trigger {
-  z-index: 1001; /* 선택된 대상의 버튼만 900 위로 보냄 */
-}
-
-.album-item.spotlight .album-menu-trigger svg {
-  color: white; /* 선택된 항목 아이콘만 선명하게 고정 */
-  opacity: 1;
-}
-
-/* 선택 시 호버 효과 제거 */
-.album-item.spotlight .album-menu-trigger:hover {
-  background-color: transparent;
-  transform: none;
-}
-
-/* 오버레이 떴을 때 하이라이트 아닌 항목들 클릭 방지 */
-.gallery-container:has(.context-menu-overlay) .photo-item:not(.spotlight),
-.gallery-container:has(.context-menu-overlay) .album-item:not(.spotlight) {
-  pointer-events: none;
-}
+} 
