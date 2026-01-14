@@ -180,40 +180,17 @@ const Gallery = () => {
       )}
 
       <div className="tc-topbar">
-        <div style={{ display: "flex", alignItems: "center", gap: "50px", marginLeft: "60px", marginTop: "14px" }}>
+        <div className="gallery-topnav">
           {tabs.map((tab, index) => {
             const isActive = index === activeIndex;
             return (
               <span
                 key={tab}
                 onClick={() => setActiveIndex(index)}
-                className="tab-item-text"
-                style={{
-                  position: "relative",
-                  fontSize: "23px",
-                  fontFamily: "Josefin Slab",
-                  fontWeight: isActive ? 600 : 350,
-                  paddingBottom: "6px",
-                  cursor: "pointer",
-                  color: "white",
-                  opacity: isActive ? 1 : 0.7,
-                  transition: "opacity 0.2s ease",
-                }}
+                className={`gallery-tab ${isActive ? 'active' : ''}`}
               >
                 {tab}
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    bottom: 0,
-                    width: "100%",
-                    height: "2px",
-                    backgroundColor: "#0E77BC",
-                    transform: isActive ? "scaleX(1)" : "scaleX(0)",
-                    transformOrigin: "center",
-                    transition: "transform 0.3s ease",
-                  }}
-                />
+                <span className="gallery-tab-underline" />
               </span>
             );
           })}
