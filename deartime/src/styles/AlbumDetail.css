@@ -35,6 +35,8 @@
   font-weight: bold;
   border-bottom: 2px solid #ffffff;
   padding-bottom: 5px;
+  position: relative;
+  transition: all 0.3s ease;
 }
 
 /* --- 상단 배너(커버) 영역 --- */
@@ -98,7 +100,7 @@
 .grid-item {
   aspect-ratio: 1 / 1;
   background-color: #d9d9d9;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   align-items: center;
