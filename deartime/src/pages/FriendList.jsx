@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
 import bg from "../assets/background_nostar.png";
@@ -7,6 +7,7 @@ import finder from "../assets/finder.png";
 
 import "../styles/FriendList.css";
 import FriendCard from "../components/FriendCard";
+import FriendInvite from "../components/FriendInvite";
 
 // ✅ 목데이터(백엔드 형식)
 const mockFriendListResponse = {
@@ -32,7 +33,10 @@ const mockFriendListResponse = {
 };
 
 export default function FriendList() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+
+  // 친구 초대 모달 상태 추가
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // ✅ 검색어
   const [keyword, setKeyword] = useState("");
@@ -153,7 +157,7 @@ export default function FriendList() {
           <button
             type="button"
             className="friend-invite-btn"
-            onClick={() => navigate("/friend/invite")}
+            onClick={() => setShowInviteModal(true)}
           >
             친구 신청
           </button>
@@ -224,6 +228,9 @@ export default function FriendList() {
           );
         })}
       </div>
+      {showInviteModal && (
+        <FriendInvite onClose={() => setShowInviteModal(false)} />
+      )}
     </div>
   );
 }

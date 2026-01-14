@@ -6,16 +6,8 @@
   
   display: flex;
   justify-content: center;
-  /* align-items: center;  <-- 삭제! (화면 작을 때 위쪽 잘림 방지) */
-  
-  /* [핵심 1] 내용이 길면 스크롤 생기도록 변경 */
   overflow-y: auto; 
-  
-  /* [핵심 2] 컨테이너 자체에 위아래 쿠션(패딩)을 줌 */
-  /* 회원가입 버튼 아래에 공간을 확보하고, 위쪽도 너무 딱 붙지 않게 함 */
   padding-top: 5px; 
-  
-  /* 패딩이 높이에 포함되도록 설정 */
   box-sizing: border-box; 
 }
 
@@ -27,30 +19,20 @@
   height: 100%;
   object-fit: cover;
   z-index: -1;
-  /* 배경 이미지는 스크롤 되어도 고정되게 하려면 아래 속성 추가 (선택사항) */
-  /* position: fixed; */ 
 }
 
 /* 카드 박스 */
 .signup-card {
   width: 450px; 
-  
-  /* [핵심 3] 높이 제한 해제 (내용물에 맞게 늘어나도록) */
   height: auto;       
-  /* max-height: 90vh; <-- 삭제 (스크롤 할 거니까 제한 불필요) */
-
   background: #000D32;
   border: 1px solid #2A4280;
   border-radius: 20px;
-  padding: 40px;
-  
+  padding: 33px;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-
-  /* [핵심 4] 마법의 중앙 정렬 + 스크롤 안전 장치 */
-  /* 화면이 클 땐 중앙 정렬, 작을 땐 위아래 패딩 사이에서 스크롤 됨 */
   margin: auto; 
 }
 
@@ -76,7 +58,8 @@
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 5px;
+  margin-bottom: 20px;
+  margin-top: -7px;
   width: 100%;
 }
 
@@ -121,7 +104,7 @@
     background: rgba(255, 255, 255, 0.00);
     color: white;
     font-size: 16px;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .signup-button:hover {
