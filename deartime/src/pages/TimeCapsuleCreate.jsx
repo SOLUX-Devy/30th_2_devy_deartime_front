@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_star.png";
 import noPhoto from "../assets/nophoto.png";
-import "../styles/timecapsuleCreate.css";
+import "../styles/TimeCapsuleCreate.css";
 
 /* ✅ 친구 선택 모달 */
 import FriendSelect from "../components/FriendSelect";
