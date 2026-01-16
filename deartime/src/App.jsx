@@ -16,6 +16,7 @@ import TimeCapsuleDetail from "./pages/TimeCapsuleDetail";
 import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
 import AlbumDetail from "./pages/AlbumDetail";
+import OAuthCallback from "./pages/oauthCallback.jsx";
 
 /* ✅ 여기 추가: FriendSelectPage import */
 import FriendSelectPage from "./components/FriendSelect"; 
@@ -36,6 +37,9 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
+      <Routes>
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
+      </Routes>
       <Routes>
         {/* ✅ 로그인/회원가입은 헤더 없이 쓰고 싶으면 Layout 밖에 둠 */}
         <Route path="/" element={<Login />} />
