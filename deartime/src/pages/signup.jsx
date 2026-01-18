@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
-import defaultProfileImg from "../assets/profile.jpg"; 
+import defaultProfileImg from "../assets/profile.jpg";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -14,12 +14,10 @@ const Signup = () => {
     nickname: "",
     birthDate: "",
     bio: "",
-    // profileImageUrl state는 이제 실제 파일 객체를 담거나 처리해야 하지만, 
-    // 일단 텍스트 필드들과 로직을 맞춥니다.
   });
 
   const [profilePreview, setProfilePreview] = useState(defaultProfileImg);
-  const [profileFile, setProfileFile] = useState(null); // 실제 파일 객체 저장용
+  const [profileFile, setProfileFile] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,17 +27,11 @@ const Signup = () => {
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // 미리보기 설정
-    const previewUrl = URL.createObjectURL(file);
-    setProfilePreview(previewUrl);
-    
-    // [중요] 나중에 전송을 위해 파일 객체 저장
+    setProfilePreview(URL.createObjectURL(file));
     setProfileFile(file);
   };
 
   const handleSubmit = async () => {
-    // 1. 필수값 체크
     if (!form.nickname.trim()) {
       alert("닉네임은 필수입니다.");
       return;
@@ -53,83 +45,71 @@ const Signup = () => {
     }
 
     try {
-      // 2. [핵심 수정] JSON 대신 FormData 생성
-      // 서버가 "multipart" 에러를 낸다는 건 이 방식을 원한다는 뜻입니다.
       const formData = new FormData();
-      
-      // (1) 닉네임 추가
-      formData.append("nickname", form.nickname);
 
-      // (2) 선택 정보들 (값이 있을 때만 추가)
-      if (form.birthDate) {
-        formData.append("birthDate", form.birthDate);
-      }
-      
-      if (form.bio && form.bio.trim() !== "") {
-        formData.append("bio", form.bio);
-      }
+      // 1. [핵심 수정] 텍스트 데이터들을 하나의 객체로 만듭니다.
+      const signupData = {
+        nickname: form.nickname,
+        birthDate: form.birthDate || null, // 값이 없으면 null
+        bio: form.bio || null,             // 값이 없으면 null
+        // profileImageUrl은 문자열로 보내는 게 아니라 아래에서 파일로 보냅니다.
+      };
 
-      // (3) 프로필 이미지 처리
-      // 만약 백엔드가 'profileImageUrl'이라는 문자열을 원하는 게 아니라
-      // 실제 파일 업로드를 원한다면 아래처럼 파일을 보내야 합니다.
-      // 일단 API 명세가 혼란스러우므로, 파일이 있으면 파일을 보내고
-      // 없으면 아무것도 보내지 않거나, null 처리를 합니다.
+      // 2. [핵심 수정] JSON 객체를 Blob으로 변환하여 'request'라는 이름으로 넣습니다.
+      // 백엔드 에러("Required part 'request'...")를 해결하는 결정적 코드입니다.
+      const jsonBlob = new Blob([JSON.stringify(signupData)], {
+        type: "application/json",
+      });
+      formData.append("request", jsonBlob);
+
+      // 3. 파일이 있다면 추가 (키 이름은 보통 'file' 아니면 'image' 아니면 'profileImageUrl')
+      // 명세서 필드명에 따라 'profileImageUrl'로 보냅니다.
       if (profileFile) {
-        // 백엔드에서 받는 파일 파라미터 이름이 보통 'file' 아니면 'image' 입니다.
-        // 명세서의 "profileImageUrl"이 문자열 필드라면 위처럼 텍스트로 보냈겠지만,
-        // multipart 에러가 난 걸로 보아 파일 자체를 기대할 확률이 높습니다.
-        // 혹시 모르니 명세서 필드명인 'profileImageUrl'로 파일을 넣어봅니다.
-        // (안되면 'file'이나 'image'로 바꿔봐야 함)
-        formData.append("profileImageUrl", profileFile); 
+        formData.append("profileImageUrl", profileFile);
+      } else {
+        // 파일이 없을 때 null을 보내야 에러가 안 나는 백엔드 구조일 수 있음
+        // (필요 시 주석 해제)
+        // formData.append("profileImageUrl", new Blob([], { type: 'application/json' })); 
       }
 
-      console.log("🚀 [FormData 전송]");
-      // FormData는 console.log로 내용이 바로 안 보입니다. 확인하려면 아래 코드 필요
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-      }
+      console.log("🚀 [전송] FormData 구성 완료");
 
       const response = await axios.post(
         "/api/users/signup",
-        formData, // body 자리에 formData 넣기
+        formData,
         {
           headers: {
             Authorization: `Bearer ${tempToken}`,
-            // [중요] Content-Type: application/json 을 지워야 합니다.
-            // axios가 FormData를 감지하면 알아서 multipart/form-data로 설정합니다.
+            // Content-Type은 axios가 알아서 'multipart/form-data'로 설정함
           },
         }
       );
 
-      // 3. 성공 처리
+      // 성공 처리
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
         response.data.data?.accessToken;
-
       const refreshToken =
         response.headers["refresh-token"] ||
         response.data.data?.refreshToken;
 
       if (accessToken) localStorage.setItem("accessToken", accessToken);
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-
       localStorage.removeItem("tempToken");
 
       alert("회원가입 성공!");
       navigate("/home");
 
     } catch (error) {
-      console.error("❌ 에러 발생:", error);
-
+      console.error("❌ 에러:", error);
       if (error.response) {
         const { status, data } = error.response;
-        console.log("🔥 서버 응답 데이터:", data);
-        
+        // 500 에러 상세 내용을 alert로 띄움
         alert(`서버 에러 (${status})\n${JSON.stringify(data, null, 2)}`);
         
         if (status === 409) navigate("/login");
       } else {
-        alert("네트워크 오류가 발생했습니다.");
+        alert("네트워크 오류 발생");
       }
     }
   };
@@ -137,7 +117,6 @@ const Signup = () => {
   return (
     <div className="signup-container">
       <img src={backgroundImg} alt="background" className="background-img" />
-
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
 
@@ -148,12 +127,7 @@ const Signup = () => {
             className="profile-img" 
             onError={(e) => {e.target.src = defaultProfileImg}}
           />
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleProfileImageChange}
-          />
+          <input type="file" accept="image/*" hidden onChange={handleProfileImageChange} />
         </label>
 
         <div className="form-section">
@@ -161,41 +135,21 @@ const Signup = () => {
             <label>아이디</label>
             <input type="text" value={email} disabled className="disabled-input" />
           </div>
-
           <div className="input-group">
             <label>닉네임</label>
-            <input
-              name="nickname"
-              placeholder="닉네임을 입력하세요"
-              value={form.nickname}
-              onChange={handleChange}
-            />
+            <input name="nickname" placeholder="닉네임" value={form.nickname} onChange={handleChange} />
           </div>
-
           <div className="input-group">
             <label>생년월일</label>
-            <input
-              type="date"
-              name="birthDate"
-              value={form.birthDate}
-              onChange={handleChange}
-            />
+            <input type="date" name="birthDate" value={form.birthDate} onChange={handleChange} />
           </div>
-
           <div className="input-group">
             <label>자기소개</label>
-            <textarea
-              name="bio"
-              placeholder="자기소개를 입력하세요"
-              value={form.bio}
-              onChange={handleChange}
-            />
+            <textarea name="bio" placeholder="자기소개" value={form.bio} onChange={handleChange} />
           </div>
         </div>
 
-        <button className="signup-button" onClick={handleSubmit}>
-          회원가입
-        </button>
+        <button className="signup-button" onClick={handleSubmit}>회원가입</button>
       </div>
     </div>
   );
