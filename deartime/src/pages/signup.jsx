@@ -9,8 +9,9 @@ import defaultProfileImg from "../assets/profile.jpg";
 const Signup = () => {
   const navigate = useNavigate();
 
-  // ✅ 구글 로그인에서 저장된 이메일 불러오기
-  const email = localStorage.getItem("user_email") || "";
+  // 현재 OAuthCallback에서는 email을 저장하지 않음
+  // 필요하면 OAuthCallback에서 저장해줘야 함
+  const email = localStorage.getItem("userEmail") || "";
 
   const [form, setForm] = useState({
     nickname: "",
@@ -19,7 +20,7 @@ const Signup = () => {
     profileImageUrl: "",
   });
 
-  // ✅ 프로필 이미지 미리보기용
+  // 프로필 이미지 미리보기
   const [profilePreview, setProfilePreview] = useState(defaultProfileImg);
 
   const handleChange = (e) => {
@@ -27,19 +28,14 @@ const Signup = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 프로필 이미지 선택
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 미리보기
     const previewUrl = URL.createObjectURL(file);
     setProfilePreview(previewUrl);
 
-    /**
-     * 지금은 서버에 업로드하지 않으므로
-     * profileImageUrl은 추후 S3 연동 시 교체
-     */
+    // 현재는 서버 업로드 X (추후 S3 연동)
     setForm((prev) => ({
       ...prev,
       profileImageUrl: previewUrl,
@@ -52,7 +48,7 @@ const Signup = () => {
       return;
     }
 
-    const tempToken = localStorage.getItem("temp_token");
+    const tempToken = localStorage.getItem("tempToken");
     if (!tempToken) {
       alert("구글 로그인이 필요합니다.");
       navigate("/login");
@@ -80,7 +76,6 @@ const Signup = () => {
         }
       );
 
-      // ✅ 토큰 헤더 / 바디 둘 다 대응
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
         response.data.data.accessToken;
@@ -89,9 +84,11 @@ const Signup = () => {
         response.headers["refresh-token"] ||
         response.data.data.refreshToken;
 
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
-      localStorage.removeItem("temp_token");
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      // 임시 토큰 제거
+      localStorage.removeItem("tempToken");
 
       navigate("/home");
     } catch (error) {
@@ -117,13 +114,9 @@ const Signup = () => {
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
 
-        {/* ✅ 프로필 이미지 선택 */}
+        {/* 프로필 이미지 선택 (선택사항) */}
         <label className="profile-image-wrapper">
-          <img
-            src={profilePreview}
-            alt="profile"
-            className="profile-img"
-          />
+          <img src={profilePreview} alt="profile" className="profile-img" />
           <input
             type="file"
             accept="image/*"
