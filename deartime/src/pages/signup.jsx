@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
-// import defaultProfileImg from "../assets/profile.jpg"; // 사용 안 함
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -14,7 +13,6 @@ const Signup = () => {
 
   const [form, setForm] = useState({
     nickname: "",
-    // birthDate, bio, profileImageUrl은 현재 입력받지 않으므로 초기값 유지
   });
 
   const handleChange = (e) => {
@@ -30,20 +28,26 @@ const Signup = () => {
     }
 
     const tempToken = localStorage.getItem("tempToken");
-    if (!tempToken) {
-      alert("구글 로그인이 필요합니다.");
+
+    // [디버깅] 토큰 상태 정밀 확인
+    console.log("🔍 현재 저장된 토큰:", tempToken);
+
+    if (!tempToken || tempToken === "undefined" || tempToken === "null") {
+      alert(`유효하지 않은 토큰입니다. (값: ${tempToken})\n다시 로그인해주세요.`);
       navigate("/login");
       return;
     }
 
     try {
-      // 2. 최소 요청 데이터 구성 (닉네임만 전송)
-      // API 명세의 '최소 요청 예시'에 맞춤: { "nickname": "나현" }
+      // 2. 요청 데이터 구성
       const requestBody = {
         nickname: form.nickname,
       };
 
-      console.log("전송 데이터:", requestBody); // 디버깅용 로그
+      // [디버깅] 서버로 보내는 데이터와 헤더를 콘솔에 출력
+      console.log("🚀 [요청 시작] URL: /api/users/signup");
+      console.log("📦 [요청 바디]:", requestBody);
+      console.log("🔑 [Authorization 헤더]:", `Bearer ${tempToken}`);
 
       const response = await axios.post(
         "/api/users/signup",
@@ -56,7 +60,9 @@ const Signup = () => {
         }
       );
 
-      // 3. 응답 처리 (토큰 저장)
+      // 3. 성공 처리
+      console.log("✅ [요청 성공] 응답:", response);
+
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
         response.data.data.accessToken;
@@ -66,10 +72,10 @@ const Signup = () => {
         response.data.data.refreshToken;
 
       if (accessToken) {
-          localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("accessToken", accessToken);
       }
       if (refreshToken) {
-          localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("refreshToken", refreshToken);
       }
 
       // 임시 토큰 제거
@@ -79,25 +85,35 @@ const Signup = () => {
       navigate("/home");
 
     } catch (error) {
-      console.error("회원가입 에러:", error); // 콘솔에 에러 상세 출력
-      
+      // 4. 에러 처리 (상세 디버깅)
+      console.error("❌ [에러 발생]:", error);
+
       if (error.response) {
-        const { status, data } = error.response;
-        // 400: 닉네임 중복, 형식 오류 등
-        if (status === 400) {
-            alert(data.message || "입력 값을 확인해주세요.");
+        // 서버가 응답을 줬으나 에러 코드인 경우 (500, 400, 409 등)
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        console.log(`🔥 [서버 응답 ${status}] 데이터:`, errorData);
+
+        // 에러 데이터를 문자열로 변환하여 Alert에 표시
+        let errorMessage = "알 수 없는 에러";
+        if (typeof errorData === "object") {
+             errorMessage = JSON.stringify(errorData, null, 2);
+        } else {
+             errorMessage = errorData;
         }
-        // 409: 이미 가입된 유저
-        else if (status === 409) {
-          alert("이미 회원가입이 완료된 사용자입니다.");
-          navigate("/login");
-        } 
-        // 500 등 기타 서버 에러
-        else {
-          alert(`서버 오류가 발생했습니다. (Code: ${status})`);
+
+        alert(`[서버 에러 ${status}]\n내용: ${errorMessage}`);
+
+        if (status === 409) {
+           navigate("/login");
         }
+      } else if (error.request) {
+        // 요청은 보냈으나 응답이 없는 경우
+        alert("서버로부터 응답이 없습니다. 백엔드 서버가 켜져 있는지 확인해주세요.");
       } else {
-        alert("네트워크 오류가 발생했습니다.");
+        // 요청 설정 중 에러
+        alert(`요청 설정 오류: ${error.message}`);
       }
     }
   };
@@ -108,18 +124,6 @@ const Signup = () => {
 
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
-
-        {/* 프로필 이미지 업로드는 500 에러의 주원인이므로 주석 처리 (닉네임만 입력) */}
-        {/* <label className="profile-image-wrapper">
-          <img src={profilePreview} alt="profile" className="profile-img" />
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleProfileImageChange}
-          />
-        </label>
-        */}
 
         <div className="form-section">
           <div className="input-group">
@@ -142,7 +146,7 @@ const Signup = () => {
             />
           </div>
 
-          {/* 생년월일, 자기소개는 선택사항이므로 일단 주석 처리하여 에러 방지 */}
+          {/* 주석 처리를 JSX 문법에 맞게 수정했습니다 */}
           {/* <div className="input-group">
             <label>생년월일</label>
             <input
