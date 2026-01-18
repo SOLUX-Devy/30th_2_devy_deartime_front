@@ -13,6 +13,8 @@ const Signup = () => {
 
   const [form, setForm] = useState({
     nickname: "",
+    birthDate: "", 
+    bio: "",       
   });
 
   const handleChange = (e) => {
@@ -29,22 +31,25 @@ const Signup = () => {
 
     const tempToken = localStorage.getItem("tempToken");
 
-    // [디버깅] 토큰 상태 정밀 확인
-    console.log("🔍 현재 저장된 토큰:", tempToken);
-
+    // [디버깅] 토큰 확인
     if (!tempToken || tempToken === "undefined" || tempToken === "null") {
-      alert(`유효하지 않은 토큰입니다. (값: ${tempToken})\n다시 로그인해주세요.`);
+      alert("로그인이 필요합니다. (토큰 없음)");
       navigate("/login");
       return;
     }
 
     try {
-      // 2. 요청 데이터 구성
+      // 2. [핵심 수정] 모든 필드를 포함하되, 값이 없으면 null로 보냄
+      // 백엔드가 필드 누락 시 500 에러를 뱉는 것을 방지
       const requestBody = {
         nickname: form.nickname,
+        // 빈 문자열("")이면 null로 변환해서 전송
+        birthDate: form.birthDate ? form.birthDate : null, 
+        bio: form.bio ? form.bio : null,
+        // 프로필 이미지는 현재 업로드 기능이 없으므로 명시적 null 전송
+        profileImageUrl: null 
       };
 
-      // [디버깅] 서버로 보내는 데이터와 헤더를 콘솔에 출력
       console.log("🚀 [요청 시작] URL: /api/users/signup");
       console.log("📦 [요청 바디]:", requestBody);
       console.log("🔑 [Authorization 헤더]:", `Bearer ${tempToken}`);
@@ -71,12 +76,8 @@ const Signup = () => {
         response.headers["refresh-token"] ||
         response.data.data.refreshToken;
 
-      if (accessToken) {
-        localStorage.setItem("accessToken", accessToken);
-      }
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-      }
+      if (accessToken) localStorage.setItem("accessToken", accessToken);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
 
       // 임시 토큰 제거
       localStorage.removeItem("tempToken");
@@ -85,35 +86,37 @@ const Signup = () => {
       navigate("/home");
 
     } catch (error) {
-      // 4. 에러 처리 (상세 디버깅)
+      // 4. 에러 처리
       console.error("❌ [에러 발생]:", error);
 
       if (error.response) {
-        // 서버가 응답을 줬으나 에러 코드인 경우 (500, 400, 409 등)
         const status = error.response.status;
         const errorData = error.response.data;
 
         console.log(`🔥 [서버 응답 ${status}] 데이터:`, errorData);
 
-        // 에러 데이터를 문자열로 변환하여 Alert에 표시
+        // 에러 메시지 표시 로직
         let errorMessage = "알 수 없는 에러";
-        if (typeof errorData === "object") {
+        if (errorData && typeof errorData === "object") {
              errorMessage = JSON.stringify(errorData, null, 2);
-        } else {
+        } else if (errorData) {
              errorMessage = errorData;
         }
 
-        alert(`[서버 에러 ${status}]\n내용: ${errorMessage}`);
+        // 500 에러인데 메시지가 없는 경우
+        if (status === 500 && !errorData) {
+            errorMessage = "서버 내부 오류입니다. (데이터 형식이 맞지 않을 가능성이 높음)";
+        }
+
+        alert(`[오류 ${status}]\n${errorMessage}`);
 
         if (status === 409) {
            navigate("/login");
         }
       } else if (error.request) {
-        // 요청은 보냈으나 응답이 없는 경우
-        alert("서버로부터 응답이 없습니다. 백엔드 서버가 켜져 있는지 확인해주세요.");
+        alert("서버로부터 응답이 없습니다.");
       } else {
-        // 요청 설정 중 에러
-        alert(`요청 설정 오류: ${error.message}`);
+        alert(`요청 중 오류 발생: ${error.message}`);
       }
     }
   };
@@ -125,6 +128,8 @@ const Signup = () => {
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
 
+        {/* 프로필 이미지는 제외 (서버 에러 방지) */}
+        
         <div className="form-section">
           <div className="input-group">
             <label>아이디</label>
@@ -146,8 +151,7 @@ const Signup = () => {
             />
           </div>
 
-          {/* 주석 처리를 JSX 문법에 맞게 수정했습니다 */}
-          {/* <div className="input-group">
+          <div className="input-group">
             <label>생년월일</label>
             <input
               type="date"
@@ -165,8 +169,7 @@ const Signup = () => {
               value={form.bio}
               onChange={handleChange}
             />
-          </div> 
-          */}
+          </div>
         </div>
 
         <button className="signup-button" onClick={handleSubmit}>
