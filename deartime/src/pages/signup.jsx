@@ -4,26 +4,43 @@ import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
+// 프로필 기본 이미지 import 필수 (경로 확인해주세요)
+import defaultProfileImg from "../assets/profile.jpg"; 
 
 const Signup = () => {
   const navigate = useNavigate();
 
-  // 이메일은 로컬스토리지에서 가져옴 (보여주기용)
   const email = localStorage.getItem("userEmail") || "";
 
   const [form, setForm] = useState({
     nickname: "",
-    birthDate: "", 
-    bio: "",       
+    birthDate: "",
+    bio: "",
+    profileImageUrl: "",
   });
+
+  // 프로필 이미지 미리보기 상태
+  const [profilePreview, setProfilePreview] = useState(defaultProfileImg);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // 프로필 사진 변경 핸들러 (UI 표시용)
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 화면에 보여주기 위한 미리보기 URL 생성
+    const previewUrl = URL.createObjectURL(file);
+    setProfilePreview(previewUrl);
+    
+    // 주의: 실제 서버 전송용 URL은 아직 없으므로 form에는 담지 않거나 빈 값 유지
+    // 나중에 S3 업로드 로직이 추가되면 여기서 처리
+  };
+
   const handleSubmit = async () => {
-    // 1. 닉네임 유효성 검사 (공백 체크)
     if (!form.nickname.trim()) {
       alert("닉네임은 필수입니다.");
       return;
@@ -31,28 +48,24 @@ const Signup = () => {
 
     const tempToken = localStorage.getItem("tempToken");
 
-    // [디버깅] 토큰 확인
     if (!tempToken || tempToken === "undefined" || tempToken === "null") {
-      alert("로그인이 필요합니다. (토큰 없음)");
+      alert("로그인이 필요합니다.");
       navigate("/login");
       return;
     }
 
     try {
-      // 2. [핵심 수정] 모든 필드를 포함하되, 값이 없으면 null로 보냄
-      // 백엔드가 필드 누락 시 500 에러를 뱉는 것을 방지
+      // [핵심 수정] 서버 죽는 것을 방지하기 위해 null 대신 ""(빈 문자열) 전송
       const requestBody = {
         nickname: form.nickname,
-        // 빈 문자열("")이면 null로 변환해서 전송
-        birthDate: form.birthDate ? form.birthDate : null, 
-        bio: form.bio ? form.bio : null,
-        // 프로필 이미지는 현재 업로드 기능이 없으므로 명시적 null 전송
-        profileImageUrl: null 
+        // 값이 없으면 빈 문자열("")을 보냄. (백엔드가 null을 싫어할 수 있음)
+        birthDate: form.birthDate ? form.birthDate : "", 
+        bio: form.bio ? form.bio : "",
+        // 프로필 이미지는 현재 파일 업로드 API가 없으므로 빈 문자열 전송 (에러 방지)
+        profileImageUrl: "" 
       };
 
-      console.log("🚀 [요청 시작] URL: /api/users/signup");
-      console.log("📦 [요청 바디]:", requestBody);
-      console.log("🔑 [Authorization 헤더]:", `Bearer ${tempToken}`);
+      console.log("🚀 [전송 Body]:", requestBody);
 
       const response = await axios.post(
         "/api/users/signup",
@@ -65,9 +78,7 @@ const Signup = () => {
         }
       );
 
-      // 3. 성공 처리
-      console.log("✅ [요청 성공] 응답:", response);
-
+      // 성공 처리
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
         response.data.data.accessToken;
@@ -79,44 +90,22 @@ const Signup = () => {
       if (accessToken) localStorage.setItem("accessToken", accessToken);
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
 
-      // 임시 토큰 제거
       localStorage.removeItem("tempToken");
 
       alert("회원가입이 완료되었습니다!");
       navigate("/home");
 
     } catch (error) {
-      // 4. 에러 처리
-      console.error("❌ [에러 발생]:", error);
+      console.error("❌ 에러 발생:", error);
 
       if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-
-        console.log(`🔥 [서버 응답 ${status}] 데이터:`, errorData);
-
-        // 에러 메시지 표시 로직
-        let errorMessage = "알 수 없는 에러";
-        if (errorData && typeof errorData === "object") {
-             errorMessage = JSON.stringify(errorData, null, 2);
-        } else if (errorData) {
-             errorMessage = errorData;
-        }
-
-        // 500 에러인데 메시지가 없는 경우
-        if (status === 500 && !errorData) {
-            errorMessage = "서버 내부 오류입니다. (데이터 형식이 맞지 않을 가능성이 높음)";
-        }
-
-        alert(`[오류 ${status}]\n${errorMessage}`);
-
-        if (status === 409) {
-           navigate("/login");
-        }
-      } else if (error.request) {
-        alert("서버로부터 응답이 없습니다.");
+        const { status, data } = error.response;
+        // 500 에러 내용 상세 표시
+        alert(`[가입 실패] 서버 에러 (${status})\n${JSON.stringify(data, null, 2)}`);
+        
+        if (status === 409) navigate("/login");
       } else {
-        alert(`요청 중 오류 발생: ${error.message}`);
+        alert("네트워크 오류가 발생했습니다.");
       }
     }
   };
@@ -128,8 +117,24 @@ const Signup = () => {
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
 
-        {/* 프로필 이미지는 제외 (서버 에러 방지) */}
-        
+        {/* 프로필 이미지 UI 복구 */}
+        <label className="profile-image-wrapper">
+          <img 
+            src={profilePreview} 
+            alt="profile" 
+            className="profile-img" 
+            // 이미지가 깨질 경우 기본 이미지로 대체하는 코드 추가
+            onError={(e) => {e.target.src = defaultProfileImg}}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleProfileImageChange}
+          />
+          {/* 카메라 아이콘이나 오버레이가 필요하면 여기에 추가 CSS */}
+        </label>
+
         <div className="form-section">
           <div className="input-group">
             <label>아이디</label>
