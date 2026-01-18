@@ -66,7 +66,7 @@ const Signup = () => {
       };
 
       const response = await axios.post(
-        "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/users/signup",
+        "/api/users/signup",
         requestBody,
         {
           headers: {
