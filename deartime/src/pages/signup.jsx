@@ -14,10 +14,12 @@ const Signup = () => {
     nickname: "",
     birthDate: "",
     bio: "",
-    profileImageUrl: "",
+    // profileImageUrl state는 이제 실제 파일 객체를 담거나 처리해야 하지만, 
+    // 일단 텍스트 필드들과 로직을 맞춥니다.
   });
 
   const [profilePreview, setProfilePreview] = useState(defaultProfileImg);
+  const [profileFile, setProfileFile] = useState(null); // 실제 파일 객체 저장용
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,9 +29,13 @@ const Signup = () => {
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // 미리보기 설정
     const previewUrl = URL.createObjectURL(file);
     setProfilePreview(previewUrl);
-    // 현재는 서버로 이미지 파일 자체를 보내지 않으므로 form 업데이트는 생략하거나 추후 구현
+    
+    // [중요] 나중에 전송을 위해 파일 객체 저장
+    setProfileFile(file);
   };
 
   const handleSubmit = async () => {
@@ -47,36 +53,50 @@ const Signup = () => {
     }
 
     try {
-      // 2. [핵심 수정] 값이 있는 필드만 동적으로 추가 (빈 문자열 전송 방지)
-      const requestBody = {
-        nickname: form.nickname,
-      };
+      // 2. [핵심 수정] JSON 대신 FormData 생성
+      // 서버가 "multipart" 에러를 낸다는 건 이 방식을 원한다는 뜻입니다.
+      const formData = new FormData();
+      
+      // (1) 닉네임 추가
+      formData.append("nickname", form.nickname);
 
-      // birthDate가 비어있지 않을 때만 추가 (빈 문자열 ""을 보내면 서버가 날짜 파싱하다 죽음)
+      // (2) 선택 정보들 (값이 있을 때만 추가)
       if (form.birthDate) {
-        requestBody.birthDate = form.birthDate;
+        formData.append("birthDate", form.birthDate);
       }
-
-      // bio가 비어있지 않을 때만 추가
+      
       if (form.bio && form.bio.trim() !== "") {
-        requestBody.bio = form.bio;
+        formData.append("bio", form.bio);
       }
 
-      // profileImageUrl: 현재 업로드 로직이 없으므로 아예 보내지 않거나,
-      // 유효한 URL 문자열일 때만 보냅니다. (빈 값 전송 금지)
-      if (form.profileImageUrl && form.profileImageUrl.startsWith("http")) {
-        requestBody.profileImageUrl = form.profileImageUrl;
+      // (3) 프로필 이미지 처리
+      // 만약 백엔드가 'profileImageUrl'이라는 문자열을 원하는 게 아니라
+      // 실제 파일 업로드를 원한다면 아래처럼 파일을 보내야 합니다.
+      // 일단 API 명세가 혼란스러우므로, 파일이 있으면 파일을 보내고
+      // 없으면 아무것도 보내지 않거나, null 처리를 합니다.
+      if (profileFile) {
+        // 백엔드에서 받는 파일 파라미터 이름이 보통 'file' 아니면 'image' 입니다.
+        // 명세서의 "profileImageUrl"이 문자열 필드라면 위처럼 텍스트로 보냈겠지만,
+        // multipart 에러가 난 걸로 보아 파일 자체를 기대할 확률이 높습니다.
+        // 혹시 모르니 명세서 필드명인 'profileImageUrl'로 파일을 넣어봅니다.
+        // (안되면 'file'이나 'image'로 바꿔봐야 함)
+        formData.append("profileImageUrl", profileFile); 
       }
 
-      console.log("🚀 [최종 전송 데이터]:", requestBody);
+      console.log("🚀 [FormData 전송]");
+      // FormData는 console.log로 내용이 바로 안 보입니다. 확인하려면 아래 코드 필요
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
 
       const response = await axios.post(
         "/api/users/signup",
-        requestBody,
+        formData, // body 자리에 formData 넣기
         {
           headers: {
             Authorization: `Bearer ${tempToken}`,
-            "Content-Type": "application/json",
+            // [중요] Content-Type: application/json 을 지워야 합니다.
+            // axios가 FormData를 감지하면 알아서 multipart/form-data로 설정합니다.
           },
         }
       );
@@ -84,7 +104,7 @@ const Signup = () => {
       // 3. 성공 처리
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
-        response.data.data?.accessToken; // data가 없을 수도 있으므로 optional chaining
+        response.data.data?.accessToken;
 
       const refreshToken =
         response.headers["refresh-token"] ||
@@ -99,27 +119,17 @@ const Signup = () => {
       navigate("/home");
 
     } catch (error) {
-      console.error("❌ 에러 객체:", error);
+      console.error("❌ 에러 발생:", error);
 
       if (error.response) {
-        // 서버가 500 에러와 함께 HTML을 뱉는 경우 JSON 파싱이 안돼서 data가 이상하게 나올 수 있음
-        const errorData = error.response.data;
-        const status = error.response.status;
-
-        console.log("🔥 서버 응답 데이터:", errorData);
-
-        if (status === 500) {
-           alert("서버 내부 오류(500)가 발생했습니다.\n서버 로그를 확인해야 정확한 원인을 알 수 있습니다.");
-        } else if (status === 400) {
-           alert(`입력값 오류: ${JSON.stringify(errorData)}`);
-        } else if (status === 409) {
-           alert("이미 가입된 회원입니다.");
-           navigate("/login");
-        } else {
-           alert(`오류 발생 (${status})`);
-        }
+        const { status, data } = error.response;
+        console.log("🔥 서버 응답 데이터:", data);
+        
+        alert(`서버 에러 (${status})\n${JSON.stringify(data, null, 2)}`);
+        
+        if (status === 409) navigate("/login");
       } else {
-        alert("서버 응답이 없습니다. (네트워크 혹은 서버 다운)");
+        alert("네트워크 오류가 발생했습니다.");
       }
     }
   };
