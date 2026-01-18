@@ -39,8 +39,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/oauth/callback" element={<OAuthCallback />} />
-      </Routes>
-      <Routes>
+        
         {/* ✅ 로그인/회원가입은 헤더 없이 쓰고 싶으면 Layout 밖에 둠 */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
