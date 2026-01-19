@@ -380,7 +380,7 @@ export default function Letterbox() {
                   /* 데이터 로딩이 끝났는데(isLoading: false) 편지가 0개인 경우 실행 */
                   <div className="no-letters-container">
                     <div className="no-letters-content">
-                      <p>아직 도착한 편지가 없어요.</p>
+                      <p>아직 편지가 없어요.</p>
                       <span>친구들에게 먼저 소식을 전해보는 건 어떨까요?</span>
                     </div>
                   </div>
