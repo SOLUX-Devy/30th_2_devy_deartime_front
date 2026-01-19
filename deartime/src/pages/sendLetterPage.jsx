@@ -9,7 +9,7 @@ import FriendSelect from "../components/FriendSelect";
 
 const SendLetter = () => {
   // 4가지 테마 정의
-  const themes = [
+  const themes = [ 
     {
       id: 1,
       imageUrl: theme1,
@@ -59,15 +59,41 @@ const SendLetter = () => {
   };
 
 
-  const isFormValid = !!selectedFriend && title.trim() !== '' && content.trim() !== '';
+  // const isFormValid = !!selectedFriend && title.trim() !== '' && content.trim() !== '';
+  const isFormValid = title.trim() !== '' && content.trim() !== '';
 
-  const handleSend = () => {
-    if (isFormValid) {
+  const handleSend = async () => {
+    if (!title.trim() || !content.trim()) return;
+
+    const payload = {
+      receiverId: 2, 
+      theme: themes[selectedThemeId] || "DEFAULT",
+      title,
+      content,
+    };
+
+    try {
+      const response = await fetch("/api/letters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("편지 전송 실패");
+      }
+
       alert("편지를 보냈습니다!");
-      // TODO: 실제 전송 로직 추가
       navigate(-1);
+    } catch (error) {
+      console.error(error);
+      alert("편지 전송 중 오류가 발생했습니다.");
     }
   };
+
 
   return (
     <>
