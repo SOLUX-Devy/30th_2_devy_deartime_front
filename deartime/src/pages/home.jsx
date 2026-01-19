@@ -15,7 +15,7 @@ export default function Home() {
       <img src={backgroundImg} alt="background" className="background-img" />
 
       <div className="description">
-        {user.nickname}님의 기억을 별빛처럼 기록해요 ✨
+        별빛처럼 사라지지 않는 기억을 기록하는 곳
       </div>
 
       <section className="cards">
