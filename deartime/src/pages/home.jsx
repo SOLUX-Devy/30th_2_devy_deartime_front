@@ -8,7 +8,9 @@ import { useUser } from "../context/UserContext";
 export default function Home() {
   const { user } = useUser();
 
-  if (!user) return null; 
+  if (!user) {
+    return null; // 또는 로딩 컴포넌트
+  }
 
   return (
     <div className="home-container">
@@ -28,14 +30,14 @@ export default function Home() {
               openAt: "2026-01-05",
               createdAt: "2026-01-01",
               imageUrl: null,
-              senderNickname: user.nickname,
+              senderNickname: user?.nickname ?? "익명",
               title: "어렸을 때의 추억",
             }}
           />
         </div>
 
-        <RecordCard imageUrl={user.profileImageUrl} />
-        <ConstellationCard birthday={user.birthday} />
+        <RecordCard imageUrl={user?.profileImageUrl ?? null} />
+        <ConstellationCard birthday={user?.birthday ?? null} />
       </section>
     </div>
   );
