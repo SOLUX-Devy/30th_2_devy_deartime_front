@@ -91,6 +91,9 @@ const Signup = () => {
         response.data.data?.refreshToken;
 
       if (accessToken) localStorage.setItem("accessToken", accessToken);
+      else if (tempToken) {
+        localStorage.setItem("accessToken", tempToken);
+      }
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
       localStorage.removeItem("tempToken");
 
