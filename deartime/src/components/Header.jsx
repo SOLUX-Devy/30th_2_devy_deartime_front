@@ -61,9 +61,11 @@ export default function Header() {
   };
 
   // 회원가입 일수 계산
-  const joinDate = user?.joinDate || localStorage.getItem("joinDate");
-  const daysTogether = joinDate
-    ? Math.floor((new Date() - new Date(joinDate)) / (1000 * 60 * 60 * 24))
+  const storedJoinDate = user?.joinDate || localStorage.getItem("joinDate");
+  const joinDateObj = storedJoinDate ? new Date(storedJoinDate) : null;
+
+  const daysTogether = joinDateObj
+    ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24))
     : 0;
 
   // 로그아웃
