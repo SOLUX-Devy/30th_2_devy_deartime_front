@@ -24,7 +24,6 @@ const Signup = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 프로필 이미지 선택 (이미지 클릭)
   const handleProfileImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -112,7 +111,6 @@ const Signup = () => {
       <div className="signup-card">
         <img src={logoImg} alt="DearTime" className="signup-logo-img" />
 
-        {/* ✅ 프로필 이미지 (클릭 → 이미지 등록) */}
         <div className="profile-edit-section">
           <label htmlFor="profileInput">
             <img
