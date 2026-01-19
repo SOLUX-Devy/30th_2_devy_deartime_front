@@ -12,24 +12,28 @@ const SendLetter = () => {
   const themes = [ 
     {
       id: 1,
+      code: "theme1",
       imageUrl: theme1,
       text: 'dark',
       button: 'dark',
     },
     {
       id: 2,
+      code: "theme2",
       imageUrl: theme2,
       text: 'light',
       button: 'light',
     },
     {
       id: 3,
+      code: "theme3",
       imageUrl: theme3,
       text: 'light',
       button: 'light',
     },
     {
       id: 4,
+      code: "theme4",
       imageUrl: theme4,
       text: 'light',
       button: 'light',
@@ -66,8 +70,8 @@ const SendLetter = () => {
     if (!title.trim() || !content.trim()) return;
 
     const payload = {
-      receiverId: 2, 
-      theme: themes[selectedThemeId] || "DEFAULT",
+      receiverId: 2,
+      theme: currentTheme.code,
       title,
       content,
     };
