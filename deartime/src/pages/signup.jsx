@@ -79,7 +79,7 @@ const Signup = () => {
         },
       });
 
-      // 서버에서 반환되는 모든 정보 확인
+      // 서버에서 반환되는 정보 확인
       console.log("[Signup Response]", response);
       console.log("[Signup Response data]", response.data);
 
@@ -93,6 +93,10 @@ const Signup = () => {
       if (accessToken) localStorage.setItem("accessToken", accessToken);
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
       localStorage.removeItem("tempToken");
+
+      // 회원가입 날짜 저장 
+      const today = new Date().toISOString(); // ISO 형식으로 저장
+      localStorage.setItem("joinDate", today);
 
       alert("회원가입 성공!");
       navigate("/home");

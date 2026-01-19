@@ -1,31 +1,21 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import DearTimeMini from "../assets/logo.svg";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import NotiIcon from "../assets/noti_bell.svg";
 import ArrowDown from "../assets/arrow_down.svg";
 import DefaultProfile from "../assets/profile.jpg";
-import {
-  MOCK_NOTIFICATIONS,
-  MOCK_USER_PROFILE,
-} from "../mocks/noti_profileDetailResponses.js";
 import "../styles/header.css";
 
 import friendIcon from "../assets/default_profile.png";
 import letterIcon from "../assets/letter.svg";
 import capsuleIcon from "../assets/timecapsule.svg";
 import ProfileManageModal from "../components/ProfileManageModal";
-import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
-
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
-  const [notifications, setNotifications] = useState(
-    MOCK_NOTIFICATIONS?.data?.content || []
-  );
-  const [userProfile] = useState(MOCK_USER_PROFILE?.data || null);
-
+  const [notifications, setNotifications] = useState([]);
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileManageOpen, setIsProfileManageOpen] = useState(false);
@@ -33,10 +23,13 @@ export default function Header() {
   const notiRef = useRef(null);
   const profileRef = useRef(null);
 
+  const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
+
   /* =========================
       UTIL
   ========================= */
-  const formatTime = (dateString) => {
+  const _formatTime = (dateString) => {
     const diff = (new Date() - new Date(dateString)) / 1000 / 60;
     if (diff < 60) return `${Math.floor(diff)}분 전`;
     if (diff < 1440) return `${Math.floor(diff / 60)}시간 전`;
@@ -47,7 +40,7 @@ export default function Header() {
     e.target.src = DefaultProfile;
   };
 
-  const getNotiIcon = (type) => {
+  const _getNotiIcon = (type) => {
     switch (type) {
       case "FRIEND_INVITE":
         return friendIcon;
@@ -61,17 +54,19 @@ export default function Header() {
     }
   };
 
-  const splitNotiContent = (content) => {
+  const _splitNotiContent = (content) => {
     const match = content.match(/(.+님이)\s(.+)/);
     if (!match) return { title: content, body: null };
     return { title: match[1], body: match[2] };
   };
 
-  const navigate = useNavigate();
+  // 회원가입 일수 계산
+  const joinDate = user?.joinDate || localStorage.getItem("joinDate");
+  const daysTogether = joinDate
+    ? Math.floor((new Date() - new Date(joinDate)) / (1000 * 60 * 60 * 24))
+    : 0;
 
-  const { setUser } = useContext(UserContext); // UserProvider에서 가져오기
-
-  // 로그아웃 
+  // 로그아웃
   const handleLogout = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
@@ -80,7 +75,7 @@ export default function Header() {
       const res = await fetch("/api/auth/logout", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -89,18 +84,13 @@ export default function Header() {
       console.log("[Logout] Response:", json);
 
       if (res.ok && json.success) {
-        // 서버에서 로그아웃 성공하면 localStorage 삭제
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
+        localStorage.removeItem("joinDate");
 
-        // UserContext 초기화
         setUser(null);
-
-        // 프로필 드롭다운 닫기
         setIsProfileOpen(false);
-
-        // 로그인 화면으로 이동
         navigate("/login");
       } else {
         console.warn("[Logout] Logout failed:", json);
@@ -110,9 +100,7 @@ export default function Header() {
     }
   };
 
-  /* =========================
-      EFFECT
-  ========================= */
+  // 클릭 외부 영역 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notiRef.current && !notiRef.current.contains(e.target)) {
@@ -127,29 +115,20 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* =========================
-      TODO: 친구 요청 처리
-      status: accepted | rejected | blocked
-  ========================= */
-  const handleFriendRequest = async (noti, status) => {
-    try {
-      console.log("[TODO] 친구 요청 처리", {
-        targetUserId: noti.targetId,
-        status,
-      });
+  // 실제 user 기반 프로필 데이터
+  const userProfile = {
+    nickname: user?.nickname || "사용자",
+    bio: user?.bio || "",
+    profileImageUrl: user?.profileImageUrl || null,
+    joinDays: daysTogether,
+  };
 
-      // TODO: PATCH /api/friends/{targetUserId}
-      // body: { status }
-
-      // TODO: PATCH /api/notifications/{noti.id}/read
-
-      // 임시 UI 처리 (연동 전)
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
-      );
-    } catch (error) {
-      console.error("[TODO] 친구 요청 처리 실패", error);
-    }
+  // 친구 요청 처리 (TODO)
+  const _handleFriendRequest = async (noti, status) => {
+    console.log("[TODO] 친구 요청 처리", { targetUserId: noti.targetId, status });
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
+    );
   };
 
   /* =========================
@@ -166,18 +145,10 @@ export default function Header() {
             </NavLink>
 
             <nav className="nav">
-              <NavLink to="/gallery" className={itemClass}>
-                갤러리
-              </NavLink>
-              <NavLink to="/letterbox" className={itemClass}>
-                우체통
-              </NavLink>
-              <NavLink to="/timecapsule" className={itemClass}>
-                타임캡슐
-              </NavLink>
-              <NavLink to="/friend" className={itemClass}>
-                친구목록
-              </NavLink>
+              <NavLink to="/gallery" className={itemClass}>갤러리</NavLink>
+              <NavLink to="/letterbox" className={itemClass}>우체통</NavLink>
+              <NavLink to="/timecapsule" className={itemClass}>타임캡슐</NavLink>
+              <NavLink to="/friend" className={itemClass}>친구목록</NavLink>
             </nav>
           </div>
 
@@ -194,77 +165,14 @@ export default function Header() {
                 type="button"
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
-                {notifications.some((n) => !n.isRead) && (
-                  <span className="red-dot" />
-                )}
+                {notifications.some((n) => !n.isRead) && <span className="red-dot" />}
               </button>
-              {isNotiOpen && (
-                <div className="dropdown noti-dropdown">
-                  <h3 className="noti-title">알림</h3>
-
-                  {notifications.map((noti) => {
-                    const { title, body } = splitNotiContent(noti.content);
-
-                    return (
-                      <div
-                        key={noti.id}
-                        className={`noti-item ${!noti.isRead ? "unread" : ""}`}
-                      >
-                        <div className="noti-icon">
-                          <img src={getNotiIcon(noti.type)} alt="알림 아이콘" />
-                        </div>
-
-                        <div className="noti-content">
-                          <p className="noti-text">{title}</p>
-                          {body && <p className="noti-text">{body}</p>}
-
-                          {noti.contentTitle && (
-                            <span className="noti-sub">
-                              • {noti.contentTitle}
-                            </span>
-                          )}
-
-                          <div className="noti-footer">
-                            {noti.type === "FRIEND_INVITE" && !noti.isRead && (
-                              <div className="noti-actions">
-                                <button
-                                  className="noti-btn accept"
-                                  onClick={() =>
-                                    handleFriendRequest(noti, "accepted")
-                                  }
-                                  type="button"
-                                >
-                                  수락
-                                </button>
-                                <button
-                                  className="noti-btn reject"
-                                  onClick={() =>
-                                    handleFriendRequest(noti, "rejected")
-                                  }
-                                  type="button"
-                                >
-                                  거절
-                                </button>
-                              </div>
-                            )}
-
-                            <span className="noti-time">
-                              {formatTime(noti.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
             {/* 프로필 */}
             <div ref={profileRef} style={{ position: "relative" }}>
               <div
                 className={`profile-trigger ${isProfileOpen ? "is-open" : ""}`}
-
                 onClick={() => {
                   setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);
@@ -274,7 +182,7 @@ export default function Header() {
               >
                 <div className="profile-circle-nav">
                   <img
-                    src={userProfile?.profileImageUrl || DefaultProfile}
+                    src={userProfile.profileImageUrl || DefaultProfile}
                     alt="profile"
                     onError={handleImgError}
                   />
@@ -286,10 +194,10 @@ export default function Header() {
                 />
               </div>
 
-              {isProfileOpen && userProfile && (
+              {isProfileOpen && (
                 <div className="dropdown profile-dropdown">
                   <h2>{userProfile.nickname} 님</h2>
-                  <p>Deartime과 함께한지 {userProfile.joinDays || 0}일째</p>
+                  <p>Deartime과 함께한지 {userProfile.joinDays}일째</p>
 
                   <div className="profile-circle-large">
                     <img
@@ -310,11 +218,7 @@ export default function Header() {
                   >
                     프로필 관리
                   </button>
-                  <button
-                    className="p-btn"
-                    type="button"
-                    onClick={handleLogout}
-                  >
+                  <button className="p-btn" type="button" onClick={handleLogout}>
                     로그아웃
                   </button>
                 </div>
