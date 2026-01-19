@@ -82,6 +82,11 @@ const SendLetter = () => {
         body: JSON.stringify(payload),
       });
 
+      // 서버 응답 디버깅
+      console.log("[SendLetter] status:", response.status);
+      const data = await response.json();
+      console.log("[SendLetter] response data:", data);
+
       if (!response.ok) {
         throw new Error("편지 전송 실패");
       }
