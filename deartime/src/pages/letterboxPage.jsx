@@ -62,16 +62,17 @@ export default function Letterbox() {
     const url = getApiUrl(activeIndex);
     if (!url) return;
 
-    setIsLoading(true);
+    //setIsLoading(true);
 
     fetch(url)
       .then((res) => res.json())
       .then((json) => {
-        setLetters(json.data);
+        setLetters(json.data || []);
         setIsLoading(false);
       })
       .catch((err) => {
         console.error(err);
+        setLetters([]);
         setIsLoading(false);
       });
   }, [activeIndex]);
@@ -346,8 +347,17 @@ export default function Letterbox() {
             <main className="letter-grid">
               {isLoading ? (
                 <p>로딩 중...</p>
-              ) : (
-                <>
+                ) : letters.length === 0 ? ( 
+                  /* 편지가 없을 때 보여줄 빈 상태(Empty State) 화면 */
+                  /* 데이터 로딩이 끝났는데(isLoading: false) 편지가 0개인 경우 실행 */
+                  <div className="no-letters-container">
+                    <div className="no-letters-content">
+                      <p>아직 도착한 편지가 없어요.</p>
+                      <span>친구들에게 먼저 소식을 전해보는 건 어떨까요?</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
                   {currentItems.map((letter) => {
                     const isSpotlight = menu.show && menu.targetId === letter.letterId;
 
