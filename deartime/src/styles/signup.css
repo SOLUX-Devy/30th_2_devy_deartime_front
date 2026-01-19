@@ -110,3 +110,20 @@
 .signup-button:hover {
   background: rgba(42, 66, 128, 0.3);
 }
+
+.profile-edit-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+

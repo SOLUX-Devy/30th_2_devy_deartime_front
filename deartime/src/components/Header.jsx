@@ -10,7 +10,7 @@ import {
 } from "../mocks/noti_profileDetailResponses.js";
 import "../styles/header.css";
 
-import friendIcon from "../assets/default_profile.svg";
+import friendIcon from "../assets/default_profile.png";
 import letterIcon from "../assets/letter.svg";
 import capsuleIcon from "../assets/timecapsule.svg";
 import ProfileManageModal from "../components/ProfileManageModal";
