@@ -13,10 +13,17 @@ import { Trash2 } from "lucide-react";
 
 export default function Letterbox() {
   const [activeIndex, setActiveIndex] = useState(0);
+  // UI는 1페이지부터 시작하지만, API는 0페이지부터 시작하므로 관리 주의
   const [page, setPage] = useState(1);
 
   const [letters, setLetters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 서버에서 받아올 페이징 정보 저장용 상태
+  const [serverPageInfo, setServerPageInfo] = useState({
+    totalElements: 0,
+    totalPages: 1,
+  });
 
   // ✅ 선택(spotlight) 카드 id
   const [focusedId, setFocusedId] = useState(null);
@@ -43,59 +50,80 @@ export default function Letterbox() {
 
   const pageSize = 8;
 
-  const getApiUrl = (index) => {
+  // 엔드포인트 결정 함수 (실제 API 주소로 변경)
+  const getApiUrl = (index, pageNum) => {
+    const basePage = pageNum - 1; // UI(1~ ) -> API(0~ )
+    const commonParams = `sort=createdAt,desc&page=${basePage}&size=${pageSize}`;
+    
     switch (index) {
-      case 0:
-        return "/letterboxMocks/received.json";
-      case 1:
-        return "/letterboxMocks/sent.json";
-      case 2:
-        return "/letterboxMocks/bookmarks.json";
+      case 0: // 받은 편지함 (주소가 /api/letters/received 라고 가정)
+        return `/api/letters/received?${commonParams}`;
+      case 1: // 보낸 편지함 (명세서 주소)
+        return `/api/letters/sent?${commonParams}`;
+      case 2: // 즐겨찾기 (주소가 /api/letters/bookmarks 라고 가정)
+        return `/api/letters/bookmarks?${commonParams}`;
       default:
-        return "/letterboxMocks/received.json";
+        return null;
     }
   };
 
+  // 2. API 호출 useEffect
   useEffect(() => {
-    if (activeIndex === 3) return;
+    if (activeIndex === 3) return; // '우리의 우체통' 탭은 별도 로직
 
-    const url = getApiUrl(activeIndex);
+    const url = getApiUrl(activeIndex, page);
     if (!url) return;
 
     //setIsLoading(true);
 
-    fetch(url)
-      .then((res) => res.json())
+    fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // 로그인 연동 시 저장한 accessToken 사용
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("네트워크 응답 에러");
+        return res.json();
+      })
       .then((json) => {
-        setLetters(json.data || []);
+        if (json.success) {
+          // 명세서 구조: json.data.data 가 배열
+          setLetters(json.data.data || []);
+          // 페이지네이션 정보 업데이트
+          setServerPageInfo({
+            totalElements: json.data.totalElements,
+            totalPages: json.data.totalPages,
+          });
+        }
         setIsLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        console.error("데이터 로드 실패:", err);
         setLetters([]);
         setIsLoading(false);
       });
-  }, [activeIndex]);
+  }, [activeIndex, page]); // 탭이 바뀌거나 페이지가 바뀔 때마다 다시 호출
 
-  // 페이지 계산
-  const totalElements = letters.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+  /// 페이지네이션 계산 (서버 데이터를 기준으로 변경)
+  const { totalElements, totalPages } = serverPageInfo;
+
+  // 현재 페이지가 전체 페이지보다 크면 마지막 페이지를 보여주도록 제한
   const safePage = Math.min(page, totalPages);
-
-  const startItem = totalElements === 0 ? 0 : (safePage - 1) * pageSize + 1;
-  const endItem = Math.min(safePage * pageSize, totalElements);
+  
+  // 현재 페이지에서 보여주는 아이템 범위 계산
+  const startItem = totalElements === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalElements);
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
     [totalPages]
   );
 
-  const currentItems = useMemo(() => {
-    const firstIdx = (safePage - 1) * pageSize;
-    const lastIdx = firstIdx + pageSize;
-    return letters.slice(firstIdx, lastIdx);
-  }, [safePage, letters]);
-
+  // 이제 currentItems는 letters 전체가 됩니다 (서버가 이미 잘라서 주기 때문)
+  const currentItems = letters; 
   const emptySlotsCount = pageSize - currentItems.length;
 
   // 삭제
