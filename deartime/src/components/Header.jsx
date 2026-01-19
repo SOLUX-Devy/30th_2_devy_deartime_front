@@ -14,6 +14,9 @@ import friendIcon from "../assets/default_profile.png";
 import letterIcon from "../assets/letter.svg";
 import capsuleIcon from "../assets/timecapsule.svg";
 import ProfileManageModal from "../components/ProfileManageModal";
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
+
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
@@ -66,18 +69,45 @@ export default function Header() {
 
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // TODO: 서버 연동 시 여기에 로그아웃 API 호출
+  const { setUser } = useContext(UserContext); // UserProvider에서 가져오기
 
-    // (JWT 쓰면)
-    // localStorage.removeItem("accessToken");
-    // localStorage.removeItem("refreshToken");
+  // 로그아웃 
+  const handleLogout = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
 
-    // 프로필 드롭다운 닫기
-    setIsProfileOpen(false);
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    // 로그인(구글) 화면으로 이동
-    navigate("/");
+      const json = await res.json();
+      console.log("[Logout] Response:", json);
+
+      if (res.ok && json.success) {
+        // 서버에서 로그아웃 성공하면 localStorage 삭제
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+
+        // UserContext 초기화
+        setUser(null);
+
+        // 프로필 드롭다운 닫기
+        setIsProfileOpen(false);
+
+        // 로그인 화면으로 이동
+        navigate("/login");
+      } else {
+        console.warn("[Logout] Logout failed:", json);
+      }
+    } catch (err) {
+      console.error("[Logout] Error:", err);
+    }
   };
 
   /* =========================
