@@ -11,20 +11,37 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState(null);
 
+  // 저장 상태
+  const [isSaving, setIsSaving] = useState(false);
+
   // 수정 가능한 상태
   const [nickname, setNickname] = useState(userProfile?.nickname || "");
   const [bio, setBio] = useState(userProfile?.bio || "");
-  const [profileImageUrl, setProfileImageUrl] = useState(
-    userProfile?.profileImageUrl || ""
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(
+    userProfile?.profileImageUrl || DefaultProfile
   );
-  const [isSaving, setIsSaving] = useState(false);
 
-  const isSaveDisabled = !nickname.trim() || isSaving;
-
-  // 대리인 선택
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
+  };
+
+  const isSaveDisabled = !nickname.trim();
+
+  // 이미지 파일 선택 시
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setProfileImageFile(file);
+
+    // 화면에 미리보기
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfileImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   // 저장 버튼 클릭
@@ -40,24 +57,24 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("nickname", nickname);
+      formData.append("bio", bio);
+      if (profileImageFile) formData.append("profileImage", profileImageFile);
+
       const res = await fetch("/api/users/me", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          nickname,
-          bio,
-          profileImageUrl,
-        }),
+        body: formData,
       });
 
       const json = await res.json();
       console.log("[Profile Update] Response:", json);
 
       if (res.ok && json.success) {
-        setUser(json.data); // UserContext 갱신
+        setUser(json.data);
         alert("프로필이 업데이트 되었습니다.");
         onClose();
       } else {
@@ -69,11 +86,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  // 프로필 이미지 에러 시 기본 이미지
-  const handleImgError = (e) => {
-    e.target.src = DefaultProfile;
   };
 
   return (
@@ -90,17 +102,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
           {/* 프로필 이미지 */}
           <div className="profile-manage-image">
-            <img
-              src={profileImageUrl || DefaultProfile}
-              alt="profile"
-              onError={handleImgError}
-            />
+            <img src={profileImagePreview} alt="profile" />
             <input
-              type="text"
-              value={profileImageUrl}
-              onChange={(e) => setProfileImageUrl(e.target.value)}
-              placeholder="프로필 이미지 URL"
-              className="profile-image-input"
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageChange}
             />
           </div>
 
@@ -179,7 +185,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <div className="save-row">
               <button
                 className={`save-btn ${isSaveDisabled ? "disabled" : ""}`}
-                disabled={isSaveDisabled}
+                disabled={isSaveDisabled || isSaving}
                 onClick={handleSave}
               >
                 {isSaving ? "저장 중..." : "저장"}
