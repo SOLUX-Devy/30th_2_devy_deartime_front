@@ -79,7 +79,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               <label>생년월일</label>
               <input
                 type="date"
-                value={userProfile?.birthDate?.split("T")[0] || ""}
+                value={userProfile?.birthDate || ""}
                 disabled
               />
             </div>

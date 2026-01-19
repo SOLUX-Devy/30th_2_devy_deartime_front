@@ -123,6 +123,8 @@ export default function Header() {
     bio: user?.bio || "",
     profileImageUrl: user?.profileImageUrl || null,
     joinDays: daysTogether,
+    email: user?.email || "",
+    birthDate: user?.birthDate || "",
   };
 
   // 친구 요청 처리 (TODO)
