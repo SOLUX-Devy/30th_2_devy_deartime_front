@@ -3,7 +3,7 @@ import RecordCard from "../components/RecordCard";
 import ConstellationCard from "../components/ConstellationCard";
 import "../styles/home.css";
 import backgroundImg from "../assets/background.svg";
-import { useUser } from "../context/UserContext";
+import { useUser } from "../context/useUser";
 
 export default function Home() {
   const { user } = useUser();
