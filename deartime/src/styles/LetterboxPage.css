@@ -214,3 +214,27 @@
   pointer-events: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
+.no-letters-container {
+    /* grid의 4개 컬럼을 모두 차지하도록 설정 */
+    grid-column: 1 / 5; 
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.no-letters-content {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.no-letters-content p {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.no-letters-content span {
+    font-size: 0.9rem;
+}
