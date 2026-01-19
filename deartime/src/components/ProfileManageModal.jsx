@@ -2,8 +2,11 @@ import { useState } from "react";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
+import { useUser } from "../context/UserContext";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
+  const { setUser } = useUser();
+
   // 대리인 모달 상태
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState(null);
@@ -11,6 +14,12 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   // 수정 가능한 상태
   const [nickname, setNickname] = useState(userProfile?.nickname || "");
   const [bio, setBio] = useState(userProfile?.bio || "");
+  const [profileImageUrl, setProfileImageUrl] = useState(
+    userProfile?.profileImageUrl || ""
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isSaveDisabled = !nickname.trim() || isSaving;
 
   // 대리인 선택
   const handleDelegateSelect = (friend) => {
@@ -18,13 +27,48 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     setIsDelegateSelectOpen(false);
   };
 
-  const isSaveDisabled = !nickname.trim();
-
   // 저장 버튼 클릭
-  const handleSave = () => {
-    // 실제로는 API 호출해서 수정
-    alert("저장되었습니다");
-    onClose();
+  const handleSave = async () => {
+    if (isSaveDisabled) return;
+    setIsSaving(true);
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/users/me", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nickname,
+          bio,
+          profileImageUrl,
+        }),
+      });
+
+      const json = await res.json();
+      console.log("[Profile Update] Response:", json);
+
+      if (res.ok && json.success) {
+        setUser(json.data); // UserContext 갱신
+        alert("프로필이 업데이트 되었습니다.");
+        onClose();
+      } else {
+        alert(json.message || "프로필 업데이트에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("[Profile Update] Error:", err);
+      alert("프로필 업데이트 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 프로필 이미지 에러 시 기본 이미지
@@ -47,9 +91,16 @@ export default function ProfileManageModal({ userProfile, onClose }) {
           {/* 프로필 이미지 */}
           <div className="profile-manage-image">
             <img
-              src={userProfile?.profileImageUrl || DefaultProfile}
+              src={profileImageUrl || DefaultProfile}
               alt="profile"
               onError={handleImgError}
+            />
+            <input
+              type="text"
+              value={profileImageUrl}
+              onChange={(e) => setProfileImageUrl(e.target.value)}
+              placeholder="프로필 이미지 URL"
+              className="profile-image-input"
             />
           </div>
 
@@ -131,7 +182,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                 disabled={isSaveDisabled}
                 onClick={handleSave}
               >
-                저장
+                {isSaving ? "저장 중..." : "저장"}
               </button>
             </div>
           </div>
