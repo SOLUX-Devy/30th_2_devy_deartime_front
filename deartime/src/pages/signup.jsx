@@ -79,6 +79,10 @@ const Signup = () => {
         },
       });
 
+      // 서버에서 반환되는 모든 정보 확인
+      console.log("[Signup Response]", response);
+      console.log("[Signup Response data]", response.data);
+
       const accessToken =
         response.headers["authorization"]?.replace("Bearer ", "") ||
         response.data.data?.accessToken;

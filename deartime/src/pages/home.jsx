@@ -20,9 +20,9 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      console.log("[Home] 유저 데이터 도착:", user);
-      console.log("생일 값:", user.birthDate); 
-      console.log("이미지 주소:", user.profileImageUrl);
+      console.log("[Home] 유저 데이터:", user);
+      console.log("생일:", user.birthDate); 
+      console.log("이미지:", user.profileImageUrl);
     }
   }, [user]);
 
