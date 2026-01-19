@@ -1,14 +1,28 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import TimeCapsuleCard from "../components/TimeCapsuleCard";
 import RecordCard from "../components/RecordCard";
 import ConstellationCard from "../components/ConstellationCard";
 import "../styles/home.css";
 import backgroundImg from "../assets/background.svg";
-import { useUser } from "../context/useUser";
+import { useUser } from "../context/UserContext";
 
 export default function Home() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
+  const navigate = useNavigate();
 
-  if (!user) return null; 
+  useEffect(() => {
+    if (!loading && !user) {
+      alert("로그인이 필요합니다.");
+      navigate("/");
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return <div className="loading-screen">정보를 불러오는 중...</div>;
+  }
+
+  if (!user) return null;
 
   return (
     <div className="home-container">
@@ -28,13 +42,14 @@ export default function Home() {
               openAt: "2026-01-05",
               createdAt: "2026-01-01",
               imageUrl: null,
-              senderNickname: user.nickname,
+              senderNickname: user.nickname || "알 수 없음", // 유저 닉네임 연동
               title: "어렸을 때의 추억",
             }}
           />
         </div>
 
         <RecordCard imageUrl={user.profileImageUrl} />
+
         <ConstellationCard birthday={user.birthday} />
       </section>
     </div>

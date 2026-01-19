@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { UserContext } from "./UserContext";
 
 export default function UserProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -7,48 +6,52 @@ export default function UserProvider({ children }) {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
-      console.log("[UserProvider] token:", token); // 토큰 확인
+      let token = localStorage.getItem("accessToken");
+
+      // 1. 토큰이 없으면 로딩 끝내고 리턴
       if (!token) {
-        console.warn("[UserProvider] No token found in localStorage");
-        setTimeout(() => setLoading(false), 0); // 동기 setState 방지
+        console.warn("[UserProvider] 토큰이 없습니다.");
+        setLoading(false);
         return;
       }
 
+      //토큰에 포함된 따옴표 제거 (400 에러 방지)
+      token = token.replace(/"/g, "");
+
       try {
-        console.log("[UserProvider] Fetching user info from /api/users/me...");
         const res = await fetch("/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`, // 공백 주의
+            "Content-Type": "application/json",
+          },
         });
-        console.log("[UserProvider] Response status:", res.status);
 
         const json = await res.json();
-        console.log("[UserProvider] Response JSON:", json);
 
         if (res.ok && json.success) {
-          // 서버 구조에 맞게 data만 setUser
-          setUser(json.data);
-          console.log("[UserProvider] User set successfully:", json.data);
+          setUser(json.data); // 서버 응답 구조에 맞게 설정 (json.data 등)
+          console.log("[UserProvider] 유저 정보 로드 성공:", json.data);
         } else {
-          console.warn("[UserProvider] Failed to fetch user info:", json);
+          console.error("[UserProvider] 유저 정보 로드 실패:", json);
+          // 토큰이 만료되었거나 유효하지 않으면 로그아웃 처리
+          if (res.status === 401 || res.status === 400) {
+            localStorage.removeItem("accessToken");
+          }
           setUser(null);
         }
       } catch (err) {
-        console.error("[UserProvider] Error fetching user info:", err);
+        console.error("[UserProvider] 네트워크 에러:", err);
         setUser(null);
       } finally {
         setLoading(false);
-        console.log("[UserProvider] Loading finished");
       }
     };
 
     fetchUser();
   }, []);
 
-  if (loading) return <div>로딩중...</div>;
-
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, loading }}>
       {children}
     </UserContext.Provider>
   );
