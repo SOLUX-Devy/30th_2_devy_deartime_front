@@ -18,6 +18,14 @@ export default function Home() {
     }
   }, [loading, user, navigate]);
 
+  useEffect(() => {
+    if (user) {
+      console.log("[Home] 유저 데이터 도착:", user);
+      console.log("생일 값:", user.birthDate); 
+      console.log("이미지 주소:", user.profileImageUrl);
+    }
+  }, [user]);
+
   if (loading) {
     return <div className="loading-screen">정보를 불러오는 중...</div>;
   }
@@ -50,7 +58,7 @@ export default function Home() {
 
         <RecordCard imageUrl={user.profileImageUrl} />
 
-        <ConstellationCard birthday={user.birthday} />
+        <ConstellationCard birthday={user.birthDate} />
       </section>
     </div>
   );
