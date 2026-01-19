@@ -66,8 +66,8 @@ const SendLetter = () => {
     if (!title.trim() || !content.trim()) return;
 
     const payload = {
-      receiverId: 2, 
-      theme: themes[selectedThemeId] || "DEFAULT",
+      receiverId: 2,
+      theme: currentTheme.text,
       title,
       content,
     };
