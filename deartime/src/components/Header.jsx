@@ -65,7 +65,7 @@ export default function Header() {
   const joinDateObj = storedJoinDate ? new Date(storedJoinDate) : null;
 
   const daysTogether = joinDateObj
-    ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24))
+    ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24)) + 1
     : 0;
 
   // 로그아웃
