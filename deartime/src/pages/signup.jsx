@@ -6,7 +6,6 @@ import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
 import defaultProfileImg from "../assets/nophoto.png";
 import { jwtDecode } from "jwt-decode";
-import { useEffect } from "react";
 
 
 const Signup = () => {
