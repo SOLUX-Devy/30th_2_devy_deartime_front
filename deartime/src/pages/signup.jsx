@@ -91,13 +91,16 @@ const Signup = () => {
         formData.append("profileImage", profileFile);
       }
 
-      const response = await axios.post(
+      // 기존 설정에 영향받지 않는 깨끗한 axios 인스턴스 생성
+      const cleanAxios = axios.create();
+
+      // 이 인스턴스로 요청 보내기
+      const response = await cleanAxios.post(
         "/api/users/signup",
         formData,
         {
           headers: {
             Authorization: `Bearer ${tempToken}`,
-            "Content-Type": undefined,
           },
         }
       );
