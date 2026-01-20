@@ -70,7 +70,7 @@ const Signup = () => {
       formData.append("request", jsonBlob);
 
       if (profileFile) {
-        formData.append("profileImageUrl", profileFile);
+        formData.append("profileImage", profileFile);
       }
 
       const response = await axios.post("/api/users/signup", formData, {
