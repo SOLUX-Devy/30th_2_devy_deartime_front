@@ -18,7 +18,7 @@ const THEME_IMAGES = {
 
 export default function LetterCard({
   data,
-  isFocused, // ✅ spotlight용 (CSS에서 focused 카드만 밝게)
+  isFocused, // spotlight용 (CSS에서 focused 카드만 밝게)
   onToggleBookmark,
   onMarkAsRead,
 }) {
@@ -34,9 +34,6 @@ export default function LetterCard({
 
   const currentBgImage = THEME_IMAGES[themeCode] || THEME_IMAGES.DEFAULT;
 
-  // 즐겨찾기 로컬 state
-  const [starred, setStarred] = useState(isBookmarked);
-
   // 상세보기 상태
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -44,41 +41,23 @@ export default function LetterCard({
   const formattedDate = sentAt.split("T")[0].replace(/-/g, ".");
 
   // 즐겨찾기 토글
-  const handleBookmarkToggle = async (e) => {
-    e.stopPropagation(); // 카드 클릭(상세보기) 이벤트 전파 방지
-
-    try {
-      const response = await fetch(`/api/letters/${data.letterId}/bookmarked`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        // 서버에서 요구한 대로 현재 상태의 반대값(!starred)을 보냄
-        body: JSON.stringify({ isBookmarked: !starred }),
-      });
-
-      if (response.ok) {
-        // 서버 성공 시, 부모 컴포넌트의 상태를 바꾸도록 함수 호출
-        onToggleBookmark(data.letterId); 
-        setStarred(!starred); // 로컬 별 아이콘 상태 즉시 변경
-      }
-    } catch (err) {
-      console.error("즐겨찾기 업데이트 실패:", err);
-    }
+  const handleBookmarkToggle = (e) => {
+    e.stopPropagation();
+    // 부모가 넘겨준 함수를 실행합니다.
+    onToggleBookmark?.(); 
   };
 
   // 일반 클릭 → 상세보기
   const handleCardClick = (e) => {
     e.stopPropagation();
-
     setIsDetailOpen(true);
 
-    if (!data.isRead) {
-      onMarkAsRead?.(data.letterId);
+    // 읽지 않은 편지라면 부모에게 읽음 처리 요청
+    if (!isRead) {
+      onMarkAsRead?.();
     }
   };
-
+  
   return (
     <>
       <div
@@ -90,7 +69,7 @@ export default function LetterCard({
           <span className="sender-info">from. {senderNickname}</span>
 
           <span
-            className={`bookmark-icon ${starred ? "active" : ""}`}
+            className={`bookmark-icon ${isBookmarked ? "active" : ""}`} // data에서 온 상태를 직접 사용
             onClick={handleBookmarkToggle}
           />
         </div>
