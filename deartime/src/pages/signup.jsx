@@ -5,10 +5,27 @@ import "../styles/signup.css";
 import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
 import defaultProfileImg from "../assets/nophoto.png";
+import { jwtDecode } from "jwt-decode";
+import { useEffect } from "react";
+
 
 const Signup = () => {
   const navigate = useNavigate();
-  const email = localStorage.getItem("userEmail") || "";
+
+  const token =
+    localStorage.getItem("tempToken") ||
+    localStorage.getItem("accessToken");
+
+  let email = "";
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      email = decoded.email || "";
+    } catch (e) {
+      console.error("토큰 디코딩 실패", e);
+    }
+  }
 
   const [form, setForm] = useState({
     nickname: "",
