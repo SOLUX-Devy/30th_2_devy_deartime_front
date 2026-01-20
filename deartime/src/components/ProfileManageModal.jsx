@@ -1,24 +1,20 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
 import { useUser } from "../context/UserContext";
-import EditProfileIcon from "../assets/edit-profile.png";
+import { setProxy } from "../api/proxy";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
   const { setUser } = useUser();
-  const fileInputRef = useRef(null);
-
-  const originalNickname = userProfile?.nickname || "";
 
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState(null);
+
   const [isSaving, setIsSaving] = useState(false);
 
-  const [nickname, setNickname] = useState(originalNickname);
+  const [nickname, setNickname] = useState(userProfile?.nickname || "");
   const [bio, setBio] = useState(userProfile?.bio || "");
-  const [birthDate, setBirthDate] = useState(userProfile?.birthDate || "");
-
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(
     userProfile?.profileImageUrl || DefaultProfile
@@ -27,9 +23,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   // 닉네임 중복 확인 상태
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
-
-  const isNicknameChanged = nickname.trim() !== originalNickname;
-  const isSaveDisabled = !nickname.trim();
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
@@ -47,6 +40,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     reader.readAsDataURL(file);
   };
 
+  // 닉네임 중복 확인
   const handleCheckNickname = async () => {
     if (!nickname.trim()) {
       alert("닉네임을 입력해주세요.");
@@ -63,18 +57,25 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       const res = await fetch(
         `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message);
+
+      if (!res.ok) {
+        throw new Error(json.message || "닉네임 확인 실패");
+      }
+
+      const { isAvailable } = json.data;
 
       setNicknameChecked(true);
-      setIsNicknameAvailable(json.data.isAvailable);
+      setIsNicknameAvailable(isAvailable);
 
       alert(
-        json.data.isAvailable
+        isAvailable
           ? "사용 가능한 닉네임입니다."
           : "이미 사용 중인 닉네임입니다."
       );
@@ -84,19 +85,39 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
   };
 
+  // 대리인 서버 저장
+  const handleSaveProxy = async () => {
+    if (!selectedDelegate) return;
+
+    try {
+      // 예시: 1년 뒤 만료
+      const expiredAt = new Date();
+      expiredAt.setFullYear(expiredAt.getFullYear() + 1);
+      const expiredAtStr = expiredAt.toISOString().slice(0, 19); // yyyy-MM-ddTHH:mm:ss
+
+      const proxyData = await setProxy(selectedDelegate.friendId, expiredAtStr);
+
+      console.log("[대리인 설정 응답]", proxyData);
+      alert("대리인이 설정되었습니다.");
+    } catch (err) {
+      console.error("대리인 설정 실패", err);
+      alert(err.message);
+    }
+  };
+
+  const isSaveDisabled = !nickname.trim();
+
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
-    // 닉네임 변경 시에만 중복 확인
-    if (isNicknameChanged) {
-      if (!nicknameChecked) {
-        alert("닉네임 중복 확인을 해주세요.");
-        return;
-      }
-      if (!isNicknameAvailable) {
-        alert("사용할 수 없는 닉네임입니다.");
-        return;
-      }
+    if (!nicknameChecked) {
+      alert("닉네임 중복 확인을 해주세요.");
+      return;
+    }
+
+    if (!isNicknameAvailable) {
+      alert("사용할 수 없는 닉네임입니다.");
+      return;
     }
 
     setIsSaving(true);
@@ -111,18 +132,16 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     try {
       const formData = new FormData();
 
+      const requestData = {
+        nickname,
+        bio,
+      };
+
       formData.append(
         "request",
-        new Blob(
-          [
-            JSON.stringify({
-              nickname,
-              bio,
-              birthDate,
-            }),
-          ],
-          { type: "application/json" }
-        )
+        new Blob([JSON.stringify(requestData)], {
+          type: "application/json",
+        })
       );
 
       if (profileImageFile) {
@@ -131,15 +150,24 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
       const res = await fetch("/api/users/me", {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 
       const json = await res.json();
+      console.log("[프로필 업데이트 응답]", json);
 
       if (res.ok && json.success) {
         setUser(json.data);
         alert("프로필이 업데이트 되었습니다.");
+
+        // 대리인 설정
+        if (selectedDelegate) {
+          await handleSaveProxy();
+        }
+
         onClose();
       } else {
         alert(json.message || "프로필 업데이트에 실패했습니다.");
@@ -161,32 +189,15 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <button className="close-btn" onClick={onClose}>✕</button>
           </div>
 
-          {/* ⭐ 프로필 이미지 영역 */}
-          <div
-            className="profile-manage-image"
-            onClick={() => fileInputRef.current.click()}
-          >
-            <img
-              src={profileImagePreview}
-              alt="profile"
-              className="profile-img"
-            />
-            <div className="edit-icon">
-              <img src={EditProfileIcon} alt="edit" />
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleProfileImageChange}
-              style={{ display: "none" }}
-            />
+          <div className="profile-manage-image">
+            <img src={profileImagePreview} alt="profile" />
+            <input type="file" accept="image/*" onChange={handleProfileImageChange} />
           </div>
 
           <div className="profile-manage-form">
             <div className="input-group">
               <label>이메일</label>
-              <input value={userProfile?.email || ""} disabled />
+              <input className="disabled-input" value={userProfile?.email || ""} disabled />
             </div>
 
             <div className="input-group">
@@ -200,19 +211,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                     setIsNicknameAvailable(null);
                   }}
                 />
-                <button type="button" onClick={handleCheckNickname}>
-                  중복확인
-                </button>
+                <button type="button" onClick={handleCheckNickname}>중복확인</button>
               </div>
             </div>
 
             <div className="input-group">
               <label>생년월일</label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-              />
+              <input type="date" value={userProfile?.birthDate || ""} disabled />
             </div>
 
             <div className="input-group">
@@ -224,23 +229,16 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               <span className="delegate-label">대리인</span>
               <button
                 className={`action-btn primary ${selectedDelegate ? "selected" : ""}`}
+                onClick={() => { if (!selectedDelegate) setIsDelegateSelectOpen(true); }}
                 type="button"
-                onClick={() => {
-                  if (!selectedDelegate) setIsDelegateSelectOpen(true);
-                }}
               >
                 <span className="delegate-text">
-                  {selectedDelegate
-                    ? selectedDelegate.friendNickname
-                    : "친구 선택"}
+                  {selectedDelegate ? selectedDelegate.friendNickname : "친구 선택"}
                 </span>
                 {selectedDelegate ? (
                   <span
                     className="delegate-remove"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedDelegate(null);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedDelegate(null); }}
                   >
                     ✕
                   </span>
@@ -252,7 +250,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="save-row">
               <button
-                className="save-btn"
+                className={`save-btn ${isSaveDisabled ? "disabled" : ""}`}
                 disabled={isSaveDisabled || isSaving}
                 onClick={handleSave}
               >
