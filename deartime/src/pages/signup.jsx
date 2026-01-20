@@ -64,56 +64,49 @@ const Signup = () => {
         bio: form.bio || null,
       };
 
-      const jsonBlob = new Blob([JSON.stringify(signupData)], {
-        type: "application/json",
-      });
-      formData.append("request", jsonBlob);
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(signupData)], {
+          type: "application/json",
+        })
+      );
 
       if (profileFile) {
         formData.append("profileImage", profileFile);
       }
 
-      const response = await axios.post("/api/users/signup", formData, {
-        headers: {
-          Authorization: `Bearer ${tempToken}`,
-        },
-      });
+      const response = await axios.post(
+        "/api/users/signup",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${tempToken}`,
+          },
+        }
+      );
 
-      // 서버에서 반환되는 정보 확인
-      console.log("[Signup Response]", response);
-      console.log("[Signup Response data]", response.data);
+      console.log("[Signup Response]", response.data);
 
-      const accessToken =
-        response.headers["authorization"]?.replace("Bearer ", "") ||
-        response.data.data?.accessToken;
-      const refreshToken =
-        response.headers["refresh-token"] ||
-        response.data.data?.refreshToken;
+      const { accessToken, refreshToken } = response.data.data;
 
       if (accessToken) localStorage.setItem("accessToken", accessToken);
-      else if (tempToken) {
-        localStorage.setItem("accessToken", tempToken);
-      }
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-      localStorage.removeItem("tempToken");
 
-      // 회원가입 날짜 저장 
-      const today = new Date().toISOString(); // ISO 형식으로 저장
-      localStorage.setItem("joinDate", today);
+      localStorage.removeItem("tempToken");
+      localStorage.setItem("joinDate", new Date().toISOString());
 
       alert("회원가입 성공!");
       navigate("/home");
     } catch (error) {
-      console.error("에러:", error);
+      console.error("회원가입 에러", error);
       if (error.response) {
-        const { status, data } = error.response;
-        alert(`서버 에러 (${status})\n${JSON.stringify(data, null, 2)}`);
-        if (status === 409) navigate("/login");
+        alert(JSON.stringify(error.response.data, null, 2));
       } else {
-        alert("네트워크 오류 발생");
+        alert("네트워크 오류");
       }
     }
   };
+
 
   return (
     <div className="signup-container">
