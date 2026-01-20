@@ -97,6 +97,7 @@ const Signup = () => {
         {
           headers: {
             Authorization: `Bearer ${tempToken}`,
+            "Content-Type": undefined,
           },
         }
       );
