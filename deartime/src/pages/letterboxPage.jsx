@@ -74,7 +74,7 @@ export default function Letterbox() {
     const url = getApiUrl(activeIndex, page);
     if (!url) return;
 
-    //setIsLoading(true);
+    setIsLoading(true);
 
     fetch(url, {
       method: "GET",
@@ -85,7 +85,7 @@ export default function Letterbox() {
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("네트워크 응답 에러");
+        if (!res.ok) throw new Error("데이터를 불러오지 못했습니다.");
         return res.json();
       })
       .then((json) => {
@@ -103,6 +103,8 @@ export default function Letterbox() {
       .catch((err) => {
         console.error("데이터 로드 실패:", err);
         setLetters([]);
+      })
+      .finally(() => {
         setIsLoading(false);
       });
   }, [activeIndex, page]); // 탭이 바뀌거나 페이지가 바뀔 때마다 다시 호출
@@ -126,21 +128,64 @@ export default function Letterbox() {
   const currentItems = letters; 
   const emptySlotsCount = pageSize - currentItems.length;
 
-  // 삭제
-  const deleteLetter = (id) => {
-    setLetters((prev) => prev.filter((letter) => letter.letterId !== id));
-  };
-
   // 즐겨찾기 토글
-  const handleToggleBookmark = (id) => {
-    setLetters((prev) =>
-      prev.map((letter) =>
-        letter.letterId === id
-          ? { ...letter, isBookmarked: !letter.isBookmarked }
-          : letter
-      )
-    );
-  };
+  const handleToggleBookmark = async (id) => {
+  try {
+    const targetLetter = letters.find(l => l.letterId === id);
+    if (!targetLetter) return;
+
+    // 서버에 상태 변경 요청
+    const response = await fetch(`/api/letters/${id}/bookmarked`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+      body: JSON.stringify({ isBookmarked: !targetLetter.isBookmarked }),
+    });
+
+    const json = await response.json();
+
+    if (json.success) {
+      // 서버 성공 시에만 로컬 상태 업데이트
+      setLetters((prev) => {
+        if (activeIndex === 2) {
+          return prev.filter((letter) => letter.letterId !== id);
+        }
+        return prev.map((letter) =>
+          letter.letterId === id ? { ...letter, isBookmarked: !letter.isBookmarked } : letter
+        );
+      });
+    }
+  } catch (err) {
+    console.error("즐겨찾기 요청 에러:", err);
+  }
+};
+
+// 삭제 처리 (DELETE 연동)
+const handleConfirmDelete = async () => {
+  if (!menu.targetId) return;
+
+  try {
+    const response = await fetch(`/api/letters/${menu.targetId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+
+    if (response.ok) {
+      // 서버 삭제 성공 시 UI 업데이트
+      setLetters((prev) => prev.filter((letter) => letter.letterId !== menu.targetId));
+      setIsDeleteCheckOpen(false);
+      closeMenu();
+    } else {
+      throw new Error("삭제에 실패했습니다.");
+    }
+  } catch (err) {
+    console.error("삭제 요청 에러:", err);
+  }
+};
 
   // 읽음 처리
   const handleMarkAsRead = (id) => {
@@ -232,14 +277,7 @@ export default function Letterbox() {
     e.stopPropagation();
     setIsDeleteCheckOpen(true);
   };
-
-  // 확인 모달: 삭제 확정
-  const handleConfirmDelete = () => {
-    if (!menu.targetId) return;
-    deleteLetter(menu.targetId);
-    setIsDeleteCheckOpen(false);
-    closeMenu();
-  };
+  
 
   // 확인 모달: 취소
   const handleCancelDelete = () => {
@@ -400,7 +438,18 @@ export default function Letterbox() {
                         onTouchStart={(e) => startPress(e, letter.letterId)}
                         onTouchEnd={cancelPress}
                         onClickCapture={(e) => stopClickAfterLongPress(e, letter.letterId)}
-                      >
+                      onClick={(e) => {
+                        if (menu.show) {
+                          e.stopPropagation();
+                          closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
+                        }
+                      }}
+                      // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
+                      style={{ 
+                        pointerEvents: isSpotlight ? "none" : "auto", 
+                        zIndex: isSpotlight ? 1001 : 1 
+                      }}
+                    >
                         <LetterCard
                           data={letter}
                           isFocused={focusedId === letter.letterId}
