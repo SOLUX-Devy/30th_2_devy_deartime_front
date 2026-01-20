@@ -7,7 +7,6 @@ import logoImg from "../assets/logo.svg";
 import defaultProfileImg from "../assets/nophoto.png";
 import { jwtDecode } from "jwt-decode";
 
-
 const Signup = () => {
   const navigate = useNavigate();
 
@@ -35,9 +34,19 @@ const Signup = () => {
   const [profilePreview, setProfilePreview] = useState(defaultProfileImg);
   const [profileFile, setProfileFile] = useState(null);
 
+  // 닉네임 중복 확인 상태
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // 닉네임 바뀌면 중복 확인 다시 필요
+    if (name === "nickname") {
+      setNicknameChecked(false);
+      setIsNicknameAvailable(null);
+    }
   };
 
   const handleProfileImageChange = (e) => {
@@ -58,9 +67,47 @@ const Signup = () => {
     setProfileFile(file);
   };
 
+  // 🔹 닉네임 중복 확인 API
+  const handleCheckNickname = async () => {
+    if (!form.nickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const response = await axios.get("/api/users/check-nickname", {
+        params: { nickname: form.nickname },
+      });
+
+      const { isAvailable } = response.data.data;
+
+      setNicknameChecked(true);
+      setIsNicknameAvailable(isAvailable);
+
+      if (isAvailable) {
+        alert("사용 가능한 닉네임입니다.");
+      } else {
+        alert("이미 사용 중인 닉네임입니다.");
+      }
+    } catch (error) {
+      console.error("닉네임 중복 확인 실패", error);
+      alert("닉네임 확인 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.nickname.trim()) {
       alert("닉네임은 필수입니다.");
+      return;
+    }
+
+    if (!nicknameChecked) {
+      alert("닉네임 중복 확인을 해주세요.");
+      return;
+    }
+
+    if (!isNicknameAvailable) {
+      alert("사용할 수 없는 닉네임입니다.");
       return;
     }
 
@@ -91,17 +138,11 @@ const Signup = () => {
         formData.append("profileImage", profileFile);
       }
 
-      const response = await axios.post(
-        "/api/users/signup",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${tempToken}`,
-          },
-        }
-      );
-
-      console.log("[Signup Response]", response.data);
+      const response = await axios.post("/api/users/signup", formData, {
+        headers: {
+          Authorization: `Bearer ${tempToken}`,
+        },
+      });
 
       const { accessToken, refreshToken } = response.data.data;
 
@@ -115,14 +156,9 @@ const Signup = () => {
       navigate("/home");
     } catch (error) {
       console.error("회원가입 에러", error);
-      if (error.response) {
-        alert(JSON.stringify(error.response.data, null, 2));
-      } else {
-        alert("네트워크 오류");
-      }
+      alert("회원가입 중 오류가 발생했습니다.");
     }
   };
-
 
   return (
     <div className="signup-container">
@@ -155,22 +191,22 @@ const Signup = () => {
         <div className="form-section">
           <div className="input-group">
             <label>아이디</label>
-            <input
-              type="text"
-              value={email}
-              disabled
-              className="disabled-input"
-            />
+            <input type="text" value={email} disabled className="disabled-input" />
           </div>
 
           <div className="input-group">
             <label>닉네임</label>
-            <input
-              name="nickname"
-              placeholder="닉네임"
-              value={form.nickname}
-              onChange={handleChange}
-            />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                name="nickname"
+                placeholder="닉네임"
+                value={form.nickname}
+                onChange={handleChange}
+              />
+              <button type="button" onClick={handleCheckNickname}>
+                중복확인
+              </button>
+            </div>
           </div>
 
           <div className="input-group">

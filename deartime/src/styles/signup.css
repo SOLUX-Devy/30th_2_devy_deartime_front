@@ -126,4 +126,44 @@
   object-fit: cover;
 }
 
+/* 닉네임 입력 + 중복확인 버튼 한 줄 정렬 */
+.input-group > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 닉네임 입력창 */
+.input-group input[name="nickname"] {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+/* 중복확인 버튼 */
+.input-group button {
+  padding: 10px 14px;
+  font-size: 13px;
+  border: none;
+  border-radius: 8px;
+  border: 2px solid #2A4280;
+  background: rgba(255, 255, 255, 0.00);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.input-group button:hover {
+  background-color: #2A4280;
+  opacity: 80%;
+}
+
+.input-group button:active {
+  background-color: #0E77BC;
+}
+
+
 
