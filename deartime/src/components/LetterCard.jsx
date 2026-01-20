@@ -44,10 +44,28 @@ export default function LetterCard({
   const formattedDate = sentAt.split("T")[0].replace(/-/g, ".");
 
   // 즐겨찾기 토글
-  const handleBookmarkToggle = (e) => {
-    e.stopPropagation();
-    onToggleBookmark?.(data.letterId);
-    setStarred((prev) => !prev);
+  const handleBookmarkToggle = async (e) => {
+    e.stopPropagation(); // 카드 클릭(상세보기) 이벤트 전파 방지
+
+    try {
+      const response = await fetch(`/api/letters/${data.letterId}/bookmarked`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        // 서버에서 요구한 대로 현재 상태의 반대값(!starred)을 보냄
+        body: JSON.stringify({ isBookmarked: !starred }),
+      });
+
+      if (response.ok) {
+        // 서버 성공 시, 부모 컴포넌트의 상태를 바꾸도록 함수 호출
+        onToggleBookmark(data.letterId); 
+        setStarred(!starred); // 로컬 별 아이콘 상태 즉시 변경
+      }
+    } catch (err) {
+      console.error("즐겨찾기 업데이트 실패:", err);
+    }
   };
 
   // 일반 클릭 → 상세보기
