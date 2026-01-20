@@ -61,7 +61,7 @@ export default function Letterbox() {
       case 1: // 보낸 편지함 (명세서 주소)
         return `/api/letters/sent?${commonParams}`;
       case 2: // 즐겨찾기 (주소가 /api/letters/bookmarks 라고 가정)
-        return `/api/letters/bookmarks?${commonParams}`;
+        return `/api/letters/bookmarked?${commonParams}`;
       default:
         return null;
     }
@@ -266,9 +266,17 @@ const handleConfirmDelete = async () => {
 
   // 롱프레스 직후 “클릭” 무시 (상세보기 열리는 거 방지)
   const stopClickAfterLongPress = (e, id) => {
-    if (justLongPressedRef.current && focusedId === id) {
-      e.stopPropagation();
-      justLongPressedRef.current = false;
+    // 1. 방금 롱프레스가 끝났거나 
+    // 2. 현재 이 카드에 삭제 메뉴가 출력 중인 경우
+    if ((justLongPressedRef.current || (menu.show && menu.targetId === id)) && focusedId === id) {
+      
+      e.stopPropagation(); // 하위 LetterCard로 클릭 신호가 가지 않도록 차단
+      
+      if (menu.show) {
+        closeMenu(); // 메뉴가 열려있을 때 클릭하면 메뉴를 닫음
+      }
+      
+      justLongPressedRef.current = false; // 플래그 초기화
     }
   };
 
@@ -438,7 +446,7 @@ const handleConfirmDelete = async () => {
                         onTouchStart={(e) => startPress(e, letter.letterId)}
                         onTouchEnd={cancelPress}
                         onClickCapture={(e) => stopClickAfterLongPress(e, letter.letterId)}
-                      onClick={(e) => {
+                        onClick={(e) => {
                         if (menu.show) {
                           e.stopPropagation();
                           closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
@@ -446,7 +454,7 @@ const handleConfirmDelete = async () => {
                       }}
                       // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
                       style={{ 
-                        pointerEvents: isSpotlight ? "none" : "auto", 
+                        pointerEvents: "auto",
                         zIndex: isSpotlight ? 1001 : 1 
                       }}
                     >
