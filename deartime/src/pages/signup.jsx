@@ -67,16 +67,28 @@ const Signup = () => {
     setProfileFile(file);
   };
 
-  // 🔹 닉네임 중복 확인 API
+  // 닉네임 중복 확인
   const handleCheckNickname = async () => {
     if (!form.nickname.trim()) {
       alert("닉네임을 입력해주세요.");
       return;
     }
 
+    const token =
+      localStorage.getItem("tempToken") ||
+      localStorage.getItem("accessToken");
+
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
     try {
       const response = await axios.get("/api/users/check-nickname", {
         params: { nickname: form.nickname },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const { isAvailable } = response.data.data;
@@ -84,14 +96,20 @@ const Signup = () => {
       setNicknameChecked(true);
       setIsNicknameAvailable(isAvailable);
 
-      if (isAvailable) {
-        alert("사용 가능한 닉네임입니다.");
-      } else {
-        alert("이미 사용 중인 닉네임입니다.");
-      }
+      alert(
+        isAvailable
+          ? "사용 가능한 닉네임입니다."
+          : "이미 사용 중인 닉네임입니다."
+      );
     } catch (error) {
       console.error("닉네임 중복 확인 실패", error);
-      alert("닉네임 확인 중 오류가 발생했습니다.");
+
+      if (error.response?.status === 401) {
+        alert("인증이 만료되었습니다. 다시 로그인해주세요.");
+        navigate("/login");
+      } else {
+        alert("닉네임 확인 중 오류가 발생했습니다.");
+      }
     }
   };
 
