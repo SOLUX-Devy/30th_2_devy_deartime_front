@@ -53,18 +53,6 @@
   cursor: pointer;
 }
 
-.profile-manage-image {
-  margin: 8px 0 12px;
-}
-
-.profile-manage-image img {
-  width: 85px;
-  height: 85px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #fff;
-}
-
 .profile-manage-form {
   width: 100%;
   display: flex;
@@ -230,6 +218,11 @@
   height: 120px;
   margin: 0 auto 16px;
   cursor: pointer;
+
+  /* flex로 이미지 중앙 정렬 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 프로필 이미지 */
@@ -239,23 +232,26 @@
   border-radius: 50%;
   object-fit: cover;
   transition: filter 0.25s ease;
+  display: block; /* 부모 flex에 영향 안 받도록 */
 }
 
-/* 수정 아이콘 (기본 숨김) */
+/* 수정 아이콘 */
 .edit-icon {
-  position: absolute;
-  top: 50%;
+  position: absolute;        /* 부모 기준 절대 위치 */
+  top: 57%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); /* 정확히 가운데 */
+  
   width: 44px;
   height: 44px;
-  background: rgba(0, 0, 0, 0.45);
   border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+
   display: flex;
   align-items: center;
   justify-content: center;
 
-  opacity: 0;
+  opacity: 0;                /* 기본 숨김 */
   transition: opacity 0.25s ease;
 }
 
@@ -263,12 +259,14 @@
 .edit-icon img {
   width: 18px;
   height: 18px;
+  filter: brightness(0.9);   /* 살짝 흐리게 */
 }
 
+/* hover 시 아이콘 표시, 이미지 살짝 흐리게 */
 .profile-manage-image:hover .edit-icon {
   opacity: 1;
 }
 
 .profile-manage-image:hover .profile-img {
-  filter: blur(2px) brightness(0.85);
+  filter: blur(1.5px) brightness(0.85);
 }
