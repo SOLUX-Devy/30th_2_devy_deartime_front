@@ -19,6 +19,10 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     userProfile?.profileImageUrl || DefaultProfile
   );
 
+  // 닉네임 중복 확인 상태
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
+
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
@@ -37,8 +41,64 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     reader.readAsDataURL(file);
   };
 
+  // 닉네임 중복 확인
+  const handleCheckNickname = async () => {
+    if (!nickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.message || "닉네임 확인 실패");
+      }
+
+      const { isAvailable } = json.data;
+
+      setNicknameChecked(true);
+      setIsNicknameAvailable(isAvailable);
+
+      alert(
+        isAvailable
+          ? "사용 가능한 닉네임입니다."
+          : "이미 사용 중인 닉네임입니다."
+      );
+    } catch (err) {
+      console.error("닉네임 중복 확인 실패", err);
+      alert("닉네임 확인 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleSave = async () => {
     if (isSaveDisabled) return;
+
+    if (!nicknameChecked) {
+      alert("닉네임 중복 확인을 해주세요.");
+      return;
+    }
+
+    if (!isNicknameAvailable) {
+      alert("사용할 수 없는 닉네임입니다.");
+      return;
+    }
+
     setIsSaving(true);
 
     const token = localStorage.getItem("accessToken");
@@ -51,17 +111,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     try {
       const formData = new FormData();
 
-      // JSON 데이터를 request라는 이름으로 Blob으로 담기
       const requestData = {
         nickname,
         bio,
       };
+
       formData.append(
         "request",
-        new Blob([JSON.stringify(requestData)], { type: "application/json" })
+        new Blob([JSON.stringify(requestData)], {
+          type: "application/json",
+        })
       );
 
-      // 이미지 파일이 있으면 profileImage라는 이름으로 담기
       if (profileImageFile) {
         formData.append("profileImage", profileImageFile);
       }
@@ -70,13 +131,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          // multipart/form-data일 경우 Content-Type은 브라우저가 자동으로 설정
         },
         body: formData,
       });
 
       const json = await res.json();
-      console.log("[Profile Update] Response:", json);
 
       if (res.ok && json.success) {
         setUser(json.data);
@@ -110,12 +169,29 @@ export default function ProfileManageModal({ userProfile, onClose }) {
           <div className="profile-manage-form">
             <div className="input-group">
               <label>이메일</label>
-              <input className="disabled-input" value={userProfile?.email || ""} disabled />
+              <input
+                className="disabled-input"
+                value={userProfile?.email || ""}
+                disabled
+              />
             </div>
 
+            {/* 🔹 닉네임 + 중복확인 */}
             <div className="input-group">
               <label>닉네임</label>
-              <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  value={nickname}
+                  onChange={(e) => {
+                    setNickname(e.target.value);
+                    setNicknameChecked(false);
+                    setIsNicknameAvailable(null);
+                  }}
+                />
+                <button type="button" onClick={handleCheckNickname}>
+                  중복확인
+                </button>
+              </div>
             </div>
 
             <div className="input-group">
@@ -132,16 +208,23 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               <span className="delegate-label">대리인</span>
               <button
                 className={`action-btn primary ${selectedDelegate ? "selected" : ""}`}
-                onClick={() => { if (!selectedDelegate) setIsDelegateSelectOpen(true); }}
+                onClick={() => {
+                  if (!selectedDelegate) setIsDelegateSelectOpen(true);
+                }}
                 type="button"
               >
                 <span className="delegate-text">
-                  {selectedDelegate ? selectedDelegate.friendNickname : "친구 선택"}
+                  {selectedDelegate
+                    ? selectedDelegate.friendNickname
+                    : "친구 선택"}
                 </span>
                 {selectedDelegate ? (
                   <span
                     className="delegate-remove"
-                    onClick={(e) => { e.stopPropagation(); setSelectedDelegate(null); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedDelegate(null);
+                    }}
                   >
                     ✕
                   </span>
