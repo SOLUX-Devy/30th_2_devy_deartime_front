@@ -438,7 +438,18 @@ const handleConfirmDelete = async () => {
                         onTouchStart={(e) => startPress(e, letter.letterId)}
                         onTouchEnd={cancelPress}
                         onClickCapture={(e) => stopClickAfterLongPress(e, letter.letterId)}
-                      >
+                      onClick={(e) => {
+                        if (menu.show) {
+                          e.stopPropagation();
+                          closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
+                        }
+                      }}
+                      // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
+                      style={{ 
+                        pointerEvents: isSpotlight ? "none" : "auto", 
+                        zIndex: isSpotlight ? 1001 : 1 
+                      }}
+                    >
                         <LetterCard
                           data={letter}
                           isFocused={focusedId === letter.letterId}
