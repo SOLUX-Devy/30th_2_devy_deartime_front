@@ -1,19 +1,24 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
 import { useUser } from "../context/UserContext";
+import EditProfileIcon from "../assets/edit-profile.png";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
   const { setUser } = useUser();
+  const fileInputRef = useRef(null);
+
+  const originalNickname = userProfile?.nickname || "";
 
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState(null);
-
   const [isSaving, setIsSaving] = useState(false);
 
-  const [nickname, setNickname] = useState(userProfile?.nickname || "");
+  const [nickname, setNickname] = useState(originalNickname);
   const [bio, setBio] = useState(userProfile?.bio || "");
+  const [birthDate, setBirthDate] = useState(userProfile?.birthDate || "");
+
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(
     userProfile?.profileImageUrl || DefaultProfile
@@ -23,12 +28,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
 
+  const isNicknameChanged = nickname.trim() !== originalNickname;
+  const isSaveDisabled = !nickname.trim();
+
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
   };
-
-  const isSaveDisabled = !nickname.trim();
 
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
@@ -41,7 +47,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     reader.readAsDataURL(file);
   };
 
-  // 닉네임 중복 확인
   const handleCheckNickname = async () => {
     if (!nickname.trim()) {
       alert("닉네임을 입력해주세요.");
@@ -58,25 +63,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       const res = await fetch(
         `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.message || "닉네임 확인 실패");
-      }
-
-      const { isAvailable } = json.data;
+      if (!res.ok) throw new Error(json.message);
 
       setNicknameChecked(true);
-      setIsNicknameAvailable(isAvailable);
+      setIsNicknameAvailable(json.data.isAvailable);
 
       alert(
-        isAvailable
+        json.data.isAvailable
           ? "사용 가능한 닉네임입니다."
           : "이미 사용 중인 닉네임입니다."
       );
@@ -89,14 +87,16 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
-    if (!nicknameChecked) {
-      alert("닉네임 중복 확인을 해주세요.");
-      return;
-    }
-
-    if (!isNicknameAvailable) {
-      alert("사용할 수 없는 닉네임입니다.");
-      return;
+    // 닉네임 변경 시에만 중복 확인
+    if (isNicknameChanged) {
+      if (!nicknameChecked) {
+        alert("닉네임 중복 확인을 해주세요.");
+        return;
+      }
+      if (!isNicknameAvailable) {
+        alert("사용할 수 없는 닉네임입니다.");
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -111,16 +111,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     try {
       const formData = new FormData();
 
-      const requestData = {
-        nickname,
-        bio,
-      };
-
       formData.append(
         "request",
-        new Blob([JSON.stringify(requestData)], {
-          type: "application/json",
-        })
+        new Blob(
+          [
+            JSON.stringify({
+              nickname,
+              bio,
+              birthDate,
+            }),
+          ],
+          { type: "application/json" }
+        )
       );
 
       if (profileImageFile) {
@@ -129,9 +131,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
       const res = await fetch("/api/users/me", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -161,22 +161,34 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <button className="close-btn" onClick={onClose}>✕</button>
           </div>
 
-          <div className="profile-manage-image">
-            <img src={profileImagePreview} alt="profile" />
-            <input type="file" accept="image/*" onChange={handleProfileImageChange} />
+          {/* ⭐ 프로필 이미지 영역 */}
+          <div
+            className="profile-manage-image"
+            onClick={() => fileInputRef.current.click()}
+          >
+            <img
+              src={profileImagePreview}
+              alt="profile"
+              className="profile-img"
+            />
+            <div className="edit-icon">
+              <img src={EditProfileIcon} alt="edit" />
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageChange}
+              style={{ display: "none" }}
+            />
           </div>
 
           <div className="profile-manage-form">
             <div className="input-group">
               <label>이메일</label>
-              <input
-                className="disabled-input"
-                value={userProfile?.email || ""}
-                disabled
-              />
+              <input value={userProfile?.email || ""} disabled />
             </div>
 
-            {/* 🔹 닉네임 + 중복확인 */}
             <div className="input-group">
               <label>닉네임</label>
               <div style={{ display: "flex", gap: "8px" }}>
@@ -196,7 +208,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="input-group">
               <label>생년월일</label>
-              <input type="date" value={userProfile?.birthDate || ""} disabled />
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
             </div>
 
             <div className="input-group">
@@ -208,10 +224,10 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               <span className="delegate-label">대리인</span>
               <button
                 className={`action-btn primary ${selectedDelegate ? "selected" : ""}`}
+                type="button"
                 onClick={() => {
                   if (!selectedDelegate) setIsDelegateSelectOpen(true);
                 }}
-                type="button"
               >
                 <span className="delegate-text">
                   {selectedDelegate
@@ -236,7 +252,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="save-row">
               <button
-                className={`save-btn ${isSaveDisabled ? "disabled" : ""}`}
+                className="save-btn"
                 disabled={isSaveDisabled || isSaving}
                 onClick={handleSave}
               >
