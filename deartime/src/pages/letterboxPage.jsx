@@ -135,7 +135,7 @@ export default function Letterbox() {
     if (!targetLetter) return;
 
     // 서버에 상태 변경 요청
-    const response = await fetch(`/api/letters/${id}/bookmarked`, {
+    const response = await fetch(`/api/letters/${id}/bookmark`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
