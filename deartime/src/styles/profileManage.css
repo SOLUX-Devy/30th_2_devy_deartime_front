@@ -232,28 +232,43 @@
   cursor: pointer;
 }
 
+/* 프로필 이미지 */
 .profile-img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  transition: filter 0.25s ease;
 }
 
+/* 수정 아이콘 (기본 숨김) */
 .edit-icon {
   position: absolute;
-  bottom: 6px;
-  right: 6px;
-  width: 32px;
-  height: 32px;
-  background: #fff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.45);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
+/* 아이콘 이미지 */
 .edit-icon img {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+}
+
+.profile-manage-image:hover .edit-icon {
+  opacity: 1;
+}
+
+.profile-manage-image:hover .profile-img {
+  filter: blur(2px) brightness(0.85);
 }
