@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 import backgroundImg from "../assets/background.svg";
@@ -82,28 +81,40 @@ const Signup = () => {
 
       formData.append(
         "request",
-        new Blob([JSON.stringify(signupData)], {
-          type: "application/json",
-        })
+        new Blob([JSON.stringify(signupData)], { type: "application/json" })
       );
 
       if (profileFile) {
         formData.append("profileImage", profileFile);
       }
 
-      const response = await axios.post(
-        "/api/users/signup",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${tempToken}`,
-          },
+      const response = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${tempToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        // 에러 발생 시 내용을 JSON으로 파싱 시도
+        const errorText = await response.text();
+        let errorData = {};
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText }; // JSON이 아니면 텍스트 자체를 메시지로
         }
-      );
+        
+        // 에러를 catch 블록으로 던짐
+        throw { response: { data: errorData, status: response.status } };
+      }
 
-      console.log("[Signup Response]", response.data);
+      // 성공 시 데이터 파싱
+      const responseData = await response.json();
+      console.log("[Signup Response]", responseData);
 
-      const { accessToken, refreshToken } = response.data.data;
+      const { accessToken, refreshToken } = responseData.data;
 
       if (accessToken) localStorage.setItem("accessToken", accessToken);
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
@@ -113,12 +124,18 @@ const Signup = () => {
 
       alert("회원가입 성공!");
       navigate("/home");
+
     } catch (error) {
       console.error("회원가입 에러", error);
-      if (error.response) {
-        alert(JSON.stringify(error.response.data, null, 2));
+
+      if (error.response && error.response.data) {
+        // 에러 메시지 출력
+        const msg = typeof error.response.data === 'object' 
+          ? JSON.stringify(error.response.data, null, 2) 
+          : error.response.data;
+        alert(msg);
       } else {
-        alert("네트워크 오류");
+        alert("네트워크 오류 또는 서버 응답 없음");
       }
     }
   };
