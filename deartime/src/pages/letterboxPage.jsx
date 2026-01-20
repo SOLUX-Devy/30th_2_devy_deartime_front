@@ -266,17 +266,17 @@ const handleConfirmDelete = async () => {
 
   // 롱프레스 직후 “클릭” 무시 (상세보기 열리는 거 방지)
   const stopClickAfterLongPress = (e, id) => {
-    // 1. 방금 롱프레스가 끝났거나 
-    // 2. 현재 이 카드에 삭제 메뉴가 출력 중인 경우
-    if ((justLongPressedRef.current || (menu.show && menu.targetId === id)) && focusedId === id) {
-      
-      e.stopPropagation(); // 하위 LetterCard로 클릭 신호가 가지 않도록 차단
-      
-      if (menu.show) {
-        closeMenu(); // 메뉴가 열려있을 때 클릭하면 메뉴를 닫음
-      }
-      
-      justLongPressedRef.current = false; // 플래그 초기화
+    // 방금 막 롱프레스가 끝나서 메뉴가 처음 딱 떴을 때
+    if (justLongPressedRef.current) {
+      e.stopPropagation();           // 편지 상세보기가 열리는 걸 막음
+      justLongPressedRef.current = false; // "방금 롱프레스함" 플래그를 바로 꺼줌
+      return;                        // 여기서 끝내야 함! (closeMenu를 실행하지 않음)
+    }
+
+    // 메뉴가 이미 떠 있는 상태에서 카드를 한 번 더 클릭했을 때
+    if (menu.show && menu.targetId === id) {
+      e.stopPropagation();           // 편지 상세보기가 열리는 걸 막음
+      closeMenu();                   // 이때만 메뉴를 닫음
     }
   };
 
