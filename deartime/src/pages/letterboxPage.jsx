@@ -11,8 +11,22 @@ import DeleteCheck from "../components/DeleteCheck";
 
 import { Trash2 } from "lucide-react";
 
+// 배경 이미지 임포트
+import bgDarkBlue from "../assets/bg-dark-blue.png";
+import bgLightPink from "../assets/bg-light-pink.png";
+import bgLightGrey from "../assets/bg-light-grey.png";
+import bgLightBlue from "../assets/bg-light-blue.png";
+
+const THEME_IMAGES = {
+    DEFAULT: bgDarkBlue,
+    PINK: bgLightPink,
+    GREY: bgLightGrey,
+    BLUE: bgLightBlue,
+  };
+
 export default function Letterbox() {
   const [activeIndex, setActiveIndex] = useState(0);
+
   // UI는 1페이지부터 시작하지만, API는 0페이지부터 시작하므로 관리 주의
   const [page, setPage] = useState(1);
 
@@ -199,6 +213,17 @@ const handleConfirmDelete = async () => {
 
   // 선택된 편지(포커스된 편지) ID
   const [selectedLetter, setSelectedLetter] = useState(null);
+
+  // 클릭 핸들러
+  const handleLetterClick = (letter) => {
+    // 상세 모달을 열기 위해 선택된 편지 정보를 저장합니다.
+    setSelectedLetter(letter); 
+    
+    // 만약 리스트의 읽음 상태를 즉시 반영하고 싶다면 여기서 호출합니다.
+    if (!letter.isRead) {
+      handleMarkAsRead(letter.letterId);
+    }
+  };
 
   // =========================
   // FriendList 방식: 메뉴 열기/닫기
@@ -455,8 +480,7 @@ const handleConfirmDelete = async () => {
                           e.stopPropagation();
                           closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
                         } else {
-                          setSelectedLetter(letter);
-                          handleMarkAsRead(letter.letterId);
+                          handleLetterClick(letter);
                         }
                       }}
                       // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
@@ -469,7 +493,7 @@ const handleConfirmDelete = async () => {
                           data={letter}
                           isFocused={focusedId === letter.letterId}
                           onToggleBookmark={() => handleToggleBookmark(letter.letterId)}
-                          onMarkAsRead={() => handleMarkAsRead(letter.letterId)}
+            
                         />
                       </div>
                     );
@@ -488,7 +512,8 @@ const handleConfirmDelete = async () => {
                 isOpen={!!selectedLetter}
                 onClose={() => setSelectedLetter(null)}
                 letterId={selectedLetter.letterId}
-                // 필요한 정보들 전달
+                themeCode={selectedLetter.themeCode}
+                bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.DEFAULT}
               />
             )}
 
