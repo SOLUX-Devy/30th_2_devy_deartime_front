@@ -53,107 +53,84 @@
 
 .letter-content-wrapper {
     flex: 1;
-    overflow-y: auto; /* 내용이 많으면 내부에서 스크롤 생성 */
-    margin : 5px 0;
+    overflow-y: auto;
+    padding-right: 8px; /* 스크롤바와 콘텐츠 간격 */
 }
 
-.letter-content-wrapper::-webkit-scrollbar {
-    width: 9px;
-    background: transparent;
+.paper-internal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-/* 화살표 제거 */
-.letter-content-wrapper::-webkit-scrollbar-button {
-    display: none;
-    width: 0;
-    height: 0;
+.paper-header {
+    margin-bottom: 12px;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-track {
-    background: linear-gradient(
-        to bottom,
-        rgba(32, 49, 94, 0.55) 0%,
-        rgba(42, 66, 128, 0.55) 100%
-    );
-    border-radius: 999px;
+.info-row {
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 8px;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(220, 220, 220, 0.85);
-    border-radius: 999px;
+.info-row .label { font-weight: 600; opacity: 0.8; }
+.info-row .value { font-weight: 400; }
 
-    background-clip: padding-box;
+.paper-divider {
+    border: none;
+    height: 1px;
+    background-color: currentColor; /* 텍스트 색상에 따라 자동 조절 */
+    opacity: 0.2;
+    margin: 15px 0 25px 0;
 }
 
-
-.letter-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 220, 220, 1);
+.paper-body {
+    flex: 1;
 }
-
-.letter-content-wrapper::-webkit-scrollbar-corner {
-    background: transparent;
-}
-
 
 .detail-title {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-top:0.3em;
-    margin-bottom: 0.5em;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.02em;
 }
 
 .detail-text {
-    padding-top:1em;
-    line-height: 1.7; 
-    white-space: pre-wrap; /* 줄바꿈(\n) 반영 */
+    line-height: 1.8;
+    white-space: pre-wrap;
     word-break: break-all;
+    font-size: 1.1rem;
+    min-height: 200px;
 }
 
-.detail-overlay .close-btn {
-    position: absolute;
-    top: 0.7rem; 
-    right: 1rem;
-    font-size: 2rem;
-    
-    background: none;
-    border: none;
-    line-height: 1;
-    cursor: pointer;
-    
-    color: #666;
-    transition: all 0.2s ease;
-    
-    padding: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.paper-footer {
+    margin-top: 30px;
+    padding-top: 10px;
 }
 
-.detail-overlay .close-btn:hover {
-    transform: rotate(90deg); 
+.detail-date {
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.7;
 }
 
-/* 테마별 글자색 설정 */
-.letter-paper.theme1 { color: #ffffff; } /* Dark Blue */
-.letter-paper.theme2 { color: #4a4a4a; } /* Pink */
-.letter-paper.theme3 { color: #2c3e50; } /* Grey */
-.letter-paper.theme4 { color: #2a3744; } /* Blue */
+/* 테마별 글자색 (가독성 확보) */
+.letter-paper.theme1, .letter-paper.theme4 { color: #ffffff; }
+.letter-paper.theme2 { color: #4a3b3b; } /* 핑크 배경에 어울리는 진한 갈색톤 */
+.letter-paper.theme3 { color: #2c3e50; }
 
-.divider {
-    border: none;
-    border-top: 1px solid currentColor; /* 현재 글자색(color)을 그대로 사용 */
-    opacity: 0.3;
-}
-
-/*디자인별 스크롤바 디자인*/
-/* 공통 스크롤바 스타일 */
+/* 스크롤바 커스텀 (제공해주신 코드 최적화) */
 .letter-content-wrapper::-webkit-scrollbar { width: 6px; }
-.letter-content-wrapper::-webkit-scrollbar-track { border-radius: 10px; background: rgba(0,0,0,0.05); }
-.letter-content-wrapper::-webkit-scrollbar-thumb { border-radius: 10px; background: rgba(220, 220, 220, 0.5); }
+.letter-content-wrapper::-webkit-scrollbar-track { background: transparent; }
+.letter-content-wrapper::-webkit-scrollbar-thumb { 
+    background: rgba(220, 220, 220, 0.3); 
+    border-radius: 10px; 
+}
 
-/* 테마별 트랙/핸들 색상 분기 */
-.theme2 .letter-content-wrapper::-webkit-scrollbar-track { background: #FFF0F5; }
+/* 테마별 스크롤바 상세 분기 */
+.theme2 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(255, 240, 245, 0.4); }
 .theme2 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #e5cbea; }
 
-.theme3 .letter-content-wrapper::-webkit-scrollbar-track { background: #425b73; }
+.theme3 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(66, 91, 115, 0.2); }
 .theme3 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #95a5a6; }
