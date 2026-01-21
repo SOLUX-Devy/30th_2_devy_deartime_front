@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "../styles/LetterboxPage.css";
 
+import LetterDetail from "../components/LetterDetail";
 import LetterCard from "../components/LetterCard";
 import MailTabs from "../components/MailTabs";
 import SendButton from "../components/SendButton";
