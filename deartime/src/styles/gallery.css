@@ -6,6 +6,8 @@
   color: white;
   padding: 20px 0;
   position: relative;
+  background-repeat: no-repeat;
+
 }
 
 /* 배경 어둡게 처리 (Spotlight용 오버레이) */
