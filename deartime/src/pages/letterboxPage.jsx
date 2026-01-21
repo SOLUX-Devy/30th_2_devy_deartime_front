@@ -162,6 +162,7 @@ export default function Letterbox() {
   }
 };
 
+
 // 삭제 처리 (DELETE 연동)
 const handleConfirmDelete = async () => {
   if (!menu.targetId) return;
@@ -195,6 +196,9 @@ const handleConfirmDelete = async () => {
       )
     );
   };
+
+  // 선택된 편지(포커스된 편지) ID
+  const [selectedLetter, setSelectedLetter] = useState(null);
 
   // =========================
   // FriendList 방식: 메뉴 열기/닫기
@@ -450,6 +454,9 @@ const handleConfirmDelete = async () => {
                         if (menu.show) {
                           e.stopPropagation();
                           closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
+                        } else {
+                          setSelectedLetter(letter);
+                          handleMarkAsRead(letter.letterId);
                         }
                       }}
                       // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
@@ -474,6 +481,16 @@ const handleConfirmDelete = async () => {
                 </>
               )}
             </main>
+
+            {/* 상세보기 모달 */}
+            {selectedLetter && (
+              <LetterDetail
+                isOpen={!!selectedLetter}
+                onClose={() => setSelectedLetter(null)}
+                letterId={selectedLetter.letterId}
+                // 필요한 정보들 전달
+              />
+            )}
 
             {/* 페이지네이션 */}
             {totalPages > 1 && (
