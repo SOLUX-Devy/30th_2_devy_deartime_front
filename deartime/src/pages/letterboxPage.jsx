@@ -19,10 +19,10 @@ import bgLightGrey from "../assets/bg-light-grey.png";
 import bgLightBlue from "../assets/bg-light-blue.png";
 
 const THEME_IMAGES = {
-    DEFAULT: bgDarkBlue,
-    PINK: bgLightPink,
-    GREY: bgLightGrey,
-    BLUE: bgLightBlue,
+    theme1: bgDarkBlue,
+    theme2: bgLightPink,
+    theme3: bgLightGrey,
+    theme4: bgLightBlue,
   };
 
 export default function Letterbox() {

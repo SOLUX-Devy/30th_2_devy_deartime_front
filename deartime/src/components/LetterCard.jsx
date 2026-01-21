@@ -28,9 +28,9 @@ export default function LetterCard({
   };
 
   // 일반 클릭 → 상세보기
-  //const handleCardClick = (e) => {
-  //  e.stopPropagation();
-  //};
+  // const handleCardClick = (e) => {
+  //   e.stopPropagation();
+  // };
   
   return (
     <>
