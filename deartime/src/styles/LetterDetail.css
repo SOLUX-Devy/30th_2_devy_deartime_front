@@ -134,19 +134,19 @@
 }
 
 /* 테마별 글자색 설정 */
-.letterbox-container .letter-paper.theme-DEFAULT { 
+.letter-paper.theme-DEFAULT { 
     color: #ffffff; 
 }
 
-.letterbox-container .letter-paper.theme-PINK { 
+.letter-paper.theme-PINK { 
     color: #4a4a4a; 
 }
 
-.letterbox-container .letter-paper.theme-GREY { 
+.letter-paper.theme-GREY { 
     color: #2c3e50; 
 }
 
-.letterbox-container .letter-paper.theme-BLUE { 
+.letter-paper.theme-BLUE { 
     color: #2a3744; 
 }
 

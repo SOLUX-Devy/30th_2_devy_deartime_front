@@ -42,6 +42,11 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
 
     if (!isOpen) return null;
 
+    // 날짜 포맷 로직 (2025-12-15T00:53:36 -> 2025.12.15)
+    const formattedDate = detailData?.sentAt 
+        ? detailData.sentAt.split("T")[0].replace(/-/g, ".") 
+        : "";
+
     return (
         <div className="detail-overlay" onClick={onClose}>
             <div 
@@ -56,12 +61,26 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
                         <p className="loading-text">편지를 읽어오는 중...</p>
                     ) : (
                         <>
-                            <h2 className="detail-title">상세 보기</h2>
+
+                        <div className="paper-header">
+                                {/* 보낸 사람과 받는 사람 정보 추가 */}
+                                <div className="detail-from">From. <span>{detailData?.senderNickname}</span></div>
+                                <div className="detail-to">To. <span>{detailData?.receiverNickname}</span></div>
+                            </div>
+
                             <hr className="divider" />
-                            {/* 서버에서 받아온 상세 본문 */}
-                            <p className="detail-text">
-                                {detailData?.content || "내용이 없습니다."}
-                            </p>
+                            
+                            <div className="paper-body">
+                                <h2 className="detail-title">{detailData?.title}</h2>
+                                <p className="detail-text">
+                                    {detailData?.content || "내용이 없습니다."}
+                                </p>
+                            </div>
+
+                            <div className="paper-footer">
+                                {/* 날짜 추가 */}
+                                <span className="detail-date">{formattedDate}</span>
+                            </div>
                         </>
                     )}
                 </div>
