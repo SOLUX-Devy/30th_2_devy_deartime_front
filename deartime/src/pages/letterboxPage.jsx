@@ -124,7 +124,7 @@ export default function Letterbox() {
     [totalPages]
   );
 
-  // 이제 currentItems는 letters 전체가 됩니다 (서버가 이미 잘라서 주기 때문)
+  // 이제 currentItems는 letters 전체가 됨 (서버가 이미 잘라서 주기 때문)
   const currentItems = letters; 
   const emptySlotsCount = pageSize - currentItems.length;
 

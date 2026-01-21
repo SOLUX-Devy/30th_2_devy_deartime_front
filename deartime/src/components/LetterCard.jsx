@@ -62,7 +62,11 @@ export default function LetterCard({
     <>
       <div
         className={`letter-card theme-${themeCode} ${isFocused ? "focused" : ""}`}
-        style={{ backgroundImage: `url(${currentBgImage})` }}
+        style={{ 
+          backgroundImage: `url(${currentBgImage})` ,
+          zIndex: isDetailOpen ? 999 : (isFocused ? 100 : 1),
+          position: 'relative'
+        }}
         onClick={handleCardClick}
       >
         <div className="card-top">
