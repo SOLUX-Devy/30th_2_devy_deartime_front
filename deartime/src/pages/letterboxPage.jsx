@@ -494,7 +494,7 @@ const handleConfirmDelete = async () => {
                           data={letter}
                           isFocused={focusedId === letter.letterId}
                           onToggleBookmark={() => handleToggleBookmark(letter.letterId)}
-            
+                          bgImage={THEME_IMAGES[letter.themeCode] || THEME_IMAGES.theme1}
                         />
                       </div>
                     );
@@ -514,7 +514,7 @@ const handleConfirmDelete = async () => {
                 onClose={() => setSelectedLetter(null)}
                 letterId={selectedLetter.letterId}
                 themeCode={selectedLetter.themeCode}
-                bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.DEFAULT}
+                bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.theme1}
               />
             )}
 

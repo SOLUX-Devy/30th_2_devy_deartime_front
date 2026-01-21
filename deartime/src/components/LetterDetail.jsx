@@ -50,38 +50,46 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
     return (
         <div className="detail-overlay" onClick={onClose}>
             <div 
-            className={`letter-paper ${detailData?.themeCode || themeCode}`} 
-            style={{ backgroundImage: `url(${bgImage})` }} 
-            onClick={(e) => e.stopPropagation()}
+                className={`letter-paper ${detailData?.themeCode || themeCode}`} 
+                style={{ backgroundImage: `url(${bgImage})` }} 
+                onClick={(e) => e.stopPropagation()}
             >
-            <button className="close-btn" onClick={onClose}>&times;</button>
-            
-            <div className="letter-content-wrapper">
-                {isLoading ? (
-                <p className="loading-text">편지를 가져오는 중...</p>
-                ) : (
-                <>
-                    <div className="paper-header">
-                        <div className="info-line">From. {detailData?.senderNickname}</div>
-                        <div className="info-line">To. {detailData?.receiverNickname}</div>
-                    </div>
+                <button className="close-btn" onClick={onClose}>&times;</button>
+                
+                <div className="letter-content-wrapper">
+                    {isLoading ? (
+                        <div className="loading-container">
+                            <p className="loading-text">편지를 읽어오는 중...</p>
+                        </div>
+                    ) : (
+                        <div className="paper-internal">
+                            <header className="paper-header">
+                                <div className="info-row">
+                                    <span className="label">From.</span>
+                                    <span className="value">{detailData?.senderNickname}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="label">To.</span>
+                                    <span className="value">{detailData?.receiverNickname}</span>
+                                </div>
+                            </header>
 
-                    <hr className="paper-divider" />
-                    
-                    <div className="paper-body">
-                        <h2 className="detail-title">{detailData?.title}</h2>
-                        <div className="detail-text">{detailData?.content}</div>
-                    </div>
+                            <hr className="paper-divider" />
+                            
+                            <article className="paper-body">
+                                <h2 className="detail-title">{detailData?.title}</h2>
+                                <div className="detail-text">{detailData?.content}</div>
+                            </article>
 
-                    <div className="paper-footer">
-                        <span className="detail-date">{formattedDate}</span>
-                    </div>
-                </>
-                )}
-            </div>
+                            <footer className="paper-footer">
+                                <span className="detail-date">{formattedDate}</span>
+                            </footer>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
-        );
+    );
 };
 
 export default LetterDetail;
