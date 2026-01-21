@@ -50,43 +50,38 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
     return (
         <div className="detail-overlay" onClick={onClose}>
             <div 
-                className={`letter-paper theme-${themeCode}`} 
-                style={{ backgroundImage: `url(${bgImage})` }} 
-                onClick={(e) => e.stopPropagation()}
+            className={`letter-paper ${detailData?.themeCode || themeCode}`} 
+            style={{ backgroundImage: `url(${bgImage})` }} 
+            onClick={(e) => e.stopPropagation()}
             >
-                <button className="close-btn" onClick={onClose}>&times;</button>
-                
-                <div className="letter-content-wrapper">
-                    {isLoading ? (
-                        <p className="loading-text">편지를 읽어오는 중...</p>
-                    ) : (
-                        <>
+            <button className="close-btn" onClick={onClose}>&times;</button>
+            
+            <div className="letter-content-wrapper">
+                {isLoading ? (
+                <p className="loading-text">편지를 가져오는 중...</p>
+                ) : (
+                <>
+                    <div className="paper-header">
+                        <div className="info-line">From. {detailData?.senderNickname}</div>
+                        <div className="info-line">To. {detailData?.receiverNickname}</div>
+                    </div>
 
-                        <div className="paper-header">
-                                {/* 보낸 사람과 받는 사람 정보 추가 */}
-                                <div className="detail-from">From. <span>{detailData?.senderNickname}</span></div>
-                                <div className="detail-to">To. <span>{detailData?.receiverNickname}</span></div>
-                            </div>
+                    <hr className="paper-divider" />
+                    
+                    <div className="paper-body">
+                        <h2 className="detail-title">{detailData?.title}</h2>
+                        <div className="detail-text">{detailData?.content}</div>
+                    </div>
 
-                            <hr className="divider" />
-                            
-                            <div className="paper-body">
-                                <h2 className="detail-title">{detailData?.title}</h2>
-                                <p className="detail-text">
-                                    {detailData?.content || "내용이 없습니다."}
-                                </p>
-                            </div>
-
-                            <div className="paper-footer">
-                                {/* 날짜 추가 */}
-                                <span className="detail-date">{formattedDate}</span>
-                            </div>
-                        </>
-                    )}
-                </div>
+                    <div className="paper-footer">
+                        <span className="detail-date">{formattedDate}</span>
+                    </div>
+                </>
+                )}
+            </div>
             </div>
         </div>
-    );
+        );
 };
 
 export default LetterDetail;
