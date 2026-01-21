@@ -28,9 +28,9 @@ export default function LetterCard({
   };
 
   // 일반 클릭 → 상세보기
-  const handleCardClick = (e) => {
-    e.stopPropagation();
-  };
+  // const handleCardClick = (e) => {
+  //  e.stopPropagation();
+  //};
   
   return (
     <>
@@ -41,7 +41,7 @@ export default function LetterCard({
           zIndex: isFocused ? 100 : 1, 
           position: 'relative'
         }}
-        onClick={handleCardClick}
+        //onClick={handleCardClick}
       >
         <div className="card-top">
           <span className="sender-info">from. {senderNickname}</span>
