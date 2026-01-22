@@ -68,7 +68,7 @@
 }
 
 .info-row {
-    font-size: 1.15rem;
+    font-size: 1rem;
     margin-bottom: 6px;
     display: flex;
     gap: 8px;
@@ -78,6 +78,7 @@
     font-weight: 600; 
     opacity: 0.8; 
     margin:0;
+    font-size: 0.8em;
 }
 
 .info-value { font-weight: 400; } 
@@ -97,7 +98,7 @@
 .detail-title {
     font-size: 1.6rem;
     font-weight: 800;
-    margin-bottom: 1.2rem;
+    margin:1em 0 1.2em 0;
     letter-spacing: -0.02em;
 }
 
