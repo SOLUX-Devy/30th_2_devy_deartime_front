@@ -146,7 +146,7 @@
 .close-btn {
     position: absolute;
     top: 1rem;
-    right: 1rem;
+    right: 0.5rem;
     background: none;
     border: none;
     font-size: 3rem;
