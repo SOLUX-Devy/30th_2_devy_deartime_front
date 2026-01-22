@@ -12,7 +12,6 @@ const Gallery = () => {
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
 
-
   const BASE_URL = "https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/photos";
   
   const ensureHttps = (url) => {
@@ -182,6 +181,7 @@ const Gallery = () => {
                 <div className="photo-grid">
                   {groupedPhotos[date].map((photo) => (
                     <div key={photo.photoId} className="photo-item">
+                      {/* [방법 3 적용] src에 ensureHttps 사용 */}
                       <div className="img-box"><img src={ensureHttps(photo.imageUrl)} alt="" /></div>
                       {editingId === photo.photoId ? (
                         <input className="edit-title-input" defaultValue={photo.caption} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.photoId)} onBlur={() => setEditingId(null)} />
@@ -200,6 +200,7 @@ const Gallery = () => {
             <div className="album-grid">
               {currentAlbums.map((album) => (
                 <div key={album.albumId} className="album-item" onClick={() => navigate(`/album/${album.albumId}`, { state: { album } })}>
+                  {/* [방법 3 적용] src에 ensureHttps 사용 */}
                   <div className="album-img-box"><img src={ensureHttps(album.coverImageUrl)} alt="" /></div>
                   <div className="album-info">
                     <h3>{album.title}</h3>
