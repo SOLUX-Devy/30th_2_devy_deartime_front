@@ -15,8 +15,9 @@ const Login = () => {
   }, [navigate]);
 
   const handleGoogleLogin = () => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
     window.location.href =
-      "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/auth/google";
+      `${baseUrl}/api/auth/google`;
   };
 
   return (

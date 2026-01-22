@@ -6,17 +6,14 @@ import ArrowDown from "../assets/arrow_down.svg";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/header.css";
 
-import friendIcon from "../assets/default_profile.png";
-import letterIcon from "../assets/letter.svg";
-import capsuleIcon from "../assets/timecapsule.svg";
 import ProfileManageModal from "../components/ProfileManageModal";
 import { UserContext } from "../context/UserContext";
+// [FIX] 훅 import 추가
+import { useNotifications } from "../hooks/useNotifications"; 
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
 
-  const [notifications, setNotifications] = useState([]);
-  const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileManageOpen, setIsProfileManageOpen] = useState(false);
 
@@ -27,38 +24,23 @@ export default function Header() {
   const { user, setUser } = useContext(UserContext);
 
   /* =========================
-      UTIL
+      UTIL & HOOKS
   ========================= */
-  const _formatTime = (dateString) => {
-    const diff = (new Date() - new Date(dateString)) / 1000 / 60;
-    if (diff < 60) return `${Math.floor(diff)}분 전`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}시간 전`;
-    return dateString.slice(0, 10).replace(/-/g, ".");
-  };
-
   const handleImgError = (e) => {
     e.target.src = DefaultProfile;
   };
 
-  const _getNotiIcon = (type) => {
-    switch (type) {
-      case "FRIEND_INVITE":
-        return friendIcon;
-      case "TIMECAPSULE_OPEN":
-      case "TIMECAPSULE_RECEIVED":
-        return capsuleIcon;
-      case "LETTER_RECEIVED":
-        return letterIcon;
-      default:
-        return friendIcon;
-    }
-  };
-
-  const _splitNotiContent = (content) => {
-    const match = content.match(/(.+님이)\s(.+)/);
-    if (!match) return { title: content, body: null };
-    return { title: match[1], body: match[2] };
-  };
+  // 훅 사용 및 변수명 매핑
+  const {
+    notifications,
+    isOpen: isNotiOpen,       
+    setIsOpen: setIsNotiOpen, 
+    hasUnread,
+    onClickNotification,
+    formatTime,
+    getNotiIcon,
+    splitNotiContent,
+  } = useNotifications({ navigate, userId: user?.id });
 
   // 회원가입 일수 계산
   const storedJoinDate = user?.joinDate || localStorage.getItem("joinDate");
@@ -81,33 +63,27 @@ export default function Header() {
           "Content-Type": "application/json",
         },
       });
-
       const json = await res.json();
-      console.log("[Logout] Response:", json);
 
       if (res.ok && json.success) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-        localStorage.removeItem("joinDate");
-
+        localStorage.clear();
         setUser(null);
         setIsProfileOpen(false);
         navigate("/login");
-      } else {
-        console.warn("[Logout] Logout failed:", json);
       }
     } catch (err) {
       console.error("[Logout] Error:", err);
     }
   };
 
-  // 클릭 외부 영역 닫기
+  // 외부 클릭 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
+      // 알림창 닫기
       if (notiRef.current && !notiRef.current.contains(e.target)) {
         setIsNotiOpen(false);
       }
+      // 프로필창 닫기
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setIsProfileOpen(false);
       }
@@ -115,28 +91,17 @@ export default function Header() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [setIsNotiOpen]); // 의존성 배열 추가
 
-  // 실제 user 기반 프로필 데이터
   const userProfile = {
     nickname: user?.nickname || "사용자",
     bio: user?.bio || "",
     profileImageUrl: user?.profileImageUrl || null,
     joinDays: daysTogether,
-    email: user?.email || "",
-    birthDate: user?.birthDate || "",
-  };
-
-  // 친구 요청 처리 (TODO)
-  const _handleFriendRequest = async (noti, status) => {
-    console.log("[TODO] 친구 요청 처리", { targetUserId: noti.targetId, status });
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
-    );
   };
 
   /* =========================
-      RENDER
+       RENDER
   ========================= */
   return (
     <>
@@ -158,7 +123,8 @@ export default function Header() {
 
           {/* 오른쪽 */}
           <div className="right-section">
-            {/* 알림 */}
+            
+            {/* 알림 섹션 */}
             <div ref={notiRef} style={{ position: "relative" }}>
               <button
                 className={`icon-img-btn ${isNotiOpen ? "is-open" : ""}`}
@@ -169,11 +135,44 @@ export default function Header() {
                 type="button"
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
-                {notifications.some((n) => !n.isRead) && <span className="red-dot" />}
+                {/* 읽지 않은 알림이 있으면 빨간 점 표시 (선택사항) */}
+                {hasUnread && <span className="noti-badge"></span>}
               </button>
+
+              {isNotiOpen && (
+                <div className="noti-dropdown">
+                  {notifications.length === 0 ? (
+                    <p className="noti-empty">아직 알림이 없습니다.</p>
+                  ) : (
+                    <ul className="noti-list">
+                      {notifications.map((noti) => {
+                        const { title, body } = splitNotiContent(noti.content);
+                        return (
+                          <li 
+                            key={noti.id} 
+                            className={`noti-item ${noti.isRead ? "read" : "unread"}`}
+                            onClick={() => onClickNotification(noti)}
+                          >
+                            <img 
+                              src={getNotiIcon(noti.type)} 
+                              alt="icon" 
+                              className="noti-item-icon" 
+                            />
+                            <div className="noti-text">
+                              <p className="noti-title">{title}</p>
+                              {body && <p className="noti-body">{body}</p>}
+                              <span className="noti-time">{formatTime(noti.createdAt)}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* 프로필 */}
+            {/* 프로필 섹션 */}
             <div ref={profileRef} style={{ position: "relative" }}>
               <div
                 className={`profile-trigger ${isProfileOpen ? "is-open" : ""}`}
@@ -181,8 +180,6 @@ export default function Header() {
                   setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);
                 }}
-                role="button"
-                tabIndex={0}
               >
                 <div className="profile-circle-nav">
                   <img
@@ -218,11 +215,10 @@ export default function Header() {
                       setIsProfileManageOpen(true);
                       setIsProfileOpen(false);
                     }}
-                    type="button"
                   >
                     프로필 관리
                   </button>
-                  <button className="p-btn" type="button" onClick={handleLogout}>
+                  <button className="p-btn" onClick={handleLogout}>
                     로그아웃
                   </button>
                 </div>
@@ -232,7 +228,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 프로필 관리 모달 */}
       {isProfileManageOpen && (
         <ProfileManageModal
           userProfile={userProfile}

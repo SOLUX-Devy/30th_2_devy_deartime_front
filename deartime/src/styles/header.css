@@ -273,8 +273,8 @@
 /* ===== 알림 드롭다운 ===== */
 .noti-dropdown {
   position: absolute;
-  top: 60px;
-  right: 0;
+  top: 45px;
+  right: -10px;
   width: 300px;
   height: 400px;
   border-radius: 15px;
@@ -463,5 +463,14 @@
   .nav .item {
     font-size: 13px;
   }
+}
+
+.noti-empty {                
+  display: flex;           
+  align-items: center;     
+  justify-content: center; 
+  color: #FFF;            
+  font-size: 14px;   
+  margin-top: 180px;     
 }
 
