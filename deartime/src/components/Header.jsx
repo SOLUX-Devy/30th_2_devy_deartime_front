@@ -136,7 +136,7 @@ export default function Header() {
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
                 {/* 읽지 않은 알림이 있으면 빨간 점 표시 (선택사항) */}
-                {hasUnread && <span className="noti-badge"></span>}
+                {hasUnread && <span className="red-dot"></span>}
               </button>
 
               {isNotiOpen && (
@@ -147,22 +147,23 @@ export default function Header() {
                     <ul className="noti-list">
                       {notifications.map((noti) => {
                         const { title, body } = splitNotiContent(noti.content);
+
                         return (
-                          <li 
-                            key={noti.id} 
+                          <li
+                            key={noti.id}
                             className={`noti-item ${noti.isRead ? "read" : "unread"}`}
                             onClick={() => onClickNotification(noti)}
                           >
-                            <img 
-                              src={getNotiIcon(noti.type)} 
-                              alt="icon" 
-                              className="noti-item-icon" 
-                            />
-                            <div className="noti-text">
-                              <p className="noti-title">{title}</p>
-                              {body && <p className="noti-body">{body}</p>}
-                              <span className="noti-time">{formatTime(noti.createdAt)}</span>
+                            <div className="noti-icon">
+                              <img src={getNotiIcon(noti.type)} alt="icon" />
                             </div>
+
+                            <div className="noti-content">
+                              <p className="noti-text">{title}</p>
+
+                              {body && <span className="noti-sub">{body}</span>}
+                            </div>
+                            <span className="noti-time">{formatTime(noti.createdAt)}</span>
                           </li>
                         );
                       })}
