@@ -3,8 +3,6 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Pen, Trash2, ArrowLeft, MoreVertical } from "lucide-react";
 import '../styles/AlbumDetail.css';
 import bg from "../assets/background_nostar.png";
-/* API 인스턴스 임포트 (경로 확인 필요) */
-import api from "../api/proxy"; 
 
 const AlbumDetail = () => {
   const { albumId } = useParams();
