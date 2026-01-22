@@ -12,7 +12,7 @@ const Gallery = () => {
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null); // 무한 스크롤 관찰용 Ref
 
-  const BASE_URL = "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/photos";
+  const BASE_URL = "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`
   });
