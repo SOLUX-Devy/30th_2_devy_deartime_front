@@ -1,5 +1,7 @@
+// ==========================
+// FriendList.jsx (전문: GET 연동 + 삭제는 FriendDelete.jsx에서 처리하는 버전)
+// ==========================
 import React, { useMemo, useRef, useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
 import bg from "../assets/background_nostar.png";
@@ -8,49 +10,21 @@ import finder from "../assets/finder.png";
 import "../styles/FriendList.css";
 import FriendCard from "../components/FriendCard";
 import FriendInvite from "../components/FriendInvite";
-import FriendDeleteConfirm from "../components/FriendDelete.jsx";
+import FriendDelete from "../components/FriendDelete.jsx";
 
-// ✅ 목데이터(백엔드 형식)
-const mockFriendListResponse = {
-  status: 200,
-  success: true,
-  message: "친구 목록 조회 성공",
-  data: {
-    count: 13,
-    friends: Array.from({ length: 13 }, (_, i) => {
-      const idx = i + 1;
-      const day = String(idx).padStart(2, "0");
-      return {
-        userId: 1,
-        friendId: idx,
-        friendNickname: `Friend ${idx}`,
-        friendProfileImageUrl: "profile.jpg",
-        friendBio: `Bio ${idx}`,
-        status: "accepted",
-        requestedAt: `2004-01-${day}T00:00:00`,
-      };
-    }),
-  },
-};
+// ✅ 백엔드 주소 (proxy 안 쓰는 경우)
+const API_BASE =
+  "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
 
 export default function FriendList() {
-  // const navigate = useNavigate();
-
-  // 친구 초대 모달 상태 추가
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // ✅ 검색어
   const [keyword, setKeyword] = useState("");
+  const [friendsData, setFriendsData] = useState([]);
 
-  // ✅ 친구 목록 state (삭제 반영하려면 state여야 함)
-  const [friendsData, setFriendsData] = useState(
-    mockFriendListResponse?.data?.friends ?? []
-  );
-
-  // ✅ 컨텍스트 메뉴 상태 (Gallery랑 동일 구조)
   const [menu, setMenu] = useState({
     show: false,
     x: 0,
@@ -58,13 +32,48 @@ export default function FriendList() {
     targetId: null,
   });
 
-  // ✅ 롱프레스 타이머
   const longPressTimerRef = useRef(null);
-  const isLongPressActive = useRef(false);
-
   const pressTargetElRef = useRef(null);
 
-  // ✅ 검색 필터
+  // =========================
+  // 친구 목록 조회 API (GET)
+  // =========================
+  const fetchFriends = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/friends`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(data?.message ?? "친구 목록 조회 실패");
+        return;
+      }
+
+      // ✅ 실데이터로 세팅
+      setFriendsData(data?.data?.friends ?? []);
+    } catch (e) {
+      alert("네트워크 오류가 발생했습니다.");
+    }
+  };
+
+  useEffect(() => {
+    fetchFriends();
+  }, []);
+
+  // =========================
+  // 검색 필터
+  // =========================
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
@@ -73,10 +82,13 @@ export default function FriendList() {
     );
   }, [friendsData, keyword]);
 
-  // ✅ 상단 count 텍스트 (검색 결과 기준 원하면 filteredFriends.length로 바꾸면 됨)
+  // ✅ count 필드는 백엔드가 주지만, 화면 표시엔 굳이 안 써도 됨
+  // (친구 목록 배열 길이가 실제 렌더링과 일치해서 더 안전)
   const countText = `${friendsData.length}명의 친구`;
 
-  // ✅ 메뉴 닫기: 바깥 클릭 / ESC / 스크롤 / 리사이즈
+  // =========================
+  // 컨텍스트 메뉴 닫기 처리
+  // =========================
   useEffect(() => {
     if (!menu.show) return;
 
@@ -98,23 +110,25 @@ export default function FriendList() {
     };
   }, [menu.show]);
 
-  // ✅ 롱프레스 시작(모바일/마우스 공통)
+  // =========================
+  // 롱프레스 / 우클릭 메뉴 열기
+  // =========================
   const startPress = (e, id) => {
     if (e.type === "mousedown" && e.button !== 0) return;
 
     pressTargetElRef.current = e.currentTarget;
-    isLongPressActive.current = false;
 
     longPressTimerRef.current = setTimeout(() => {
       const el = pressTargetElRef.current;
       if (!el) return;
 
       const rect = el.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-      isLongPressActive.current = true;
+      setMenu({
+        show: true,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        targetId: id,
+      });
     }, 500);
   };
 
@@ -126,19 +140,21 @@ export default function FriendList() {
     pressTargetElRef.current = null;
   };
 
-  // ✅ 우클릭
   const handleContextMenu = (e, id) => {
     e.preventDefault();
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-    isLongPressActive.current = true;
+    setMenu({
+      show: true,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      targetId: id,
+    });
   };
 
-  // ✅ 삭제
+  // =========================
+  // 삭제 클릭 → 확인 모달
+  // =========================
   const handleDeleteClick = () => {
     if (!menu.targetId) return;
 
@@ -147,24 +163,11 @@ export default function FriendList() {
     setMenu((prev) => ({ ...prev, show: false }));
   };
 
-
-  // 삭제 확인
-  const confirmDelete = () => {
-    setFriendsData((prev) =>
-      prev.filter((f) => f.friendId !== deleteTargetId)
-    );
-
-    setShowDeleteConfirm(false);
-    setDeleteTargetId(null);
-  };
-
-
   return (
     <div
       className="friendlist-container"
       style={{ backgroundImage: `url(${bg})` }}
     >
-      {/* 상단 영역 */}
       <div className="friend-topbar">
         <div className="friend-topnav">
           <span className="friend-tab active">친구 목록</span>
@@ -181,7 +184,6 @@ export default function FriendList() {
         </div>
       </div>
 
-      {/* 검색줄 */}
       <div className="friend-search-row">
         <div className="friend-search">
           <input
@@ -202,7 +204,6 @@ export default function FriendList() {
         <div className="friend-count">{countText}</div>
       </div>
 
-      {/* ✅ 오버레이 (Gallery랑 동일: menu.show면 표시) */}
       {menu.show && (
         <div
           className="context-menu-overlay"
@@ -210,24 +211,25 @@ export default function FriendList() {
         />
       )}
 
-      {/* ✅ 삭제 메뉴 (1개짜리) */}
       {menu.show && (
         <div
           className="custom-context-menu"
           style={{ top: menu.y, left: menu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="menu-item delete" onClick={(e) => {
+          <div
+            className="menu-item delete"
+            onClick={(e) => {
               e.stopPropagation();
               handleDeleteClick();
-            }}>
+            }}
+          >
             <Trash2 size={20} color="#FF4D4D" />
             <span>삭제</span>
           </div>
         </div>
       )}
 
-      {/* ✅ 카드 그리드 */}
       <div className="friend-grid">
         {filteredFriends.map((f) => {
           const isSpotlight = menu.show && menu.targetId === f.friendId;
@@ -248,14 +250,25 @@ export default function FriendList() {
           );
         })}
       </div>
+
       {showInviteModal && (
         <FriendInvite onClose={() => setShowInviteModal(false)} />
       )}
 
+      {/* ✅ 삭제 API 호출은 FriendDelete.jsx 내부에서 수행 */}
       {showDeleteConfirm && (
-        <FriendDeleteConfirm
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteConfirm(false)}
+        <FriendDelete
+          friendId={deleteTargetId}
+          apiBase={API_BASE}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setDeleteTargetId(null);
+          }}
+          onSuccess={(deletedId) => {
+            setFriendsData((prev) => prev.filter((f) => f.friendId !== deletedId));
+            setShowDeleteConfirm(false);
+            setDeleteTargetId(null);
+          }}
         />
       )}
     </div>
