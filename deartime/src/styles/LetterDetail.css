@@ -2,8 +2,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.7);
     
     /* 가로세로 중앙 정렬 */
@@ -53,132 +53,119 @@
 
 .letter-content-wrapper {
     flex: 1;
-    overflow-y: auto; /* 내용이 많으면 내부에서 스크롤 생성 */
-    margin : 5px 0;
+    overflow-y: auto;
+    padding-right: 8px; /* 스크롤바와 콘텐츠 간격 */
 }
 
-.letter-content-wrapper::-webkit-scrollbar {
-    width: 9px;
-    background: transparent;
+.paper-internal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-/* 화살표 제거 */
-.letter-content-wrapper::-webkit-scrollbar-button {
-    display: none;
-    width: 0;
-    height: 0;
+.paper-header {
+    margin-bottom: 10px;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-track {
-    background: linear-gradient(
-        to bottom,
-        rgba(32, 49, 94, 0.55) 0%,
-        rgba(42, 66, 128, 0.55) 100%
-    );
-    border-radius: 999px;
+.info-row {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 8px;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(220, 220, 220, 0.85);
-    border-radius: 999px;
-
-    background-clip: padding-box;
+.info-label { 
+    opacity: 0.8; 
+    margin:0;
+    font-size: 0.8em;
 }
 
+/*.info-value { 
+} */
 
-.letter-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 220, 220, 1);
+.paper-divider {
+    border: none;
+    height: 1px;
+    background-color: currentColor; /* 텍스트 색상에 따라 자동 조절 */
+    opacity: 0.2;
+    margin: 5px 0 5px 0;
 }
 
-.letter-content-wrapper::-webkit-scrollbar-corner {
-    background: transparent;
+.paper-body {
+    flex: 1;
 }
-
 
 .detail-title {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-top:0.3em;
-    margin-bottom: 0.5em;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin:1em 0 1.2em 0;
+    letter-spacing: -0.02em;
 }
 
 .detail-text {
-    padding-top:1em;
-    line-height: 1.7; 
-    white-space: pre-wrap; /* 줄바꿈(\n) 반영 */
+    line-height: 1.8;
+    white-space: pre-wrap;
     word-break: break-all;
+    font-size: 1.1rem;
+    min-height: 200px;
 }
 
-.detail-overlay .close-btn {
+.paper-footer {
+    margin-top: 30px;
+    padding-top: 10px;
+}
+
+.detail-date {
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+/* 테마별 글자색 (가독성 확보) */
+.letter-paper.theme1 { color: #ffffff; }
+.letter-paper.theme4 { color: #4a3b3b; } /* 핑크 배경에 어울리는 진한 갈색톤 */
+.letter-paper.theme3, .letter-paper.theme2 { color: #2c3e50; }
+
+/* 스크롤바 커스텀 */
+.letter-content-wrapper::-webkit-scrollbar { width: 6px; }
+.letter-content-wrapper::-webkit-scrollbar-track { background: transparent; }
+.letter-content-wrapper::-webkit-scrollbar-thumb { 
+    background: rgba(220, 220, 220, 0.3); 
+    border-radius: 10px; 
+}
+
+/* 테마별 스크롤바 상세 분기 */
+.theme4 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(255, 240, 245, 0.4); }
+.theme4 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #e5cbea; }
+
+.theme3 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(66, 91, 115, 0.2); }
+.theme3 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #95a5a6; }
+
+.close-btn {
     position: absolute;
-    top: 0.7rem; 
-    right: 1rem;
-    font-size: 2rem;
-    
+    top: 1rem;
+    right: 0.5rem;
     background: none;
     border: none;
-    line-height: 1;
+    font-size: 3rem;
+    color: currentColor;
     cursor: pointer;
-    
-    color: #666;
-    transition: all 0.2s ease;
-    
-    padding: 5px;
+    opacity: 0.5;
+    transition: 0.2s;
+    line-height: 1;
+    z-index: 10;
+}
+
+.close-btn:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+.loading-container {
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.detail-overlay .close-btn:hover {
-    transform: rotate(90deg); 
-}
-
-/* 테마별 글자색 설정 */
-.letterbox-container .letter-paper.theme-DEFAULT { 
-    color: #ffffff; 
-}
-
-.letterbox-container .letter-paper.theme-PINK { 
-    color: #4a4a4a; 
-}
-
-.letterbox-container .letter-paper.theme-GREY { 
-    color: #2c3e50; 
-}
-
-.letterbox-container .letter-paper.theme-BLUE { 
-    color: #2a3744; 
-}
-
-.divider {
-    border: none;
-    border-top: 1px solid currentColor; /* 현재 글자색(color)을 그대로 사용 */
-    opacity: 0.3;
-}
-
-/*디자인별 스크롤바 디자인*/
-/* DEFAULT, BLUE 테마는 기존 배경 사용 */
-/* PINK 테마 (연분홍 배경) */
-.theme-PINK .letter-content-wrapper::-webkit-scrollbar-track {
-    background: #FFF0F5;
-}
-.theme-PINK .letter-content-wrapper::-webkit-scrollbar-thumb {
-    background-color: rgb(229, 203, 224);
-}
-
-.theme-PINK .letter-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #d6b7e5;
-}
-
-
-/* GREY 테마 (다크그레이 배경) */
-.theme-GREY .letter-content-wrapper::-webkit-scrollbar-track {
-    background: #425b73;
-}
-.theme-GREY .letter-content-wrapper::-webkit-scrollbar-thumb {
-    background-color: #95a5a6;
-}
-
-.theme-GREY .letter-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 220, 220, 1);
 }

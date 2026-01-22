@@ -23,10 +23,25 @@
 }
 
 /* 테마별 텍스트 */
-.letter-card.theme-DEFAULT { color: #ffffff; }
-.letter-card.theme-PINK { color: #4a4a4a; }
-.letter-card.theme-GREY { color: #4a4a4a; }
-.letter-card.theme-BLUE { color: #2c3e50; }
+/* theme1: Dark Blue (기존 DEFAULT) */
+.letter-card.theme1 { 
+    color: #ffffff; 
+}
+
+/* theme2: Light Blue */
+.letter-card.theme2 { 
+    color: #2c3e50; 
+}
+
+/* theme3: Grey */
+.letter-card.theme3 { 
+    color: #4a4a4a; 
+}
+
+/* theme4: Pink */
+.letter-card.theme4 { 
+    color: #4a4a4a; 
+}
 
 .card-top {
   display: flex;
@@ -42,16 +57,21 @@
 }
 
 .summary-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-top: 15px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 10px;
 
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+    /* 연속된 긴 문자열도 강제로 줄바꿈 */
+    word-break: break-all; 
+    overflow-wrap: anywhere;
 
-  word-break: keep-all;
+    /* 멀티라인 말줄임 처리 (2~3줄 권장) */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* 최대 3줄까지만 노출 */
+    -webkit-box-orient: vertical;
+    
+    overflow: hidden;
+    text-overflow: ellipsis; 
 }
 
 .card-bottom {

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/MailTabs.css';
 
-const MailTabs = ({ activeIndex, setActiveIndex, setPage }) => {
+const MailTabs = ({ activeIndex, setActiveIndex}) => {
     const tabs = ["받은 편지", "보낸 편지", "즐겨찾기", "우리의 우체통"];
 
     return (
@@ -21,7 +21,6 @@ const MailTabs = ({ activeIndex, setActiveIndex, setPage }) => {
                         className={`tab-item ${isActive ? 'active' : ''}`}
                         onClick={() => {
                             setActiveIndex(index);
-                            setPage(1);
                         }}
                     >
                         {tab}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/LetterDetail.css';
 
-const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
+const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsRead }) => {
     const [detailData, setDetailData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +27,11 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
 
                 if (isMounted && json.success) { // 마운트된 상태일 때만 set
                 setDetailData(json.data);
+
+                if (json.data.isRead === true){
+                    // 편지 읽음 처리 API 호출
+                    onMarkAsRead(letterId);
+                }
                 }
             } catch (err) {
                 if (isMounted) console.error("에러 발생:", err);
@@ -38,14 +43,19 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
         fetchDetail();
 
     return () => { isMounted = false; }; // 언마운트 시 false로 변경
-}, [isOpen, letterId]);
+}, [isOpen, letterId, onMarkAsRead]);
 
     if (!isOpen) return null;
+
+    // 날짜 포맷 로직 (2025-12-15T00:53:36 -> 2025.12.15)
+    const formattedDate = detailData?.sentAt 
+        ? detailData.sentAt.split("T")[0].replace(/-/g, ".") 
+        : "";
 
     return (
         <div className="detail-overlay" onClick={onClose}>
             <div 
-                className={`letter-paper theme-${themeCode}`} 
+                className={`letter-paper ${detailData?.themeCode || themeCode}`} 
                 style={{ backgroundImage: `url(${bgImage})` }} 
                 onClick={(e) => e.stopPropagation()}
             >
@@ -53,16 +63,33 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
                 
                 <div className="letter-content-wrapper">
                     {isLoading ? (
-                        <p className="loading-text">편지를 읽어오는 중...</p>
+                        <div className="loading-container">
+                            <p className="loading-text">편지를 읽어오는 중...</p>
+                        </div>
                     ) : (
-                        <>
-                            <h2 className="detail-title">상세 보기</h2>
-                            <hr className="divider" />
-                            {/* 서버에서 받아온 상세 본문 */}
-                            <p className="detail-text">
-                                {detailData?.content || "내용이 없습니다."}
-                            </p>
-                        </>
+                        <div className="paper-internal">
+                            <header className="paper-header">
+                                <div className="info-row">
+                                    <span className="info-label">From.</span>
+                                    <span className="info-value">{detailData?.senderNickname}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="info-label">To.</span>
+                                    <span className="info-value">{detailData?.receiverNickname}</span>
+                                </div>
+                            </header>
+
+                            <hr className="paper-divider" />
+                            
+                            <article className="paper-body">
+                                <h2 className="detail-title">{detailData?.title}</h2>
+                                <div className="detail-text">{detailData?.content}</div>
+                            </article>
+
+                            <footer className="paper-footer">
+                                <span className="detail-date">{formattedDate}</span>
+                            </footer>
+                        </div>
                     )}
                 </div>
             </div>
