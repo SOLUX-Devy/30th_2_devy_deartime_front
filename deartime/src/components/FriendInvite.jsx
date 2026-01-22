@@ -1,18 +1,32 @@
 import React, { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-import { mockFriendListResponse } from "../mocks/FriendList.js";
-import profileImage from "../assets/profile.jpg";
+import profileImageFallback from "../assets/profile.jpg";
+
+/**
+ * FriendInvite (전문)
+ * - Step 1: 이메일 입력
+ * - Step 2-1: 검색 결과 확인 + [친구 신청] (friendStatus: none/received)
+ * - Step 2-2: 안내 모달 (pending/accepted/검색결과없음/에러/성공메시지)
+ *
+ * ✅ API
+ * 1) GET  /api/friends/search?keyword={email}
+ * 2) POST /api/friends   body: { friendId: number }
+ *
+ * ⚠️ 프록시(vite proxy) 없으면 API_BASE에 EC2 주소를 넣어야 실제 서버로 요청됩니다.
+ */
+
+// ✅ 프록시 사용하면 "" 그대로 두기 (fetch("/api/...") 형태 유지)
+// ✅ 프록시 없으면 아래 EC2 주소 넣기
+const API_BASE =
+  "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
+// 예: "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080"
 
 export default function FriendInvite({ onClose }) {
-  // const navigate = useNavigate();
-
-  // const closeModal = () => {
-  //   navigate(-1); // 뒤로 가기 = 모달 닫기
-  // };
-
-  const [step, setStep] = useState(1); // 1: 입력, 2: 확인
-  const [inputId, setInputId] = useState("");
+  const [step, setStep] = useState(1); // 1: 입력, 2: 확인(2-1), 3: 안내(2-2)
+  const [inputEmail, setInputEmail] = useState("");
   const [foundFriend, setFoundFriend] = useState(null);
+
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -23,41 +37,153 @@ export default function FriendInvite({ onClose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const handleNext = () => {
-    const keyword = inputId.trim().toLowerCase();
+  const openStatusModal = (message) => {
+    setStatusMessage(message);
+    setStep(3);
+  };
 
-    const friend = mockFriendListResponse.data.friends.find((f) => {
-      // 숫자 ID 매칭
-      if (!isNaN(keyword) && String(f.friendId) === keyword) {
-        return true;
-      }
+  const getAccessToken = () => {
+    return localStorage.getItem("accessToken");
+  };
 
-      // 닉네임 부분 검색
-      if (f.friendNickname.toLowerCase().includes(keyword)) {
-        return true;
-      }
+  // =========================
+  // 1) 이메일 검색 (GET)
+  // =========================
+  const handleNext = async () => {
+    const keyword = inputEmail.trim().toLowerCase();
+    if (!keyword) return;
 
-      return false;
-    });
-
-    if (!friend) {
-      alert("해당 아이디를 가진 사용자를 찾을 수 없습니다.");
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      openStatusModal("로그인이 필요합니다.");
       return;
     }
 
-    setFoundFriend(friend);
-    setStep(2);
+    setIsLoading(true);
+
+    try {
+      const url = `${API_BASE}/api/friends/search?keyword=${encodeURIComponent(
+        keyword,
+      )}`;
+
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // 400(검색어 비었음 등), 401/403 등
+      if (!res.ok) {
+        let msg = "요청에 실패했습니다.";
+        try {
+          const err = await res.json();
+          msg = err?.message || msg;
+        } catch (_) {}
+        openStatusModal(msg);
+        return;
+      }
+
+      const json = await res.json();
+
+      const count = json?.data?.count ?? 0;
+      const results = json?.data?.results ?? [];
+
+      // ✅ 검색 결과 없음도 200이지만 count=0
+      if (count === 0 || results.length === 0) {
+        openStatusModal("사용자를 찾지 못했습니다.");
+        return;
+      }
+
+      const user = results[0];
+      const friendStatus = user?.friendStatus;
+
+      // ✅ friendStatus 분기
+      if (friendStatus === "pending") {
+        openStatusModal("이미 친구 신청을 보냈습니다.");
+        return;
+      }
+      if (friendStatus === "accepted") {
+        openStatusModal("이미 친구 관계입니다.");
+        return;
+      }
+
+      // ✅ none / received → 2-1 확인 모달
+      if (friendStatus === "none" || friendStatus === "received") {
+        setFoundFriend({
+          // POST 바디에 넣을 값 (스펙: friendId는 '상대방 사용자 ID')
+          friendId: user.userId,
+          friendNickname: user.nickname,
+          profileImageUrl: user.profileImageUrl,
+          friendBio: user.bio,
+          friendStatus: user.friendStatus,
+        });
+        setStep(2);
+        return;
+      }
+
+      // 혹시 모르는 값이면 안전 처리
+      openStatusModal("처리할 수 없는 상태입니다.");
+    } catch (e) {
+      openStatusModal("네트워크 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // 친구 신청 
-  const handleFriendRequest = () => {
-    console.log("친구 신청 보냄:", foundFriend);
+  // =========================
+  // 2) 친구 신청 (POST)
+  // =========================
+  const handleFriendRequest = async () => {
+    if (!foundFriend?.friendId) return;
 
-    alert(
-      `${foundFriend.friendNickname}님에게 친구 신청을 보냈습니다.`
-    );
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      openStatusModal("로그인이 필요합니다.");
+      return;
+    }
 
-    onClose();
+    setIsLoading(true);
+
+    try {
+      const url = `${API_BASE}/api/friends`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ friendId: foundFriend.friendId }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      // ✅ 성공(201 Created)
+      if (res.ok && data?.success) {
+        if (data?.data?.status === "accepted") {
+          openStatusModal("친구 요청이 자동으로 수락되었습니다!");
+        } else {
+          openStatusModal("친구 요청을 보냈습니다.");
+        }
+        return;
+      }
+
+      // ❌ 에러: 백엔드 message 우선
+      const msg =
+        data?.message ||
+        (res.status === 400
+          ? "요청을 처리할 수 없습니다."
+          : res.status === 404
+            ? "친구를 찾을 수 없습니다."
+            : "요청에 실패했습니다.");
+
+      openStatusModal(msg);
+    } catch (e) {
+      openStatusModal("네트워크 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,7 +192,13 @@ export default function FriendInvite({ onClose }) {
       <div className="friend-invite-overlay" onClick={onClose}>
         {/* 모달 */}
         <div
-          className={`friend-invite-modal ${step === 1 ? "modal-step-1" : "modal-step-2"}`}
+          className={`friend-invite-modal ${
+            step === 1
+              ? "modal-step-1"
+              : step === 2
+                ? "modal-step-2"
+                : "modal-step-1"
+          }`}
           onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
         >
           <button className="friend-invite-close" onClick={onClose}>
@@ -75,47 +207,46 @@ export default function FriendInvite({ onClose }) {
 
           <h3 className="friend-invite-title">친구 신청</h3>
 
+          {/* ================= 1단계 ================= */}
           {step === 1 && (
             <div className="friend-invite-body column">
               <input
                 className="friend-invite-input"
-                placeholder="아이디를 입력해주세요."
-                value={inputId}
-                onChange={(e) => setInputId(e.target.value)}
+                placeholder="이메일을 입력해주세요."
+                value={inputEmail}
+                onChange={(e) => setInputEmail(e.target.value)}
               />
 
               <div className="friend-invite-footer">
-              <button
-                className="friend-invite-next"
-                disabled={!inputId.trim()}
-                onClick={handleNext}
-              >
-                다음
-              </button>
+                <button
+                  className="friend-invite-next"
+                  disabled={!inputEmail.trim() || isLoading}
+                  onClick={handleNext}
+                >
+                  {isLoading ? "조회중" : "다음"}
+                </button>
+              </div>
             </div>
-          </div>
           )}
 
-          {/* ================= 2단계 ================= */}
+          {/* ================= 2-1단계 (기존 확인 화면) ================= */}
           {step === 2 && foundFriend && (
             <div className="friend-invite-body column">
               <div className="friend-preview">
                 <img
-                  src={profileImage}
+                  src={foundFriend.profileImageUrl || profileImageFallback}
                   alt="profile"
                 />
                 <div>
-                    <div className="friend-info-container">
-                  <label className="friend-label">아이디</label>
-                  <div className="friend-id">
-                    {foundFriend.friendId}
-                  </div>
+                  <div className="friend-info-container">
+                    <label className="friend-label">아이디</label>
+                    <div className="friend-id">{foundFriend.friendId}</div>
 
-                  <label className="friend-label">닉네임</label>
-                  <div className="friend-nickname">
-                    {foundFriend.friendNickname}
+                    <label className="friend-label">닉네임</label>
+                    <div className="friend-nickname">
+                      {foundFriend.friendNickname}
+                    </div>
                   </div>
-                </div>
                 </div>
               </div>
 
@@ -129,8 +260,31 @@ export default function FriendInvite({ onClose }) {
                 <button
                   className="friend-invite-submit"
                   onClick={handleFriendRequest}
+                  disabled={isLoading}
                 >
-                  친구 신청
+                  {isLoading ? "처리중" : "친구 신청"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================= 2-2단계 (상태 안내 모달) ================= */}
+          {step === 3 && (
+            <div className="friend-invite-body column">
+              <div className="friend-status-box">{statusMessage}</div>
+
+              <div className="friend-invite-actions">
+                <button
+                  className="friend-invite-submit"
+                  onClick={() => {
+                    setStep(1);
+                    setStatusMessage("");
+                    setFoundFriend(null);
+                    // inputEmail은 유지할지/지울지 선택
+                    // setInputEmail("");
+                  }}
+                >
+                  확인
                 </button>
               </div>
             </div>
@@ -206,18 +360,6 @@ export default function FriendInvite({ onClose }) {
           justify-content: center;
         }
 
-        .friend-invite-placeholder {
-          width: 100%;
-          height: 100%;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 15px;
-        }
-
         .friend-invite-input {
           width: 360px;
           height: 40px;
@@ -283,7 +425,6 @@ export default function FriendInvite({ onClose }) {
           align-items: center; 
         }
 
-
         .friend-preview img{
           display: flex;
           justify-content: center;
@@ -296,6 +437,7 @@ export default function FriendInvite({ onClose }) {
           align-items: center;
           justify-content: center;
           overflow: hidden;
+          object-fit: cover;
         }
 
         .friend-info-container {
@@ -359,6 +501,24 @@ export default function FriendInvite({ onClose }) {
 
         .friend-invite-submit:active { 
           background-color: #0E77BC;
+        }
+
+        .friend-invite-submit:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        /* 2-2 안내 모달 메시지 박스 */
+        .friend-status-box {
+          width: 100%;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(42, 66, 128, 0.8);
+          padding: 18px 14px;
+          text-align: center;
+          font-family: "Josefin Slab";
+          font-size: 14px;
+          color: rgba(255,255,255,0.9);
         }
       `}</style>
     </>
