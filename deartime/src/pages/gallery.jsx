@@ -11,18 +11,13 @@ const Gallery = () => {
   const location = useLocation();
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
-
-  const BASE_URL = "https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/photos";
   
   const ensureHttps = (url) => {
     if (!url) return url;
     return url.replace(/^http:\/\//i, 'https://');
   };
 
-<<<<<<< HEAD
   const BASE_URL = "https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
-=======
->>>>>>> 5550505d6061bf551dd5c9bec4af00e20cafe168
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`
   });
