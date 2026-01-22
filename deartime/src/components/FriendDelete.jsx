@@ -1,5 +1,5 @@
 // ==========================
-// FriendDelete.jsx (전문: DELETE 연동 포함 - 선택2)
+// FriendDelete.jsx (완성본: DELETE 연동 + 스타일 포함, Mixed Content 해결)
 // ==========================
 import React, { useEffect, useState } from "react";
 
@@ -27,7 +27,8 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
         return;
       }
 
-      const res = await fetch(`${apiBase}/api/friends/${friendId}`, {
+      // ✅ 핵심: 절대주소(http://ec2...) 금지 → /api 로만 요청 (Vercel rewrites 타게)
+      const res = await fetch(`/api/friends/${friendId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${accessToken}`,
