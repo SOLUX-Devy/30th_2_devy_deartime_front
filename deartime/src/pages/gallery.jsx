@@ -1,292 +1,232 @@
 import { useNavigate, useLocation } from "react-router-dom"; 
 import '../styles/gallery.css';
-import React, { useMemo, useState, useRef, useEffect } from "react";
-import { Pen, Trash2, MoreVertical } from "lucide-react"; 
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { Pen, Trash2, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
+import axios from "axios";
 
 const Gallery = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef(null);
-  const longPressTimerRef = useRef(null);
-  const isLongPressActive = useRef(false);
+  const scrollObserverRef = useRef(null); // 무한 스크롤 관찰용 Ref
+
+  const BASE_URL = "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
+  const getAuthHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+  });
 
   const tabs = ["RECORD", "ALBUM"];
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
-  const [photos, setPhotos] = useState([
-    { id: 1, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '너무 즐거웠다!', isFavorite: false },
-    { id: 2, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '그냥 웃음이 끊이지 않았던 날', isFavorite: true },
-    { id: 3, url: 'https://via.placeholder.com/150', date: '2025.01.01', title: '하이디라오 먹고 싶다~', isFavorite: false },
-  ]);
+  /* 데이터 및 페이지네이션 상태 관리 */
+  const [photos, setPhotos] = useState([]);
+  const [photoPage, setPhotoPage] = useState(0); // 사진 현재 페이지
+  const [hasMorePhotos, setHasMorePhotos] = useState(true); // 더 불러올 사진 있는지 여부
+  
+  const [albums, setAlbums] = useState([]);
+  const [albumPage, setAlbumPage] = useState(1); // 앨범 현재 페이지 (1부터 시작)
+  const ALBUMS_PER_PAGE = 6; // 한 페이지당 보여줄 앨범 수
 
-  const [albums, setAlbums] = useState([
-    { id: 101, title: '즐겨찾기', count: 9, coverUrl: 'https://via.placeholder.com/300', isFavorite: true },
-    { id: 102, title: '우리 가족', count: 1234, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
-    { id: 103, title: '강쥐', count: 2894, coverUrl: 'https://via.placeholder.com/300', isFavorite: false },
-  ]);
-
+  const [loading, setLoading] = useState(false);
   const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, type: null, isCentered: false }); 
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  /* 사진 데이터를 백엔드에서 불러오는 함수 (무한 스크롤용) */
+  const fetchPhotos = useCallback(async (page) => {
+    if (loading || !hasMorePhotos) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/photos`, {
+        headers: getAuthHeader(),
+        params: { sort: "takenAt,desc", page: page, size: 20 }
+      });
+      
+      const newPhotos = res.data.data || [];
+      if (newPhotos.length < 20) setHasMorePhotos(false);
+      
+      setPhotos(prev => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
+    } catch (err) {
+      console.error("사진 로드 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, hasMorePhotos]);
+
+  /* 앨범 데이터를 백엔드에서 불러오는 함수 */
+  const fetchAlbums = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/albums`, {
+        headers: getAuthHeader()
+      });
+      setAlbums(res.data.data || []);
+    } catch (err) {
+      console.error("앨범 로드 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* 탭 변경 시 데이터 초기화 및 첫 로드 */
   useEffect(() => {
-    const handleClick = () => setMenu(prev => ({ ...prev, show: false }));
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, []);
-
-  const startPress = (e, id, type) => {
-    if (e.type === 'mousedown' && e.button !== 0) return;
-    const currentTarget = e.currentTarget;
-
-    isLongPressActive.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      const rect = currentTarget.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      setMenu({ show: true, x, y, targetId: id, type, isCentered: true });
-      isLongPressActive.current = true;
-      if (navigator.vibrate) navigator.vibrate(50);
-    }, 500); 
-  };
-
-  const cancelPress = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
+    if (activeIndex === 0) {
+      setPhotos([]);
+      setPhotoPage(0);
+      setHasMorePhotos(true);
+      fetchPhotos(0);
+    } else {
+      fetchAlbums();
     }
-  };
+  }, [activeIndex]);
 
-  const handleItemClick = (e, album = null) => {
-    if (isLongPressActive.current) {
-      e.stopPropagation();
-      isLongPressActive.current = false;
-      return;
-    }
-    if (album) handleAlbumClick(album);
-  };
+  /* 사진 탭 전용: 무한 스크롤 관찰자 설정 */
+  useEffect(() => {
+    if (activeIndex !== 0 || !hasMorePhotos) return;
 
-  const handleAlbumClick = (album) => {
-    if (editingId) return;
-    navigate(`/album/${album.id}`, { state: { album } });
-  };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          setPhotoPage(prev => {
+            const nextPage = prev + 1;
+            fetchPhotos(nextPage);
+            return nextPage;
+          });
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-  const handleFileUpload = (e) => {
+    if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
+    return () => observer.disconnect();
+  }, [activeIndex, hasMorePhotos, loading, fetchPhotos]);
+
+  /* 앨범 탭 전용: 현재 페이지에 해당하는 앨범 계산 */
+  const currentAlbums = useMemo(() => {
+    const startIndex = (albumPage - 1) * ALBUMS_PER_PAGE;
+    return albums.slice(startIndex, startIndex + ALBUMS_PER_PAGE);
+  }, [albums, albumPage]);
+
+  const totalAlbumPages = Math.ceil(albums.length / ALBUMS_PER_PAGE);
+
+  /* 사진 업로드/수정/삭제 핸들러 (기존 로직 유지) */
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
-      const newPhoto = { 
-        id: Date.now(), 
-        url: imageUrl, 
-        date: today, 
-        title: file.name.split('.')[0], 
-        isFavorite: false 
-      };
-      setPhotos([newPhoto, ...photos]);
-      e.target.value = '';
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        await axios.post(`${BASE_URL}/api/photos`, formData, {
+          headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
+        });
+        setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0);
+      } catch (err) { alert("업로드 실패"); }
     }
   };
 
-  const togglePhotoFavorite = (e, photoId) => {
-    e.stopPropagation(); 
-    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p));
-  };
-
-  const toggleAlbumFavorite = (e, albumId) => {
-    e.stopPropagation(); 
-    setAlbums(prev => prev.map(album => album.id === albumId ? { ...album, isFavorite: !album.isFavorite } : album));
-  };
-
-  const handleContextMenu = (e, id, type) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    setMenu({ show: true, x, y, targetId: id, type: type, isCentered: true });
-    isLongPressActive.current = true;
-  };
-
-  const handleAlbumMenuClick = (e, albumId) => {
-    e.stopPropagation(); 
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenu({ show: true, x: rect.left - 160, y: rect.bottom + 10, targetId: albumId, type: 'album', isCentered: false });
-  };
-
-  const handleDelete = () => {
-    if (menu.type === 'photo') setPhotos(prev => prev.filter(p => p.id !== menu.targetId));
-    else setAlbums(prev => prev.filter(a => a.id !== menu.targetId));
+  const handleDelete = async () => {
+    try {
+      const endpoint = menu.type === 'photo' ? `/api/photos/${menu.targetId}` : `/api/albums/${menu.targetId}`;
+      await axios.delete(`${BASE_URL}${endpoint}`, { headers: getAuthHeader() });
+      activeIndex === 0 ? (setPhotos([]), setPhotoPage(0), fetchPhotos(0)) : fetchAlbums();
+    } catch (err) { alert("삭제 실패"); }
     setMenu(prev => ({ ...prev, show: false }));
   };
 
-  const handleEditStart = (e) => {
-    e.stopPropagation();
-    setEditingId(menu.targetId);
-    setMenu(prev => ({ ...prev, show: false }));
-  };
-
-  const handleEditComplete = (e, id) => {
+  const handleEditComplete = async (e, id) => {
     if (e.key === 'Enter') {
-      const newTitle = e.target.value;
-      if (activeIndex === 0) setPhotos(prev => prev.map(p => p.id === id ? { ...p, title: newTitle } : p));
-      else setAlbums(prev => prev.map(a => a.id === id ? { ...a, title: newTitle } : a));
+      try {
+        if (activeIndex === 0) await axios.post(`${BASE_URL}/api/photos/${id}/caption`, { caption: e.target.value }, { headers: getAuthHeader() });
+        else await axios.post(`${BASE_URL}/api/albums/${id}/title`, { title: e.target.value }, { headers: getAuthHeader() });
+        activeIndex === 0 ? (setPhotos([]), setPhotoPage(0), fetchPhotos(0)) : fetchAlbums();
+      } catch (err) { alert("수정 실패"); }
       setEditingId(null);
     } else if (e.key === 'Escape') setEditingId(null);
   };
 
+  /* 날짜별 사진 그룹화 가공 */
   const groupedPhotos = useMemo(() => {
     return photos.reduce((acc, photo) => {
-      const date = photo.date;
+      const date = photo.uploadedAt?.split('T')[0] || "Unknown";
       if (!acc[date]) acc[date] = [];
       acc[date].push(photo);
       return acc;
     }, {});
   }, [photos]);
-  
-  const sortedAlbums = useMemo(() => {
-    return [...albums].sort((a, b) => {
-      if (a.isFavorite === b.isFavorite) return 0;
-      return a.isFavorite ? -1 : 1;
-    });
-  }, [albums]);
 
   return (
     <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
-      
-      <AlbumCreateModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onCreate={(data) => setAlbums([{id: Date.now(), ...data, count: 0, isFavorite: false}, ...albums])} 
-      />
-
+      <AlbumCreateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={fetchAlbums} />
       <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileUpload} />
 
-      {(menu.show || editingId !== null) && <div className="context-menu-overlay" />}
-
-      {menu.show && (
-        <div className={`custom-context-menu ${menu.isCentered ? 'centered' : ''}`} style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
-          <div className="menu-item" onClick={handleEditStart}>
-            <Pen size={15} color="white" />
-            <span>{menu.type === 'photo' ? '텍스트 수정' : '이름 수정'}</span>
-          </div>  
-          <div className="menu-divider" />
-          <div className="menu-item delete" onClick={handleDelete}>
-            <Trash2 size={15} color="#FF4D4D" />
-            <span>삭제</span>
-          </div>
-        </div>
-      )}
-
+      {/* 탭 네비게이션 */}
       <div className="tc-topbar">
         <div className="gallery-topnav">
-          {tabs.map((tab, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <span
-                key={tab}
-                onClick={() => setActiveIndex(index)}
-                className={`gallery-tab ${isActive ? 'active' : ''}`}
-              >
-                {tab}
-                <span className="gallery-tab-underline" />
-              </span>
-            );
-          })}
+          {tabs.map((tab, index) => (
+            <span key={tab} onClick={() => setActiveIndex(index)} className={`gallery-tab ${index === activeIndex ? 'active' : ''}`}>
+              {tab}<span className="gallery-tab-underline" />
+            </span>
+          ))}
         </div>
-
         <div className="tc-topbar-right">
-          <button
-            type="button"
-            className="tc-create-btn"
-            onClick={() => activeIndex === 0 ? fileInputRef.current.click() : setIsModalOpen(true)}
-          >
+          <button className="tc-create-btn" onClick={() => activeIndex === 0 ? fileInputRef.current.click() : setIsModalOpen(true)}>
             {activeIndex === 0 ? '업로드' : '생성'}
           </button>
         </div>
       </div>
 
+      {/* 메인 컨텐츠 영역 */}
       <div className="gallery-content-wrapper">
         {activeIndex === 0 ? (
-          Object.keys(groupedPhotos).map((date) => (
-            <section key={date} className="date-group">
-              <h2 className="date-title">{date}</h2>
-              <div className="photo-grid">
-                {groupedPhotos[date].map((photo) => {
-                  const isSpotlight = (menu.show && menu.targetId === photo.id) || (editingId === photo.id);
-                  return (
-                    <div 
-                      key={photo.id} 
-                      className={`photo-item ${isSpotlight ? 'spotlight' : ''}`} 
-                      onContextMenu={(e) => handleContextMenu(e, photo.id, 'photo')}
-                      onMouseDown={(e) => startPress(e, photo.id, 'photo')}
-                      onMouseUp={cancelPress}
-                      onMouseLeave={cancelPress}
-                      onTouchStart={(e) => startPress(e, photo.id, 'photo')}
-                      onTouchEnd={cancelPress}
-                      onClick={(e) => handleItemClick(e)} 
-                    >
-                      <div className="img-box">
-                        <img src={photo.url} alt="" />
-                        <button 
-                          className={`fav-star-btn photo-star ${photo.isFavorite ? 'active' : ''}`} 
-                          onClick={(e) => togglePhotoFavorite(e, photo.id)}
-                        />
-                      </div>
-                      {editingId === photo.id ? (
-                        <input className="edit-title-input" defaultValue={photo.title} autoFocus onFocus={(e) => e.target.select()} onKeyDown={(e) => handleEditComplete(e, photo.id)} onBlur={() => setEditingId(null)} />
+          <>
+            {Object.keys(groupedPhotos).map((date) => (
+              <section key={date} className="date-group">
+                <h2 className="date-title">{date}</h2>
+                <div className="photo-grid">
+                  {groupedPhotos[date].map((photo) => (
+                    <div key={photo.photoId} className="photo-item">
+                      <div className="img-box"><img src={photo.imageUrl} alt="" /></div>
+                      {editingId === photo.photoId ? (
+                        <input className="edit-title-input" defaultValue={photo.caption} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.photoId)} onBlur={() => setEditingId(null)} />
                       ) : (
-                        <p className="photo-title">{photo.title}</p>
+                        <p className="photo-title">{photo.caption}</p>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))
+                  ))}
+                </div>
+              </section>
+            ))}
+            {/* 무한 스크롤 트리거 */}
+            <div ref={scrollObserverRef} className="scroll-observer" style={{ height: '20px' }} />
+          </>
         ) : (
           <div className="album-section">
             <div className="album-grid">
-              {sortedAlbums.map((album) => {
-                const isSpotlight = (menu.show && menu.targetId === album.id) || (editingId === album.id);
-                return (
-                  <div 
-                    key={album.id} 
-                    className={`album-item ${isSpotlight ? 'spotlight' : ''}`}
-                    onClick={(e) => handleItemClick(e, album)}
-                    onContextMenu={(e) => handleContextMenu(e, album.id, 'album')}
-                    onMouseDown={(e) => startPress(e, album.id, 'album')}
-                    onMouseUp={cancelPress}
-                    onMouseLeave={cancelPress}
-                    onTouchStart={(e) => startPress(e, album.id, 'album')}
-                    onTouchEnd={cancelPress}
-                    style={{ cursor: editingId === album.id ? 'default' : 'pointer' }}
-                  >
-                    <div className="album-img-box">
-                      <img src={album.coverUrl} alt="" />
-                      <button 
-                        className={`fav-star-btn ${album.isFavorite ? 'active' : ''}`} 
-                        onClick={(e) => toggleAlbumFavorite(e, album.id)}
-                      />
-                    </div>
-                    <div className="album-info">
-                      <div className="album-info-top">
-                        {editingId === album.id ? (
-                          <input className="edit-title-input" defaultValue={album.title} autoFocus onFocus={(e) => e.target.select()} onKeyDown={(e) => handleEditComplete(e, album.id)} onBlur={() => setEditingId(null)} onClick={(e) => e.stopPropagation()} />
-                        ) : (
-                          <h3>{album.title}</h3>
-                        )}
-                        <button className="album-menu-trigger" onClick={(e) => handleAlbumMenuClick(e, album.id)}>
-                          <MoreVertical size={24} color="white" />
-                        </button>
-                      </div>
-                      <p>항목 {album.count.toLocaleString()} 개</p>
-                    </div>
+              {currentAlbums.map((album) => (
+                <div key={album.albumId} className="album-item" onClick={() => navigate(`/album/${album.albumId}`, { state: { album } })}>
+                  <div className="album-img-box"><img src={album.coverImageUrl} alt="" /></div>
+                  <div className="album-info">
+                    <h3>{album.title}</h3>
+                    <p>항목 {album.photoCount || 0}개</p>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
+            
+            {/* 앨범 전용 페이지네이션 UI */}
+            {totalAlbumPages > 1 && (
+              <div className="album-pagination">
+                <button onClick={() => setAlbumPage(p => Math.max(1, p - 1))} disabled={albumPage === 1}><ChevronLeft size={20}/></button>
+                {[...Array(totalAlbumPages)].map((_, i) => (
+                  <span key={i} className={`page-num ${albumPage === i + 1 ? 'active' : ''}`} onClick={() => setAlbumPage(i + 1)}>
+                    {i + 1}p
+                  </span>
+                ))}
+                <button onClick={() => setAlbumPage(p => Math.min(totalAlbumPages, p + 1))} disabled={albumPage === totalAlbumPages}><ChevronRight size={20}/></button>
+              </div>
+            )}
           </div>
         )}
       </div>
