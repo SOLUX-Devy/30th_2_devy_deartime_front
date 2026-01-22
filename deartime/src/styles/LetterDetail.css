@@ -68,6 +68,8 @@
 }
 
 .info-row {
+    display: flex;
+    align-items: center;
     font-size: 1rem;
     margin-bottom: 6px;
     display: flex;
