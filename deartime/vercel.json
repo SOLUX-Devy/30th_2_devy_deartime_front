@@ -5,6 +5,10 @@
       "destination": "https://api.deartime.kr/api/:path*"
     },
     {
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
