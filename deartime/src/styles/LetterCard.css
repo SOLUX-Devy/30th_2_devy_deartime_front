@@ -57,16 +57,21 @@
 }
 
 .summary-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-top: 15px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 10px;
 
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+    /* 연속된 긴 문자열도 강제로 줄바꿈 */
+    word-break: break-all; 
+    overflow-wrap: anywhere;
 
-  word-break: keep-all;
+    /* 멀티라인 말줄임 처리 (2~3줄 권장) */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* 최대 3줄까지만 노출 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis; 
 }
 
 .card-bottom {
