@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import DearTimeMini from "../assets/logo.svg";
+import DearTimeMini from "../assets/logo.svg?url";
 import { useState, useEffect, useRef, useContext } from "react";
-import NotiIcon from "../assets/noti_bell.svg";
-import ArrowDown from "../assets/arrow_down.svg";
+import NotiIcon from "../assets/noti_bell.svg?url";
+import ArrowDown from "../assets/arrow_down.svg?url";
 import DefaultProfile from "../assets/profile.jpg";
 import "../styles/header.css";
 
@@ -146,7 +146,6 @@ export default function Header() {
                   ) : (
                     <ul className="noti-list">
                       {notifications.map((noti) => {
-                        console.log("noti.type =", noti.type, "icon =", getNotiIcon(noti.type));
                         const { title, body } = splitNotiContent(noti.content);
                         return (
                           <li 

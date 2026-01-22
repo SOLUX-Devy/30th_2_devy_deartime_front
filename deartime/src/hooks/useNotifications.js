@@ -7,8 +7,8 @@ import {
 } from "../api/notification";
 import "../styles/header.css";
 import friendIcon from "../assets/default_profile.png"; 
-import letterIcon from "../assets/letter.svg";
-import capsuleIcon from "../assets/timecapsule.svg";
+import letterIcon from "../assets/letter.svg?url";
+import capsuleIcon from "../assets/timecapsule.svg?url";
 
 export function useNotifications({ navigate, userId }) { // userId 추가
   const [notifications, setNotifications] = useState([]);
