@@ -15,14 +15,15 @@ const Login = () => {
   }, [navigate]);
 
   const handleGoogleLogin = () => {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL;
-      // 현재 브라우저의 도메인을 기준으로 콜백 주소 생성
-      // 로컬이면 http://localhost:5173/oauth/callback
-      // 배포면 https://...vercel.app/oauth/callback 이 됨
-      const redirectUri = `${window.location.origin}/oauth/callback`;
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    const frontBaseUrl = import.meta.env.VITE_FRONT_BASE_URL;
 
-      window.location.href = `${baseUrl}/api/auth/google?redirect_uri=${redirectUri}`;
+    const redirectUri = `${frontBaseUrl}/oauth/callback`;
+
+    window.location.href =
+      `${apiBaseUrl}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
+
 
   return (
     <div className="landing-container">
