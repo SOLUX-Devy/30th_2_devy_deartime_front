@@ -75,13 +75,13 @@
 }
 
 .info-label { 
-    font-weight: 600; 
     opacity: 0.8; 
     margin:0;
     font-size: 0.8em;
 }
 
-.info-value { font-weight: 400; } 
+/*.info-value { 
+} */
 
 .paper-divider {
     border: none;
@@ -122,9 +122,9 @@
 }
 
 /* 테마별 글자색 (가독성 확보) */
-.letter-paper.theme1, .letter-paper.theme2 { color: #ffffff; }
+.letter-paper.theme1 { color: #ffffff; }
 .letter-paper.theme4 { color: #4a3b3b; } /* 핑크 배경에 어울리는 진한 갈색톤 */
-.letter-paper.theme3 { color: #2c3e50; }
+.letter-paper.theme3, .letter-paper.theme2 { color: #2c3e50; }
 
 /* 스크롤바 커스텀 */
 .letter-content-wrapper::-webkit-scrollbar { width: 6px; }
