@@ -220,11 +220,6 @@ const handleConfirmDelete = async () => {
   const handleLetterClick = (letter) => {
     // 상세 모달을 열기 위해 선택된 편지 정보를 저장합니다.
     setSelectedLetter(letter); 
-    
-    // 만약 리스트의 읽음 상태를 즉시 반영하고 싶다면 여기서 호출합니다.
-    if (!letter.isRead) {
-      handleMarkAsRead(letter.letterId);
-    }
   };
 
   // =========================
