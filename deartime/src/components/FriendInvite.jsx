@@ -180,9 +180,11 @@ export default function FriendInvite({ onClose }) {
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          <button className="friend-invite-close" onClick={onClose}>
-            ×
-          </button>
+          {step !== 3 && (
+            <button className="friend-invite-close" onClick={onClose}>
+              ×
+            </button>
+          )}
 
           <h3 className="friend-invite-title">친구 신청</h3>
 
