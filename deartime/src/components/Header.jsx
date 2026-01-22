@@ -40,7 +40,7 @@ export default function Header() {
     formatTime,
     getNotiIcon,
     splitNotiContent,
-  } = useNotifications({ navigate, userId: user?.email });
+  } = useNotifications({ navigate, userId: user?.id });
 
   // 회원가입 일수 계산
   const storedJoinDate = user?.joinDate || localStorage.getItem("joinDate");
