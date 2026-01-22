@@ -18,11 +18,12 @@ import bgLightPink from "../assets/bg-light-pink.png";
 import bgLightGrey from "../assets/bg-light-grey.png";
 import bgLightBlue from "../assets/bg-light-blue.png";
 
+// 테마 코드에 따른 배경 이미지 매핑
 const THEME_IMAGES = {
     theme1: bgDarkBlue,
-    theme2: bgLightPink,
+    theme2: bgLightBlue,
     theme3: bgLightGrey,
-    theme4: bgLightBlue,
+    theme4: bgLightPink,
   };
 
 export default function Letterbox() {
@@ -515,6 +516,7 @@ const handleConfirmDelete = async () => {
                 letterId={selectedLetter.letterId}
                 themeCode={selectedLetter.themeCode}
                 bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.theme1}
+                onMarkAsRead={handleMarkAsRead}
               />
             )}
 
