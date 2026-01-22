@@ -16,10 +16,6 @@ import profileImageFallback from "../assets/profile.jpg";
 
 // ✅ 프록시 사용하면 "" 그대로 두기 (fetch("/api/...") 형태 유지)
 // ✅ 프록시 없으면 아래 EC2 주소 넣기
-const API_BASE =
-  "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
-// 예: "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080"
-
 export default function FriendInvite({ onClose }) {
   const [step, setStep] = useState(1); // 1: 입력, 2: 확인(2-1), 3: 안내(2-2)
   const [inputEmail, setInputEmail] = useState("");
@@ -61,10 +57,8 @@ export default function FriendInvite({ onClose }) {
 
     setIsLoading(true);
 
-    try {
-      const url = `${API_BASE}/api/friends/search?keyword=${encodeURIComponent(
-        keyword,
-      )}`;
+    try {const url = `/api/friends/search?keyword=${encodeURIComponent(keyword)}`;
+
 
       const res = await fetch(url, {
         method: "GET",
@@ -146,7 +140,7 @@ export default function FriendInvite({ onClose }) {
     setIsLoading(true);
 
     try {
-      const url = `${API_BASE}/api/friends`;
+      const url = `/api/friends`;
 
       const res = await fetch(url, {
         method: "POST",

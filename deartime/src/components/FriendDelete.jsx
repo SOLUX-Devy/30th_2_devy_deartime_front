@@ -3,7 +3,7 @@
 // ==========================
 import React, { useEffect, useState } from "react";
 
-export default function FriendDelete({ friendId, apiBase, onSuccess, onCancel }) {
+export default function FriendDelete({ friendId, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);
 
   // ESC로 닫기
@@ -59,10 +59,18 @@ export default function FriendDelete({ friendId, apiBase, onSuccess, onCancel })
           <p className="confirm-desc">친구를 삭제하면 되돌릴 수 없습니다.</p>
 
           <div className="confirm-actions">
-            <button className="confirm-cancel" onClick={onCancel} disabled={isLoading}>
+            <button
+              className="confirm-cancel"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
               취소
             </button>
-            <button className="confirm-delete" onClick={handleDelete} disabled={isLoading}>
+            <button
+              className="confirm-delete"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
               {isLoading ? "삭제중" : "삭제"}
             </button>
           </div>
