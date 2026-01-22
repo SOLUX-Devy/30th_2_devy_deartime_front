@@ -318,6 +318,9 @@ export default function FriendInvite({ onClose }) {
             padding-top: 10px;
         }
 
+        .modal-step-1.step-3 .friend-invite-close {
+          display: none;
+        }
         .friend-invite-close {
           position: absolute;
           top: 8px;
