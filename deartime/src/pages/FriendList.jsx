@@ -1,5 +1,5 @@
 // ==========================
-// FriendList.jsx (전문: GET 연동 + 삭제는 FriendDelete.jsx에서 처리하는 버전)
+// FriendList.jsx (GET 연동 + 삭제는 FriendDelete.jsx에서 처리)
 // ==========================
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -11,14 +11,6 @@ import "../styles/FriendList.css";
 import FriendCard from "../components/FriendCard";
 import FriendInvite from "../components/FriendInvite";
 import FriendDelete from "../components/FriendDelete.jsx";
-
-// ✅ 백엔드 주소 (proxy 안 쓰는 경우)
-const res = await fetch(`/api/friends`, {
-  method: "GET",
-  headers: {
-    Authorization: `Bearer ${accessToken}`,
-  },
-});
 
 export default function FriendList() {
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -50,7 +42,8 @@ export default function FriendList() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/api/friends`, {
+      // ✅ 핵심: 절대주소 금지 → /api 로만 요청 (Vercel rewrites 타게)
+      const res = await fetch(`/api/friends`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -64,7 +57,6 @@ export default function FriendList() {
         return;
       }
 
-      // ✅ 실데이터로 세팅
       setFriendsData(data?.data?.friends ?? []);
     } catch (e) {
       alert("네트워크 오류가 발생했습니다.");
@@ -82,12 +74,10 @@ export default function FriendList() {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
     return friendsData.filter((f) =>
-      (f.friendNickname || "").toLowerCase().includes(k),
+      (f.friendNickname || "").toLowerCase().includes(k)
     );
   }, [friendsData, keyword]);
 
-  // ✅ count 필드는 백엔드가 주지만, 화면 표시엔 굳이 안 써도 됨
-  // (친구 목록 배열 길이가 실제 렌더링과 일치해서 더 안전)
   const countText = `${friendsData.length}명의 친구`;
 
   // =========================
@@ -259,7 +249,6 @@ export default function FriendList() {
         <FriendInvite onClose={() => setShowInviteModal(false)} />
       )}
 
-      {/* ✅ 삭제 API 호출은 FriendDelete.jsx 내부에서 수행 */}
       {showDeleteConfirm && (
         <FriendDelete
           friendId={deleteTargetId}
@@ -269,7 +258,7 @@ export default function FriendList() {
           }}
           onSuccess={(deletedId) => {
             setFriendsData((prev) =>
-              prev.filter((f) => f.friendId !== deletedId),
+              prev.filter((f) => f.friendId !== deletedId)
             );
             setShowDeleteConfirm(false);
             setDeleteTargetId(null);

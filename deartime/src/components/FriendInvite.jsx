@@ -57,8 +57,8 @@ export default function FriendInvite({ onClose }) {
 
     setIsLoading(true);
 
-    try {const url = `/api/friends/search?keyword=${encodeURIComponent(keyword)}`;
-
+    try {
+      const url = `/api/friends/search?keyword=${encodeURIComponent(keyword)}`;
 
       const res = await fetch(url, {
         method: "GET",
