@@ -28,9 +28,9 @@
     color: #ffffff; 
 }
 
-/* theme2: Pink */
+/* theme2: Light Blue */
 .letter-card.theme2 { 
-    color: #4a4a4a; 
+    color: #2c3e50; 
 }
 
 /* theme3: Grey */
@@ -38,9 +38,9 @@
     color: #4a4a4a; 
 }
 
-/* theme4: Blue */
+/* theme4: Pink */
 .letter-card.theme4 { 
-    color: #2c3e50; 
+    color: #4a4a4a; 
 }
 
 .card-top {

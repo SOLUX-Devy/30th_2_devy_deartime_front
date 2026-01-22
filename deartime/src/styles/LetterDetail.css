@@ -122,11 +122,11 @@
 }
 
 /* 테마별 글자색 (가독성 확보) */
-.letter-paper.theme1, .letter-paper.theme4 { color: #ffffff; }
-.letter-paper.theme2 { color: #4a3b3b; } /* 핑크 배경에 어울리는 진한 갈색톤 */
+.letter-paper.theme1, .letter-paper.theme2 { color: #ffffff; }
+.letter-paper.theme4 { color: #4a3b3b; } /* 핑크 배경에 어울리는 진한 갈색톤 */
 .letter-paper.theme3 { color: #2c3e50; }
 
-/* 스크롤바 커스텀 (제공해주신 코드 최적화) */
+/* 스크롤바 커스텀 */
 .letter-content-wrapper::-webkit-scrollbar { width: 6px; }
 .letter-content-wrapper::-webkit-scrollbar-track { background: transparent; }
 .letter-content-wrapper::-webkit-scrollbar-thumb { 
@@ -135,19 +135,19 @@
 }
 
 /* 테마별 스크롤바 상세 분기 */
-.theme2 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(255, 240, 245, 0.4); }
-.theme2 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #e5cbea; }
+.theme4 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(255, 240, 245, 0.4); }
+.theme4 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #e5cbea; }
 
 .theme3 .letter-content-wrapper::-webkit-scrollbar-track { background: rgba(66, 91, 115, 0.2); }
 .theme3 .letter-content-wrapper::-webkit-scrollbar-thumb { background: #95a5a6; }
 
 .close-btn {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
+    top: 1rem;
+    right: 1rem;
     background: none;
     border: none;
-    font-size: 2.2rem;
+    font-size: 3rem;
     color: currentColor;
     cursor: pointer;
     opacity: 0.5;
