@@ -10,12 +10,8 @@ import profileImageFallback from "../assets/profile.jpg";
  * ✅ API
  * 1) GET  /api/friends/search?keyword={email}
  * 2) POST /api/friends   body: { friendId: number }
- *
- * ⚠️ 프록시(vite proxy) 없으면 API_BASE에 EC2 주소를 넣어야 실제 서버로 요청됩니다.
  */
 
-// ✅ 프록시 사용하면 "" 그대로 두기 (fetch("/api/...") 형태 유지)
-// ✅ 프록시 없으면 아래 EC2 주소 넣기
 export default function FriendInvite({ onClose }) {
   const [step, setStep] = useState(1); // 1: 입력, 2: 확인(2-1), 3: 안내(2-2)
   const [inputEmail, setInputEmail] = useState("");
@@ -38,9 +34,7 @@ export default function FriendInvite({ onClose }) {
     setStep(3);
   };
 
-  const getAccessToken = () => {
-    return localStorage.getItem("accessToken");
-  };
+  const getAccessToken = () => localStorage.getItem("accessToken");
 
   // =========================
   // 1) 이메일 검색 (GET)
@@ -67,7 +61,6 @@ export default function FriendInvite({ onClose }) {
         },
       });
 
-      // 400(검색어 비었음 등), 401/403 등
       if (!res.ok) {
         let msg = "요청에 실패했습니다.";
         try {
@@ -83,7 +76,6 @@ export default function FriendInvite({ onClose }) {
       const count = json?.data?.count ?? 0;
       const results = json?.data?.results ?? [];
 
-      // ✅ 검색 결과 없음도 200이지만 count=0
       if (count === 0 || results.length === 0) {
         openStatusModal("사용자를 찾지 못했습니다.");
         return;
@@ -92,7 +84,6 @@ export default function FriendInvite({ onClose }) {
       const user = results[0];
       const friendStatus = user?.friendStatus;
 
-      // ✅ friendStatus 분기
       if (friendStatus === "pending") {
         openStatusModal("이미 친구 신청을 보냈습니다.");
         return;
@@ -102,22 +93,19 @@ export default function FriendInvite({ onClose }) {
         return;
       }
 
-      // ✅ none / received → 2-1 확인 모달
       if (friendStatus === "none" || friendStatus === "received") {
         setFoundFriend({
-          // POST 바디에 넣을 값 (스펙: friendId는 '상대방 사용자 ID')
           friendId: user.userId,
           friendNickname: user.nickname,
           profileImageUrl: user.profileImageUrl,
           friendBio: user.bio,
           friendStatus: user.friendStatus,
-          email: keyword,
+          email: keyword, // ✅ 입력한 이메일 보관
         });
         setStep(2);
         return;
       }
 
-      // 혹시 모르는 값이면 안전 처리
       openStatusModal("처리할 수 없는 상태입니다.");
     } catch (e) {
       openStatusModal("네트워크 오류가 발생했습니다.");
@@ -154,7 +142,6 @@ export default function FriendInvite({ onClose }) {
 
       const data = await res.json().catch(() => null);
 
-      // ✅ 성공(201 Created)
       if (res.ok && data?.success) {
         if (data?.data?.status === "accepted") {
           openStatusModal("친구 요청이 자동으로 수락되었습니다!");
@@ -164,7 +151,6 @@ export default function FriendInvite({ onClose }) {
         return;
       }
 
-      // ❌ 에러: 백엔드 message 우선
       const msg =
         data?.message ||
         (res.status === 400
@@ -183,9 +169,7 @@ export default function FriendInvite({ onClose }) {
 
   return (
     <>
-      {/* 오버레이 */}
       <div className="friend-invite-overlay" onClick={onClose}>
-        {/* 모달 */}
         <div
           className={`friend-invite-modal ${
             step === 1
@@ -194,7 +178,7 @@ export default function FriendInvite({ onClose }) {
                 ? "modal-step-2"
                 : "modal-step-1"
           }`}
-          onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
+          onClick={(e) => e.stopPropagation()}
         >
           <button className="friend-invite-close" onClick={onClose}>
             ×
@@ -224,7 +208,7 @@ export default function FriendInvite({ onClose }) {
             </div>
           )}
 
-          {/* ================= 2-1단계 (기존 확인 화면) ================= */}
+          {/* ================= 2-1단계 ================= */}
           {step === 2 && foundFriend && (
             <div className="friend-invite-body column">
               <div className="friend-preview">
@@ -241,17 +225,15 @@ export default function FriendInvite({ onClose }) {
                   <div className="profile-placeholder" />
                 )}
 
-                <div>
-                  <div className="friend-info-container">
-                    <label className="friend-label">이메일</label>
-                    <div className="friend-id">
-                      {foundFriend.email || inputEmail}
-                    </div>
+                <div className="friend-info-container">
+                  <label className="friend-label">이메일</label>
+                  <div className="friend-id">
+                    {foundFriend.email || inputEmail}
+                  </div>
 
-                    <label className="friend-label">닉네임</label>
-                    <div className="friend-nickname">
-                      {foundFriend.friendNickname}
-                    </div>
+                  <label className="friend-label">닉네임</label>
+                  <div className="friend-nickname">
+                    {foundFriend.friendNickname}
                   </div>
                 </div>
               </div>
@@ -274,7 +256,7 @@ export default function FriendInvite({ onClose }) {
             </div>
           )}
 
-          {/* ================= 2-2단계 (상태 안내 모달) ================= */}
+          {/* ================= 2-2단계 ================= */}
           {step === 3 && (
             <div className="friend-invite-body column">
               <div className="friend-status-box">{statusMessage}</div>
@@ -286,8 +268,6 @@ export default function FriendInvite({ onClose }) {
                     setStep(1);
                     setStatusMessage("");
                     setFoundFriend(null);
-                    // inputEmail은 유지할지/지울지 선택
-                    // setInputEmail("");
                   }}
                 >
                   확인
@@ -298,11 +278,10 @@ export default function FriendInvite({ onClose }) {
         </div>
       </div>
 
-      {/* ===== CSS (한 파일에 포함) ===== */}
       <style>{`
         .friend-invite-overlay {
           position: fixed;
-          top: 80px; /* Header 높이 고려 */
+          top: 80px;
           left: 0;
           width: 100%;
           height: calc(100vh - 80px);
@@ -315,23 +294,24 @@ export default function FriendInvite({ onClose }) {
 
         .friend-invite-modal {
           background: #000D32;
-          border-radius: 16px;
+          border-radius: 20px;
           border: 1px solid #2A4280;
           position: relative;
           color: white;
-          border-radius: 20px;
         }
- 
+
         .modal-step-1 {
           width: 420px;
           height: 260px;
           padding: 24px;
         }
 
+        /* ✅ 2단계는 내용 늘어나면 늘어나게 (겹침 방지) */
         .modal-step-2 {
           width: 420px;
-          height: 550px;
+          height: auto;
           padding: 24px;
+          padding-bottom: 28px;
         }
 
         .friend-invite-close {
@@ -343,10 +323,6 @@ export default function FriendInvite({ onClose }) {
           color: white;
           font-size: 40px;
           cursor: pointer;
-        }
-
-        .friend-invite-close:hover {
-          opacity: 1;
         }
 
         .friend-invite-title {
@@ -366,18 +342,29 @@ export default function FriendInvite({ onClose }) {
           justify-content: center;
         }
 
+        .friend-invite-body.column {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          width: 100%;
+          box-sizing: border-box;
+          align-items: stretch;
+        }
+
+        /* ✅ placeholder 포함 '세로 중앙'은 line-height + padding 정리로 해결 */
         .friend-invite-input {
-          width: 380px;
+          width: 350px;
           height: 45px;
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.50);
           border: 1px solid #2A4280;
           background: #000D32;
-          margin-bottom: 50px;
           color: #FFF;
-          padding-left: 15px;
+
+          padding: 0 15px;         /* ✅ 위아래 padding 제거 */
+          line-height: 45px;       /* ✅ 글자(placeholder) 세로 중앙 */
           font-family: "Josefin Slab";
           font-size: 16px;
+          box-sizing: border-box;
         }
 
         .friend-invite-input::placeholder {
@@ -415,46 +402,40 @@ export default function FriendInvite({ onClose }) {
           background-color: #0E77BC;
         }
 
-        .friend-invite-body.column {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-          width: 100%;
-          box-sizing: border-box;
-          align-items: stretch;
-        }
-
         .friend-preview {
           width: 100%;
           display: flex;
           flex-direction: column;
-          align-items: center; 
+          align-items: center;
         }
 
         .friend-preview img{
-          display: flex;
-          justify-content: center;
-          margin-bottom: 30px;
+          margin-bottom: 18px;
           width: 100px;
           height: 100px;
           background: white;
           border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           overflow: hidden;
           object-fit: cover;
         }
 
+        .profile-placeholder {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          background: #000;
+          margin-bottom: 18px;
+          border: 1px solid #2A4280;
+        }
+
+        /* ✅ 여기 height:40px 같은 거 절대 넣지마 (내용 다 짤림/겹침) */
         .friend-info-container {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          width: 380px;    
-          height : 40px;
-          align-items: stretch;
+          width: 350px;
         }
-        
+
         .friend-label {
           font-size: 13px;
           color: white;
@@ -470,9 +451,9 @@ export default function FriendInvite({ onClose }) {
           border-radius: 10px;
           background: #545454;
           color: rgba(255, 255, 255, 0.8);
-          padding: 12px 20px;
+          padding: 12px 14px;
           font-size: 14px;
-          box-sizing: border-box; 
+          box-sizing: border-box;
           text-align: left;
         }
 
@@ -481,13 +462,13 @@ export default function FriendInvite({ onClose }) {
           color: #FFF;
           text-align: center;
           font-family: "Josefin Slab";
-          margin: 20px 0 10px 0;
+          margin: 10px 0 6px 0;
         }
 
         .friend-invite-actions {
           display: flex;
           justify-content: flex-end;
-          margin-top: 10px;
+          margin-top: 6px;
         }
 
         .friend-invite-submit {
@@ -499,9 +480,9 @@ export default function FriendInvite({ onClose }) {
           padding: 8px 20px;
           font-size: 14px;
           cursor: pointer;
-          margin-bottom: -20px;
+          margin-bottom: 0; /* ✅ -20 삭제 (겹침 원인) */
         }
-        
+
         .friend-invite-submit:hover {
           background: #2A4280;
           opacity: 0.8;
@@ -516,7 +497,6 @@ export default function FriendInvite({ onClose }) {
           cursor: not-allowed;
         }
 
-        /* 2-2 안내 모달 메시지 박스 */
         .friend-status-box {
           width: 100%;
           border-radius: 12px;
@@ -527,15 +507,6 @@ export default function FriendInvite({ onClose }) {
           font-family: "Josefin Slab";
           font-size: 14px;
           color: rgba(255,255,255,0.9);
-        }
-
-        .profile-placeholder {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background: #000;               /* 완전 검정 */
-          margin-bottom: 30px;
-          border: 1px solid #2A4280;       /* 기존 톤에 맞춘 테두리 */
         }
       `}</style>
     </>
