@@ -367,8 +367,8 @@ export default function FriendInvite({ onClose }) {
         }
 
         .friend-invite-input {
-          width: 360px;
-          height: 40px;
+          width: 380px;
+          height: 45px;
           border-radius: 10px;
           border: 1px solid rgba(255, 255, 255, 0.50);
           border: 1px solid #2A4280;
@@ -450,7 +450,8 @@ export default function FriendInvite({ onClose }) {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          width: 100%;
+          width: 380px;    
+          height : 40px;
           align-items: stretch;
         }
         
