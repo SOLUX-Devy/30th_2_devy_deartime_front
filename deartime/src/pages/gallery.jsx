@@ -12,7 +12,7 @@ const Gallery = () => {
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
 
-  const BASE_URL = "https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/photos";
+  const BASE_URL = "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/photos";
   
   const ensureHttps = (url) => {
     if (!url) return url;
