@@ -2,11 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.deartime.kr/api/:path*"
-    },
-    {
-      "source": "/favicon.ico",
-      "destination": "/favicon.ico"
+      "destination": "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/api/:path*"
     },
     {
       "source": "/(.*)",
