@@ -57,8 +57,7 @@ export const connectNotificationSocket = ({ userId, onMessage }) => {
   console.log("👉 [3] SockJS 연결 시도 (/ws-stomp)"); // 3번 로그
 
   // 3. SockJS 연결
-  // (Vite Proxy가 설정되어 있어야 http://localhost:8080/ws-stomp 로 넘어갑니다)
-  const socket = new SockJS("https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/ws-stomp");
+  const socket = new SockJS("http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080/ws-stomp");
   stompClient = Stomp.over(socket);
 
   // 디버깅을 위해 로그 켜기
