@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
 import bg from "../assets/background_nostar.png";
@@ -10,47 +9,17 @@ import FriendCard from "../components/FriendCard";
 import FriendInvite from "../components/FriendInvite";
 import FriendDeleteConfirm from "../components/FriendDelete.jsx";
 
-// ✅ 목데이터(백엔드 형식)
-const mockFriendListResponse = {
-  status: 200,
-  success: true,
-  message: "친구 목록 조회 성공",
-  data: {
-    count: 13,
-    friends: Array.from({ length: 13 }, (_, i) => {
-      const idx = i + 1;
-      const day = String(idx).padStart(2, "0");
-      return {
-        userId: 1,
-        friendId: idx,
-        friendNickname: `Friend ${idx}`,
-        friendProfileImageUrl: "profile.jpg",
-        friendBio: `Bio ${idx}`,
-        status: "accepted",
-        requestedAt: `2004-01-${day}T00:00:00`,
-      };
-    }),
-  },
-};
-
 export default function FriendList() {
-  // const navigate = useNavigate();
-
-  // 친구 초대 모달 상태 추가
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // ✅ 검색어
   const [keyword, setKeyword] = useState("");
 
-  // ✅ 친구 목록 state (삭제 반영하려면 state여야 함)
-  const [friendsData, setFriendsData] = useState(
-    mockFriendListResponse?.data?.friends ?? []
-  );
+  // ✅ 목데이터 제거: 빈 배열로 시작
+  const [friendsData, setFriendsData] = useState([]);
 
-  // ✅ 컨텍스트 메뉴 상태 (Gallery랑 동일 구조)
   const [menu, setMenu] = useState({
     show: false,
     x: 0,
@@ -58,13 +27,44 @@ export default function FriendList() {
     targetId: null,
   });
 
-  // ✅ 롱프레스 타이머
   const longPressTimerRef = useRef(null);
   const isLongPressActive = useRef(false);
-
   const pressTargetElRef = useRef(null);
 
-  // ✅ 검색 필터
+  // ✅ 친구 목록 API 연동
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        const accessToken = localStorage.getItem("accessToken"); // 저장 키 맞게 수정
+        if (!accessToken) {
+          alert("로그인이 필요합니다.");
+          return;
+        }
+
+        const res = await fetch("/api/friends", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data?.message ?? "친구 목록 조회 실패");
+          return;
+        }
+
+        // ✅ 실데이터로 세팅
+        setFriendsData(data?.data?.friends ?? []);
+      } catch (e) {
+        alert("네트워크 오류가 발생했습니다.");
+      }
+    };
+
+    fetchFriends();
+  }, []);
+
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
@@ -73,10 +73,8 @@ export default function FriendList() {
     );
   }, [friendsData, keyword]);
 
-  // ✅ 상단 count 텍스트 (검색 결과 기준 원하면 filteredFriends.length로 바꾸면 됨)
   const countText = `${friendsData.length}명의 친구`;
 
-  // ✅ 메뉴 닫기: 바깥 클릭 / ESC / 스크롤 / 리사이즈
   useEffect(() => {
     if (!menu.show) return;
 
@@ -98,7 +96,6 @@ export default function FriendList() {
     };
   }, [menu.show]);
 
-  // ✅ 롱프레스 시작(모바일/마우스 공통)
   const startPress = (e, id) => {
     if (e.type === "mousedown" && e.button !== 0) return;
 
@@ -126,7 +123,6 @@ export default function FriendList() {
     pressTargetElRef.current = null;
   };
 
-  // ✅ 우클릭
   const handleContextMenu = (e, id) => {
     e.preventDefault();
 
@@ -138,7 +134,6 @@ export default function FriendList() {
     isLongPressActive.current = true;
   };
 
-  // ✅ 삭제
   const handleDeleteClick = () => {
     if (!menu.targetId) return;
 
@@ -147,24 +142,18 @@ export default function FriendList() {
     setMenu((prev) => ({ ...prev, show: false }));
   };
 
-
-  // 삭제 확인
+  // (현재는 프론트에서만 삭제 반영) - 삭제 API 있으면 여기서 호출하면 됨
   const confirmDelete = () => {
-    setFriendsData((prev) =>
-      prev.filter((f) => f.friendId !== deleteTargetId)
-    );
-
+    setFriendsData((prev) => prev.filter((f) => f.friendId !== deleteTargetId));
     setShowDeleteConfirm(false);
     setDeleteTargetId(null);
   };
-
 
   return (
     <div
       className="friendlist-container"
       style={{ backgroundImage: `url(${bg})` }}
     >
-      {/* 상단 영역 */}
       <div className="friend-topbar">
         <div className="friend-topnav">
           <span className="friend-tab active">친구 목록</span>
@@ -181,7 +170,6 @@ export default function FriendList() {
         </div>
       </div>
 
-      {/* 검색줄 */}
       <div className="friend-search-row">
         <div className="friend-search">
           <input
@@ -190,11 +178,7 @@ export default function FriendList() {
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="친구를 검색하세요"
           />
-          <button
-            type="button"
-            className="friend-search-btn"
-            aria-label="search"
-          >
+          <button type="button" className="friend-search-btn" aria-label="search">
             <img className="friend-search-icon" src={finder} alt="" />
           </button>
         </div>
@@ -202,7 +186,6 @@ export default function FriendList() {
         <div className="friend-count">{countText}</div>
       </div>
 
-      {/* ✅ 오버레이 (Gallery랑 동일: menu.show면 표시) */}
       {menu.show && (
         <div
           className="context-menu-overlay"
@@ -210,24 +193,25 @@ export default function FriendList() {
         />
       )}
 
-      {/* ✅ 삭제 메뉴 (1개짜리) */}
       {menu.show && (
         <div
           className="custom-context-menu"
           style={{ top: menu.y, left: menu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="menu-item delete" onClick={(e) => {
+          <div
+            className="menu-item delete"
+            onClick={(e) => {
               e.stopPropagation();
               handleDeleteClick();
-            }}>
+            }}
+          >
             <Trash2 size={20} color="#FF4D4D" />
             <span>삭제</span>
           </div>
         </div>
       )}
 
-      {/* ✅ 카드 그리드 */}
       <div className="friend-grid">
         {filteredFriends.map((f) => {
           const isSpotlight = menu.show && menu.targetId === f.friendId;
@@ -248,6 +232,7 @@ export default function FriendList() {
           );
         })}
       </div>
+
       {showInviteModal && (
         <FriendInvite onClose={() => setShowInviteModal(false)} />
       )}
