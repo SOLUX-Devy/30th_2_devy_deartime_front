@@ -3,8 +3,33 @@ import Stomp from "stompjs";
 
 let stompClient = null;
 
-/* ... fetchNotifications, readNotification 등 위쪽 코드는 그대로 유지 ... */
-// (기존 API 함수들은 생략하겠습니다. 아래 connect 함수만 바꿔주세요)
+// [GET] 알림 목록 조회 
+export const fetchNotifications = async ({ page = 0, size = 20 }) => {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`/api/notifications?page=${page}&size=${size}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("알림 조회 실패");
+  return res.json();
+};
+
+// [PATCH] 알림 읽음 처리
+export const readNotification = async (id) => {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`/api/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("알림 읽음 처리 실패");
+  return res.json();
+};
 
 /* WebSocket (SockJS + STOMP) 연결 */
 export const connectNotificationSocket = ({ userId, onMessage }) => {
