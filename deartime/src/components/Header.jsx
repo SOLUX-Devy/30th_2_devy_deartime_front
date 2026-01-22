@@ -146,6 +146,7 @@ export default function Header() {
                   ) : (
                     <ul className="noti-list">
                       {notifications.map((noti) => {
+                        console.log("noti.type =", noti.type, "icon =", getNotiIcon(noti.type));
                         const { title, body } = splitNotiContent(noti.content);
                         return (
                           <li 
