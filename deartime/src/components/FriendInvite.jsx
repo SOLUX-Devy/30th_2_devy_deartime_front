@@ -270,6 +270,7 @@ export default function FriendInvite({ onClose }) {
                     setStep(1);
                     setStatusMessage("");
                     setFoundFriend(null);
+                    setInputEmail("");
                     onClose();
                   }}
                 >
