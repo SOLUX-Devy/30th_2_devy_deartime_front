@@ -43,8 +43,7 @@ export default function Header() {
   } = useNotifications({ navigate, userId: user?.userId });
 
   // 회원가입 일수 계산
-  const storedJoinDate = user?.joinDate || localStorage.getItem("joinDate");
-  const joinDateObj = storedJoinDate ? new Date(storedJoinDate) : null;
+  const joinDateObj = user?.createdAt ? new Date(user.createdAt) : null;
 
   const daysTogether = joinDateObj
     ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24)) + 1
@@ -98,6 +97,8 @@ export default function Header() {
     bio: user?.bio || "",
     profileImageUrl: user?.profileImageUrl || null,
     joinDays: daysTogether,
+    email: user?.email || "",
+    birthDate: user?.birthDate || "",
   };
 
   /* =========================
