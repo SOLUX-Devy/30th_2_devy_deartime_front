@@ -44,7 +44,7 @@ export default function LetterCard({
         //onClick={handleCardClick}
       >
         <div className="card-top">
-          <span className="sender-info">from. {senderNickname}</span>
+          <span className="sender-info">From. {senderNickname}</span>
 
           <span
             className={`bookmark-icon ${isBookmarked ? "active" : ""}`} // data에서 온 상태를 직접 사용
