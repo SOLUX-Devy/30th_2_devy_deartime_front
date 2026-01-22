@@ -13,8 +13,12 @@ import FriendInvite from "../components/FriendInvite";
 import FriendDelete from "../components/FriendDelete.jsx";
 
 // ✅ 백엔드 주소 (proxy 안 쓰는 경우)
-const API_BASE =
-  "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
+const res = await fetch(`/api/friends`, {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+  },
+});
 
 export default function FriendList() {
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -78,7 +82,7 @@ export default function FriendList() {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
     return friendsData.filter((f) =>
-      (f.friendNickname || "").toLowerCase().includes(k)
+      (f.friendNickname || "").toLowerCase().includes(k),
     );
   }, [friendsData, keyword]);
 
@@ -259,13 +263,14 @@ export default function FriendList() {
       {showDeleteConfirm && (
         <FriendDelete
           friendId={deleteTargetId}
-          apiBase={API_BASE}
           onCancel={() => {
             setShowDeleteConfirm(false);
             setDeleteTargetId(null);
           }}
           onSuccess={(deletedId) => {
-            setFriendsData((prev) => prev.filter((f) => f.friendId !== deletedId));
+            setFriendsData((prev) =>
+              prev.filter((f) => f.friendId !== deletedId),
+            );
             setShowDeleteConfirm(false);
             setDeleteTargetId(null);
           }}
