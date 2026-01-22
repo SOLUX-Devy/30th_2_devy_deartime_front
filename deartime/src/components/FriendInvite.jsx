@@ -349,6 +349,7 @@ export default function FriendInvite({ onClose }) {
           width: 100%;
           box-sizing: border-box;
           align-items: stretch;
+          justify-content: flex-start;
         }
 
         /* ✅ placeholder 포함 '세로 중앙'은 line-height + padding 정리로 해결 */
