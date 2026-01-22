@@ -1,3 +1,6 @@
+// ==========================
+// FriendList.jsx (전문: GET 연동 + 삭제는 FriendDelete.jsx에서 처리하는 버전)
+// ==========================
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 
@@ -7,7 +10,11 @@ import finder from "../assets/finder.png";
 import "../styles/FriendList.css";
 import FriendCard from "../components/FriendCard";
 import FriendInvite from "../components/FriendInvite";
-import FriendDeleteConfirm from "../components/FriendDelete.jsx";
+import FriendDelete from "../components/FriendDelete.jsx";
+
+// ✅ 백엔드 주소 (proxy 안 쓰는 경우)
+const API_BASE =
+  "http://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
 
 export default function FriendList() {
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -16,8 +23,6 @@ export default function FriendList() {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
   const [keyword, setKeyword] = useState("");
-
-  // ✅ 목데이터 제거: 빈 배열로 시작
   const [friendsData, setFriendsData] = useState([]);
 
   const [menu, setMenu] = useState({
@@ -28,43 +33,47 @@ export default function FriendList() {
   });
 
   const longPressTimerRef = useRef(null);
-  const isLongPressActive = useRef(false);
   const pressTargetElRef = useRef(null);
 
-  // ✅ 친구 목록 API 연동
-  useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        const accessToken = localStorage.getItem("accessToken"); // 저장 키 맞게 수정
-        if (!accessToken) {
-          alert("로그인이 필요합니다.");
-          return;
-        }
-
-        const res = await fetch("/api/friends", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data?.message ?? "친구 목록 조회 실패");
-          return;
-        }
-
-        // ✅ 실데이터로 세팅
-        setFriendsData(data?.data?.friends ?? []);
-      } catch (e) {
-        alert("네트워크 오류가 발생했습니다.");
+  // =========================
+  // 친구 목록 조회 API (GET)
+  // =========================
+  const fetchFriends = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        alert("로그인이 필요합니다.");
+        return;
       }
-    };
 
+      const res = await fetch(`${API_BASE}/api/friends`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(data?.message ?? "친구 목록 조회 실패");
+        return;
+      }
+
+      // ✅ 실데이터로 세팅
+      setFriendsData(data?.data?.friends ?? []);
+    } catch (e) {
+      alert("네트워크 오류가 발생했습니다.");
+    }
+  };
+
+  useEffect(() => {
     fetchFriends();
   }, []);
 
+  // =========================
+  // 검색 필터
+  // =========================
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
@@ -73,8 +82,13 @@ export default function FriendList() {
     );
   }, [friendsData, keyword]);
 
+  // ✅ count 필드는 백엔드가 주지만, 화면 표시엔 굳이 안 써도 됨
+  // (친구 목록 배열 길이가 실제 렌더링과 일치해서 더 안전)
   const countText = `${friendsData.length}명의 친구`;
 
+  // =========================
+  // 컨텍스트 메뉴 닫기 처리
+  // =========================
   useEffect(() => {
     if (!menu.show) return;
 
@@ -96,22 +110,25 @@ export default function FriendList() {
     };
   }, [menu.show]);
 
+  // =========================
+  // 롱프레스 / 우클릭 메뉴 열기
+  // =========================
   const startPress = (e, id) => {
     if (e.type === "mousedown" && e.button !== 0) return;
 
     pressTargetElRef.current = e.currentTarget;
-    isLongPressActive.current = false;
 
     longPressTimerRef.current = setTimeout(() => {
       const el = pressTargetElRef.current;
       if (!el) return;
 
       const rect = el.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-      isLongPressActive.current = true;
+      setMenu({
+        show: true,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        targetId: id,
+      });
     }, 500);
   };
 
@@ -127,26 +144,23 @@ export default function FriendList() {
     e.preventDefault();
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-    isLongPressActive.current = true;
+    setMenu({
+      show: true,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      targetId: id,
+    });
   };
 
+  // =========================
+  // 삭제 클릭 → 확인 모달
+  // =========================
   const handleDeleteClick = () => {
     if (!menu.targetId) return;
 
     setDeleteTargetId(menu.targetId);
     setShowDeleteConfirm(true);
     setMenu((prev) => ({ ...prev, show: false }));
-  };
-
-  // (현재는 프론트에서만 삭제 반영) - 삭제 API 있으면 여기서 호출하면 됨
-  const confirmDelete = () => {
-    setFriendsData((prev) => prev.filter((f) => f.friendId !== deleteTargetId));
-    setShowDeleteConfirm(false);
-    setDeleteTargetId(null);
   };
 
   return (
@@ -178,7 +192,11 @@ export default function FriendList() {
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="친구를 검색하세요"
           />
-          <button type="button" className="friend-search-btn" aria-label="search">
+          <button
+            type="button"
+            className="friend-search-btn"
+            aria-label="search"
+          >
             <img className="friend-search-icon" src={finder} alt="" />
           </button>
         </div>
@@ -237,10 +255,20 @@ export default function FriendList() {
         <FriendInvite onClose={() => setShowInviteModal(false)} />
       )}
 
+      {/* ✅ 삭제 API 호출은 FriendDelete.jsx 내부에서 수행 */}
       {showDeleteConfirm && (
-        <FriendDeleteConfirm
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteConfirm(false)}
+        <FriendDelete
+          friendId={deleteTargetId}
+          apiBase={API_BASE}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setDeleteTargetId(null);
+          }}
+          onSuccess={(deletedId) => {
+            setFriendsData((prev) => prev.filter((f) => f.friendId !== deletedId));
+            setShowDeleteConfirm(false);
+            setDeleteTargetId(null);
+          }}
         />
       )}
     </div>
