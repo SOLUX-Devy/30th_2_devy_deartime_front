@@ -302,7 +302,7 @@ export default function FriendInvite({ onClose }) {
 
         .modal-step-1 {
           width: 420px;
-          height: 260px;
+          height: auto;
           padding: 24px;
         }
 
@@ -313,10 +313,10 @@ export default function FriendInvite({ onClose }) {
           padding: 24px;
           padding-bottom: 28px;
         }
-          .modal-step-2 .friend-invite-body.column {
-  justify-content: flex-start;
-  padding-top: 10px;
-}
+        .modal-step-2 .friend-invite-body.column {
+            justify-content: flex-start;
+            padding-top: 10px;
+        }
 
         .friend-invite-close {
           position: absolute;
@@ -377,9 +377,9 @@ export default function FriendInvite({ onClose }) {
         }
 
         .friend-invite-footer {
-          position: absolute;
-          bottom: 30px;
-          right: 30px;
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 20px;
         }
 
         .friend-invite-next {
