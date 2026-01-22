@@ -12,12 +12,10 @@ const Gallery = () => {
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
   
-  const ensureHttps = (url) => {
-    if (!url) return url;
-    return url.replace(/^http:\/\//i, 'https://');
-  };
+  // 무한 루프 방지를 위해 API 호출 중복 방지용 Ref 사용
+  const isFetchingRef = useRef(false);
 
-  const BASE_URL = "https://ec2-43-203-87-207.ap-northeast-2.compute.amazonaws.com:8080";
+  const BASE_PATH = "/api"; 
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`
   });
@@ -25,10 +23,10 @@ const Gallery = () => {
   const tabs = ["RECORD", "ALBUM"];
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
 
-  /* 데이터 상태 관리 */
   const [photos, setPhotos] = useState([]);
   const [photoPage, setPhotoPage] = useState(0);
   const [hasMorePhotos, setHasMorePhotos] = useState(true);
+  
   const [albums, setAlbums] = useState([]);
   const [albumPage, setAlbumPage] = useState(1);
   const ALBUMS_PER_PAGE = 6;
@@ -37,17 +35,28 @@ const Gallery = () => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /* 사진 목록 데이터 로드 (무한 스크롤) */
+  const ensureHttps = (url) => {
+    if (!url) return url;
+    return url.replace(/^http:\/\//i, 'https://');
+  };
+
+  /* 사진 데이터 로드 함수 (무한 루프 방지 로직 적용) */
   const fetchPhotos = useCallback(async (page) => {
-    if (loading || !hasMorePhotos) return;
+    if (isFetchingRef.current || !hasMorePhotos) return;
+    
+    isFetchingRef.current = true;
     setLoading(true);
+    
     try {
-      const res = await axios.get(`${BASE_URL}`, {
+      const res = await axios.get(`${BASE_PATH}/photos`, {
         headers: getAuthHeader(),
         params: { sort: "takenAt,desc", page: page, size: 20 }
       });
       
-      const newPhotos = res.data.data || [];
+      // 데이터가 배열인지 확실히 체크
+      const responseData = res.data.data;
+      const newPhotos = Array.isArray(responseData) ? responseData : [];
+      
       if (newPhotos.length < 20) setHasMorePhotos(false);
       
       setPhotos(prev => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
@@ -55,19 +64,19 @@ const Gallery = () => {
       console.error("사진 로드 실패:", err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [loading, hasMorePhotos]);
+    // 의존성 배열에서 loading을 제거하여 무한 루프 차단
+  }, [hasMorePhotos]);
 
-  /* 앨범 목록 데이터 로드 */
   const fetchAlbums = async () => {
     setLoading(true);
     try {
-      // API 경로가 /api/albums일 경우 처리
-      const ALBUM_API = BASE_URL.replace('/photos', '/albums');
-      const res = await axios.get(ALBUM_API, {
+      const res = await axios.get(`${BASE_PATH}/albums`, {
         headers: getAuthHeader()
       });
-      setAlbums(res.data.data || []);
+      const responseData = res.data.data;
+      setAlbums(Array.isArray(responseData) ? responseData : []);
     } catch (err) {
       console.error("앨범 로드 실패:", err);
     } finally {
@@ -75,6 +84,7 @@ const Gallery = () => {
     }
   };
 
+  /* 탭 변경 시 초기화 */
   useEffect(() => {
     if (activeIndex === 0) {
       setPhotos([]);
@@ -84,15 +94,15 @@ const Gallery = () => {
     } else {
       fetchAlbums();
     }
-  }, [activeIndex]);
+  }, [activeIndex]); // fetchPhotos는 useCallback으로 감싸져 있으므로 생략 가능하거나 포함해도 무방
 
-  /* Intersection Observer를 이용한 무한 스크롤 */
+  /* 무한 스크롤 관찰자 */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !isFetchingRef.current) {
           setPhotoPage(prev => {
             const nextPage = prev + 1;
             fetchPhotos(nextPage);
@@ -105,7 +115,7 @@ const Gallery = () => {
 
     if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
     return () => observer.disconnect();
-  }, [activeIndex, hasMorePhotos, loading, fetchPhotos]);
+  }, [activeIndex, hasMorePhotos, fetchPhotos]);
 
   const currentAlbums = useMemo(() => {
     const startIndex = (albumPage - 1) * ALBUMS_PER_PAGE;
@@ -114,14 +124,13 @@ const Gallery = () => {
 
   const totalAlbumPages = Math.ceil(albums.length / ALBUMS_PER_PAGE);
 
-  /* 사진 업로드 핸들러 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const formData = new FormData();
       formData.append("file", file);
       try {
-        await axios.post(`${BASE_URL}`, formData, {
+        await axios.post(`${BASE_PATH}/photos`, formData, {
           headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
         });
         setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0);
@@ -129,20 +138,20 @@ const Gallery = () => {
     }
   };
 
-  /* 제목 수정 완료 핸들러 */
   const handleEditComplete = async (e, id) => {
     if (e.key === 'Enter') {
       try {
-        const url = activeIndex === 0 ? `${BASE_URL}/${id}/caption` : `${BASE_URL.replace('/photos', '/albums')}/${id}/title`;
-        const payload = activeIndex === 0 ? { caption: e.target.value } : { title: e.target.value };
-        await axios.post(url, payload, { headers: getAuthHeader() });
+        if (activeIndex === 0) await axios.post(`${BASE_PATH}/photos/${id}/caption`, { caption: e.target.value }, { headers: getAuthHeader() });
+        else await axios.post(`${BASE_PATH}/albums/${id}/title`, { title: e.target.value }, { headers: getAuthHeader() });
         activeIndex === 0 ? (setPhotos([]), setPhotoPage(0), fetchPhotos(0)) : fetchAlbums();
       } catch (err) { alert("수정 실패"); }
       setEditingId(null);
     } else if (e.key === 'Escape') setEditingId(null);
   };
 
+  /* [중요] 데이터 방어 로직 추가: photos가 배열일 때만 reduce 실행 */
   const groupedPhotos = useMemo(() => {
+    if (!Array.isArray(photos)) return {};
     return photos.reduce((acc, photo) => {
       const date = photo.uploadedAt?.split('T')[0] || "Unknown";
       if (!acc[date]) acc[date] = [];
@@ -180,7 +189,6 @@ const Gallery = () => {
                 <div className="photo-grid">
                   {groupedPhotos[date].map((photo) => (
                     <div key={photo.photoId} className="photo-item">
-                      {/* [방법 3 적용] src에 ensureHttps 사용 */}
                       <div className="img-box"><img src={ensureHttps(photo.imageUrl)} alt="" /></div>
                       {editingId === photo.photoId ? (
                         <input className="edit-title-input" defaultValue={photo.caption} autoFocus onKeyDown={(e) => handleEditComplete(e, photo.photoId)} onBlur={() => setEditingId(null)} />
@@ -199,7 +207,6 @@ const Gallery = () => {
             <div className="album-grid">
               {currentAlbums.map((album) => (
                 <div key={album.albumId} className="album-item" onClick={() => navigate(`/album/${album.albumId}`, { state: { album } })}>
-                  {/* [방법 3 적용] src에 ensureHttps 사용 */}
                   <div className="album-img-box"><img src={ensureHttps(album.coverImageUrl)} alt="" /></div>
                   <div className="album-info">
                     <h3>{album.title}</h3>
@@ -208,7 +215,6 @@ const Gallery = () => {
                 </div>
               ))}
             </div>
-            
             {totalAlbumPages > 1 && (
               <div className="album-pagination">
                 <button onClick={() => setAlbumPage(p => Math.max(1, p - 1))} disabled={albumPage === 1}><ChevronLeft size={20}/></button>
