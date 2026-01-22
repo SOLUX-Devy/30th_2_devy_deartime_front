@@ -69,6 +69,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 3; /* 최대 3줄까지만 노출 */
     -webkit-box-orient: vertical;
+    
     overflow: hidden;
     text-overflow: ellipsis; 
 }
