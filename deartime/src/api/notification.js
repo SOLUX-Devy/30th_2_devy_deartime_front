@@ -57,7 +57,7 @@ export const connectNotificationSocket = ({ userId, onMessage }) => {
   console.log("👉 [3] SockJS 연결 시도 (/ws-stomp)"); // 3번 로그
 
   // 3. SockJS 연결
-  const socket = new SockJS("/ws-stomp");
+  const socket = new SockJS("https://api.deartime.kr/ws-stomp");
   stompClient = Stomp.over(socket);
 
   // 디버깅을 위해 로그 켜기
