@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/LetterDetail.css';
 
-const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
+const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsRead }) => {
     const [detailData, setDetailData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +27,11 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
 
                 if (isMounted && json.success) { // 마운트된 상태일 때만 set
                 setDetailData(json.data);
+
+                if (json.data.isRead === true){
+                    // 편지 읽음 처리 API 호출
+                    onMarkAsRead(letterId);
+                }
                 }
             } catch (err) {
                 if (isMounted) console.error("에러 발생:", err);
@@ -38,7 +43,7 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
         fetchDetail();
 
     return () => { isMounted = false; }; // 언마운트 시 false로 변경
-}, [isOpen, letterId]);
+}, [isOpen, letterId, onMarkAsRead]);
 
     if (!isOpen) return null;
 
