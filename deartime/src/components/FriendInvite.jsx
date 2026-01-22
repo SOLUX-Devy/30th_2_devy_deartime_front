@@ -111,6 +111,7 @@ export default function FriendInvite({ onClose }) {
           profileImageUrl: user.profileImageUrl,
           friendBio: user.bio,
           friendStatus: user.friendStatus,
+          email: keyword,
         });
         setStep(2);
         return;
@@ -227,14 +228,25 @@ export default function FriendInvite({ onClose }) {
           {step === 2 && foundFriend && (
             <div className="friend-invite-body column">
               <div className="friend-preview">
-                <img
-                  src={foundFriend.profileImageUrl || profileImageFallback}
-                  alt="profile"
-                />
+                {foundFriend.profileImageUrl ? (
+                  <img
+                    src={foundFriend.profileImageUrl}
+                    alt="profile"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = profileImageFallback;
+                    }}
+                  />
+                ) : (
+                  <div className="profile-placeholder" />
+                )}
+
                 <div>
                   <div className="friend-info-container">
-                    <label className="friend-label">아이디</label>
-                    <div className="friend-id">{foundFriend.friendId}</div>
+                    <label className="friend-label">이메일</label>
+                    <div className="friend-id">
+                      {foundFriend.email || inputEmail}
+                    </div>
 
                     <label className="friend-label">닉네임</label>
                     <div className="friend-nickname">
@@ -457,13 +469,14 @@ export default function FriendInvite({ onClose }) {
           border-radius: 10px;
           background: #545454;
           color: rgba(255, 255, 255, 0.8);
-          padding: 12px 150px;
+          padding: 12px 20px;
           font-size: 14px;
           box-sizing: border-box; 
+          text-align: left;
         }
 
         .friend-warning {
-          font-size: 11px;
+          font-size: 12px;
           color: #FFF;
           text-align: center;
           font-family: "Josefin Slab";
@@ -513,6 +526,15 @@ export default function FriendInvite({ onClose }) {
           font-family: "Josefin Slab";
           font-size: 14px;
           color: rgba(255,255,255,0.9);
+        }
+
+        .profile-placeholder {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          background: #000;               /* 완전 검정 */
+          margin-bottom: 30px;
+          border: 1px solid #2A4280;       /* 기존 톤에 맞춘 테두리 */
         }
       `}</style>
     </>
