@@ -65,12 +65,12 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode }) => {
                         <div className="paper-internal">
                             <header className="paper-header">
                                 <div className="info-row">
-                                    <span className="label">From.</span>
-                                    <span className="value">{detailData?.senderNickname}</span>
+                                    <span className="info-label">From.</span>
+                                    <span className="info-value">{detailData?.senderNickname}</span>
                                 </div>
                                 <div className="info-row">
-                                    <span className="label">To.</span>
-                                    <span className="value">{detailData?.receiverNickname}</span>
+                                    <span className="info-label">To.</span>
+                                    <span className="info-value">{detailData?.receiverNickname}</span>
                                 </div>
                             </header>
 

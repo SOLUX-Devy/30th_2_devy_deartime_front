@@ -23,10 +23,25 @@
 }
 
 /* 테마별 텍스트 */
-.letter-card.theme-DEFAULT { color: #ffffff; }
-.letter-card.theme-PINK { color: #4a4a4a; }
-.letter-card.theme-GREY { color: #4a4a4a; }
-.letter-card.theme-BLUE { color: #2c3e50; }
+/* theme1: Dark Blue (기존 DEFAULT) */
+.letter-card.theme1 { 
+    color: #ffffff; 
+}
+
+/* theme2: Pink */
+.letter-card.theme2 { 
+    color: #4a4a4a; 
+}
+
+/* theme3: Grey */
+.letter-card.theme3 { 
+    color: #4a4a4a; 
+}
+
+/* theme4: Blue */
+.letter-card.theme4 { 
+    color: #2c3e50; 
+}
 
 .card-top {
   display: flex;

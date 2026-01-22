@@ -35,7 +35,7 @@ export default function LetterCard({
   return (
     <>
       <div
-        className={`letter-card theme-${data.themeCode} ${isFocused ? "focused" : ""}`}
+        className={`letter-card ${data.themeCode} ${isFocused ? "focused" : ""}`}
         style={{ 
           backgroundImage: `url(${bgImage})`,
           zIndex: isFocused ? 100 : 1, 
