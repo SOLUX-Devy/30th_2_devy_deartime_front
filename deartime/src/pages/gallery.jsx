@@ -1,12 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/gallery.css";
-import React, {
-  useMemo,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import React, {useMemo, useState, useRef, useEffect, useCallback,} from "react";
 import { Pen, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
@@ -17,7 +11,7 @@ const Gallery = () => {
   const location = useLocation();
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
-  const isFetchingRef = useRef(false); // 실제 네트워크 요청 중인지 체크하는 플래그
+  const isFetchingRef = useRef(false);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const BASE_PATH = `${apiBaseUrl}/api`;
@@ -57,14 +51,12 @@ const Gallery = () => {
     return url.replace(/[<>]/g, "");
   };
 
-  /* [1] 사진 목록 조회 - 의존성에서 hasMorePhotos 제거 */
+  /* [1] 사진 목록 조회 (Infinite Scroll) */
   const fetchPhotos = useCallback(
     async (page, isInitial = false) => {
-      // 이미 요청 중이면 중단
       if (isFetchingRef.current) return;
-
       isFetchingRef.current = true;
-      if (!isInitial) setLoading(true); // 초기 로딩이 아닐 때만 하단 로딩바 표시 (선택 사항)
+      if (!isInitial) setLoading(true);
 
       try {
         const res = await axios.get(`${BASE_PATH}/photos`, {
@@ -77,7 +69,6 @@ const Gallery = () => {
           ? responseWrapper.data
           : [];
 
-        // 다음 페이지 존재 여부 판단
         const isLast = responseWrapper.isLast || newPhotos.length < 20;
         setHasMorePhotos(!isLast);
 
@@ -90,7 +81,7 @@ const Gallery = () => {
       }
     },
     [BASE_PATH, getAuthHeader],
-  ); // 의존성을 최소화하여 함수 재생성 방지
+  );
 
   /* [2] 앨범 목록 조회 */
   const fetchAlbums = useCallback(async () => {
@@ -108,7 +99,7 @@ const Gallery = () => {
     }
   }, [BASE_PATH, getAuthHeader]);
 
-  /* [3] 앨범 생성 로직 */
+  /* [3] 앨범 생성 로직 (2단계: 커버 업로드 -> 앨범 생성) */
   const handleCreateAlbum = async (albumData) => {
     setLoading(true);
     try {
@@ -151,45 +142,6 @@ const Gallery = () => {
     }
   };
 
-  /* 탭 변경 시 리셋 및 첫 페이지 로드 */
-  useEffect(() => {
-    if (activeIndex === 0) {
-      setPhotos([]);
-      setPhotoPage(0);
-      setHasMorePhotos(true);
-      fetchPhotos(0, true);
-    } else {
-      fetchAlbums();
-    }
-  }, [activeIndex, fetchPhotos, fetchAlbums]);
-
-  /* 무한 스크롤 옵저버 */
-  useEffect(() => {
-    if (activeIndex !== 0 || !hasMorePhotos) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // 1. 관찰 대상이 보이고 2. 로딩 중이 아닐 때만 실행
-        if (entries[0].isIntersecting && !isFetchingRef.current) {
-          setPhotoPage((prev) => {
-            const nextPage = prev + 1;
-            fetchPhotos(nextPage);
-            return nextPage;
-          });
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    const target = scrollObserverRef.current;
-    if (target) observer.observe(target);
-
-    return () => {
-      if (target) observer.unobserve(target);
-      observer.disconnect();
-    };
-  }, [activeIndex, hasMorePhotos, fetchPhotos]);
-
   /* [기능] 단일 사진 업로드 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -223,7 +175,7 @@ const Gallery = () => {
     }
   };
 
-  /* 삭제 및 수정 (기존 로직 유지) */
+  /* [기능] 삭제 로직 (사진/앨범 공통) */
   const handleDeletePhoto = async (photoId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
@@ -232,7 +184,7 @@ const Gallery = () => {
       });
       setPhotos((prev) => prev.filter((p) => p.photoId !== photoId));
     } catch (err) {
-      alert("삭제 권한이 없습니다.");
+      alert(err.response?.data?.data || "삭제 권한이 없습니다.");
     }
     setContextMenu({ ...contextMenu, show: false });
   };
@@ -240,16 +192,19 @@ const Gallery = () => {
   const handleDeleteAlbum = async (albumId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`${BASE_PATH}/albums/${albumId}`, {
+      const res = await axios.delete(`${BASE_PATH}/albums/${albumId}`, {
         headers: getAuthHeader(),
       });
-      setAlbums((prev) => prev.filter((a) => a.albumId !== albumId));
+      if (res.data.success) {
+        setAlbums((prev) => prev.filter((a) => a.albumId !== albumId));
+      }
     } catch (err) {
-      alert("삭제 실패");
+      alert(err.response?.data?.data || "삭제 실패");
     }
     setContextMenu({ ...contextMenu, show: false });
   };
 
+  /* [기능] 수정 완료 로직 (캡션/제목 공통) */
   const handleEditComplete = async (e, id) => {
     const newText = e.target.value;
     if (e.key === "Enter") {
@@ -276,11 +231,66 @@ const Gallery = () => {
           );
         }
       } catch (err) {
-        alert("수정 실패");
+        alert(err.response?.data?.data || "수정 실패");
       }
       setEditingId(null);
     } else if (e.key === "Escape") setEditingId(null);
   };
+
+  /* [수정] 탭 및 데이터 동기화 Effect - async/await 적용 */
+  useEffect(() => {
+    const syncData = async () => {
+      if (activeIndex === 0) {
+        setPhotos([]);
+        setPhotoPage(0);
+        setHasMorePhotos(true);
+        fetchPhotos(0, true);
+      } else {
+        // 1. 서버 데이터를 먼저 완전히 가져온 후(await)
+        await fetchAlbums();
+        
+        // 2. 상세 페이지(AlbumDetail)에서 돌아왔을 때의 로컬 수정을 그 위에 덧씌웁니다.
+        if (location.state?.updatedAlbum) {
+          const updated = location.state.updatedAlbum;
+          setAlbums((prev) =>
+            prev.map((a) =>
+              a.albumId === updated.albumId
+                ? { ...a, coverImageUrl: updated.coverImageUrl }
+                : a,
+            ),
+          );
+        }
+      }
+    };
+
+    syncData();
+  }, [activeIndex, fetchPhotos, fetchAlbums, location.state]);
+
+  /* 무한 스크롤 Observer Effect */
+  useEffect(() => {
+    if (activeIndex !== 0 || !hasMorePhotos) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingRef.current) {
+          setPhotoPage((prev) => {
+            const nextPage = prev + 1;
+            fetchPhotos(nextPage);
+            return nextPage;
+          });
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const target = scrollObserverRef.current;
+    if (target) observer.observe(target);
+
+    return () => {
+      if (target) observer.unobserve(target);
+      observer.disconnect();
+    };
+  }, [activeIndex, hasMorePhotos, fetchPhotos]);
 
   const onContextMenu = (e, id) => {
     e.preventDefault();
@@ -418,14 +428,11 @@ const Gallery = () => {
                 </div>
               </section>
             ))}
-            {/* 데이터가 더 있고 로딩 중이 아닐 때만 옵저버 노출 */}
             {!loading && hasMorePhotos && (
               <div ref={scrollObserverRef} style={{ height: "50px" }} />
             )}
             {loading && (
-              <div
-                style={{ textAlign: "center", padding: "20px", color: "white" }}
-              >
+              <div style={{ textAlign: "center", padding: "20px", color: "white" }}>
                 로딩 중...
               </div>
             )}
