@@ -88,8 +88,8 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
 
     try {
-      const res = await fetch(
-        `/api/users/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`,
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const res = await fetch(`${apiBaseUrl}/api/users/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
@@ -178,7 +178,9 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         formData.append("profileImage", profileImageFile);
       }
 
-      const res = await fetch("/api/users/me", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+      const res = await fetch(`${apiBaseUrl}/api/users/me`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
