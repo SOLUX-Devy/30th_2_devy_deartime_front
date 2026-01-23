@@ -128,7 +128,7 @@
       const file = e.target.files[0];
       if (file) {
         const formData = new FormData();
-        formData.append("files", files);
+        formData.append("files", file);
         try {
           await axios.post(`${BASE_PATH}/photos`, formData, {
             headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
