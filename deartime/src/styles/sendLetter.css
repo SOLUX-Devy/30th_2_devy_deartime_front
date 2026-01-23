@@ -128,7 +128,12 @@
   resize: none;
   font-family: 'ABeeZee', sans-serif;
 }
-
+/* send 버튼 비활성 상태 – 금지 커서 제거 */
+.send-btn:disabled {
+  cursor: default;          /* 🚫 제거 */
+  pointer-events: none;     /* hover/active 차단 */
+  opacity: 0.6;             /* 비활성 느낌만 */
+}
 .theme-option {
   position: relative;
   width: 80px;

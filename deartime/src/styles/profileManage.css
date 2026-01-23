@@ -387,6 +387,13 @@
   background-color: #0e77bc;
 }
 
+/* 🔥 disabled일 때 금지 커서 제거 */
+.input-group button:disabled,
+.save-btn.disabled,
+.action-btn:disabled {
+  cursor: default;        /* 🚫 → 일반 커서 */
+  pointer-events: none;   /* hover 자체 차단 (선택) */
+}
 .save-btn.disabled {
   cursor: default;
   opacity: 1;
