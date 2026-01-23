@@ -225,9 +225,15 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (res.ok && json.success) {
         setUser(json.data);
 
-        // ✅ alert 제거 (요구사항)
-        // alert("프로필이 업데이트 되었습니다.");
+        // ✅ 추가: 다른 페이지에서도 즉시 반영되도록 localStorage 최신화
+        if (json?.data?.userId)
+          localStorage.setItem("userId", String(json.data.userId));
+        if (json?.data?.nickname)
+          localStorage.setItem("nickname", json.data.nickname);
+        if (json?.data?.profileImageUrl)
+          localStorage.setItem("profileImageUrl", json.data.profileImageUrl);
 
+        // ✅ 대리인 저장은 1번만
         if (selectedDelegate) {
           await handleSaveProxy();
         }
@@ -236,7 +242,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       } else {
         const msg = json.message || "프로필 업데이트에 실패했습니다.";
 
-        // 서버가 닉네임 관련 메시지를 주면 인라인에 출력
         if (
           msg.toLowerCase().includes("닉네임") ||
           msg.toLowerCase().includes("nickname")

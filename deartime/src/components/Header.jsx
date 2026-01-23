@@ -22,9 +22,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
 
-  /* =========================
-      NOTIFICATION HOOK
-  ========================= */
+
   const {
     notifications,
     isOpen: isNotiOpen,
@@ -34,8 +32,6 @@ export default function Header() {
     formatTime,
     getNotiIcon,
     splitNotiContent,
-
-    // ✅ 친구 요청 관련
     isFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
@@ -44,16 +40,12 @@ export default function Header() {
     userId: user?.userId,
   });
 
-  /* =========================
-      UTIL
-  ========================= */
+
   const handleImgError = (e) => {
     e.target.src = DefaultProfile;
   };
 
-  /* =========================
-      LOGOUT
-  ========================= */
+
   const handleLogout = async () => {
     const token = localStorage.getItem("accessToken");
 
@@ -86,9 +78,7 @@ export default function Header() {
     }
   };
 
-  /* =========================
-      OUTSIDE CLICK
-  ========================= */
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notiRef.current && !notiRef.current.contains(e.target)) {
@@ -103,9 +93,7 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setIsNotiOpen]);
 
-  /* =========================
-      USER INFO
-  ========================= */
+
   const joinDateObj = user?.createdAt ? new Date(user.createdAt) : null;
   const daysTogether = joinDateObj
     ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24)) + 1
@@ -120,9 +108,6 @@ export default function Header() {
     birthDate: user?.birthDate || "",
   };
 
-  /* =========================
-      RENDER
-  ========================= */
   return (
     <>
       <header className="header">
