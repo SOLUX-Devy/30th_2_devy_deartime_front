@@ -61,18 +61,6 @@ export default function TimeCapsuleCreatePage() {
       const token = localStorage.getItem("accessToken");
       if (!token) return;
 
-      // 이미 있으면 굳이 호출 X
-      const storedId = Number(localStorage.getItem("userId")) || null;
-      const storedNickname =
-        localStorage.getItem("nickname") ||
-        localStorage.getItem("userNickname") ||
-        null;
-
-      if (storedId) setMyUserId(storedId);
-      if (storedNickname) setMyNickname(storedNickname);
-
-      if (storedId) return;
-
       try {
         const res = await fetch(`${apiBaseUrl}/api/users/me`, {
           method: "GET",
@@ -85,13 +73,13 @@ export default function TimeCapsuleCreatePage() {
         const me = json?.data;
         if (!me?.userId) return;
 
-        // localStorage 저장
+        // ✅ localStorage 최신화
         localStorage.setItem("userId", String(me.userId));
         if (me.nickname) localStorage.setItem("nickname", me.nickname);
         if (me.profileImageUrl)
           localStorage.setItem("profileImageUrl", me.profileImageUrl);
 
-        // state 반영
+        // ✅ state 최신화
         setMyUserId(me.userId);
         if (me.nickname) setMyNickname(me.nickname);
       } catch (e) {
@@ -101,6 +89,16 @@ export default function TimeCapsuleCreatePage() {
 
     hydrateMe();
   }, [apiBaseUrl]);
+  useEffect(() => {
+    if (!sendToMe) return;
+    if (!myUserId) return;
+
+    setReceiver({
+      id: myUserId,
+      nickname: `${myNickname} (나)`,
+      raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
+    });
+  }, [sendToMe, myNickname, myUserId]);
 
   // ⚠️ 현재는 이미지 필수로 막아둔 상태(!!pickedFile)
   const isFormValid =
@@ -190,27 +188,27 @@ export default function TimeCapsuleCreatePage() {
   };
 
   // ✅ 다른 사람(receiver)이 선택돼 있으면 '나에게로' 토글 비활성화
-// ✅ 나에게로 비활성 조건 (내 정보 로딩 중 OR 다른 사람 선택됨)
-const isSelfToggleDisabled =
-  !myUserId || (!!receiver && receiver.id !== myUserId);
+  // ✅ 나에게로 비활성 조건 (내 정보 로딩 중 OR 다른 사람 선택됨)
+  const isSelfToggleDisabled =
+    !myUserId || (!!receiver && receiver.id !== myUserId);
 
   // ✅ 나에게로 토글
-const toggleSendToMe = () => {
-  if (isSelfToggleDisabled) return;
+  const toggleSendToMe = () => {
+    if (isSelfToggleDisabled) return;
 
-  const next = !sendToMe;
-  setSendToMe(next);
+    const next = !sendToMe;
+    setSendToMe(next);
 
-  if (next) {
-    setReceiver({
-      id: myUserId,
-      nickname: `${myNickname} (나)`,
-      raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
-    });
-  } else {
-    setReceiver(null);
-  }
-};
+    if (next) {
+      setReceiver({
+        id: myUserId,
+        nickname: `${myNickname} (나)`,
+        raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
+      });
+    } else {
+      setReceiver(null);
+    }
+  };
   return (
     <div className="tc-create-page" style={{ backgroundImage: `url(${bg})` }}>
       <div className="tc-create-overlay">
@@ -238,30 +236,29 @@ const toggleSendToMe = () => {
 
                 {/* ✅ 나에게로 체크박스: 다른 사람 선택 중이면 disabled */}
                 <div
-  className={`tc-create-selfRow ${sendToMe ? "selected" : ""} ${
-    isSelfToggleDisabled ? "disabled" : ""
-  }`}
-  onClick={() => {
-    if (isSelfToggleDisabled) return;
-    toggleSendToMe();
-  }}
-  role="button"
-  tabIndex={isSelfToggleDisabled ? -1 : 0}
-  aria-disabled={isSelfToggleDisabled}
->
-  <input
-    type="checkbox"
-    checked={sendToMe}
-    disabled={isSelfToggleDisabled}
-    onChange={(e) => {
-      e.stopPropagation();
-      if (isSelfToggleDisabled) return;
-      toggleSendToMe();
-    }}
-  />
-  <span>나에게로</span>
-</div>
-
+                  className={`tc-create-selfRow ${sendToMe ? "selected" : ""} ${
+                    isSelfToggleDisabled ? "disabled" : ""
+                  }`}
+                  onClick={() => {
+                    if (isSelfToggleDisabled) return;
+                    toggleSendToMe();
+                  }}
+                  role="button"
+                  tabIndex={isSelfToggleDisabled ? -1 : 0}
+                  aria-disabled={isSelfToggleDisabled}
+                >
+                  <input
+                    type="checkbox"
+                    checked={sendToMe}
+                    disabled={isSelfToggleDisabled}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      if (isSelfToggleDisabled) return;
+                      toggleSendToMe();
+                    }}
+                  />
+                  <span>나에게로</span>
+                </div>
 
                 <button
                   type="button"
@@ -323,7 +320,11 @@ const toggleSendToMe = () => {
                   tabIndex={0}
                   aria-label="upload image"
                 >
-                  <img className="tc-create-image" src={imageSrc} alt="preview" />
+                  <img
+                    className="tc-create-image"
+                    src={imageSrc}
+                    alt="preview"
+                  />
                   <input
                     ref={fileRef}
                     type="file"
