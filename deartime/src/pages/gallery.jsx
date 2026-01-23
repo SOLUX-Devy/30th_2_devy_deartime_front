@@ -42,93 +42,99 @@ const Gallery = () => {
     return cleanedUrl.replace(/^http:\/\//i, "https://");
   };
 
-  /* [기능] 사진 목록 조회 */
-  const fetchPhotos = useCallback(async (page) => {
-    if (isFetchingRef.current || !hasMorePhotos) return;
-    isFetchingRef.current = true;
-    setLoading(true);
-
-    try {
-      const res = await axios.get(`${BASE_PATH}/photos`, {
-        headers: getAuthHeader(),
-        params: { sort: "takenAt,desc", page: page, size: 20 },
-      });
-
-      const responseWrapper = res.data.data;
-      const newPhotos = Array.isArray(responseWrapper.data) ? responseWrapper.data : [];
-
-      if (responseWrapper.isLast || newPhotos.length < 20) {
-        setHasMorePhotos(false);
-      }
-
-      setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
-    } catch (err) {
-      console.error("사진 로드 실패:", err);
-    } finally {
-      setLoading(false);
-      isFetchingRef.current = false;
-    }
-  }, [hasMorePhotos]);
-
-  /* [기능] 앨범 목록 조회 */
-  const fetchAlbums = async () => {
+  const fetchAlbums = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_PATH}/albums`, {
         headers: getAuthHeader(),
       });
-      const albumList = res.data.data;
-      setAlbums(Array.isArray(albumList) ? albumList : []);
+
+      // 콘솔로 데이터 구조를 먼저 확인해보는 것이 좋습니다.
+      console.log("앨범 서버 응답:", res.data);
+
+      // 백엔드 명세에 따라 res.data.data.data 일 수도 있고 res.data.data 일 수도 있습니다.
+      // 안전하게 둘 다 체크하는 로직입니다.
+      const responseData = res.data.data;
+      const albumList = Array.isArray(responseData) 
+        ? responseData 
+        : (responseData?.data || []);
+
+      setAlbums(albumList);
     } catch (err) {
-      console.error("앨범 로드 실패:", err);
+      console.error("앨범 로드 실패:", err.response?.data || err.message);
+      // 401 에러 등이 날 경우 처리
+      if (err.response?.status === 401) {
+        alert("인증이 만료되었습니다. 다시 로그인해주세요.");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  /* [기능] 앨범 생성 */
-  const handleCreateAlbum = async (albumData) => {
-    try {
-      const res = await axios.post(`${BASE_PATH}/albums`, {
-        title: albumData.title,
-        coverPhotoId: albumData.coverPhotoId || null
-      }, {
-        headers: getAuthHeader()
+  /* [기능] 사진 목록 조회 */
+  const fetchPhotos = useCallback(async (page) => {
+  // 함수 안에서 최신 상태를 체크하기 위해 Ref를 활용하거나 
+  // 호출하는 쪽(useEffect)에서 조건을 체크하는 것이 가장 깔끔합니다.
+  if (isFetchingRef.current) return;
+
+  isFetchingRef.current = true;
+  setLoading(true);
+
+  try {
+    const res = await axios.get(`${BASE_PATH}/photos`, {
+      headers: getAuthHeader(),
+      params: { sort: "takenAt,desc", page: page, size: 20 },
+    });
+
+    const responseWrapper = res.data.data;
+    const newPhotos = Array.isArray(responseWrapper.data) ? responseWrapper.data : [];
+
+    // 여기서 더 불러올 데이터가 있는지 판단
+    if (responseWrapper.isLast || newPhotos.length < 20) {
+      setHasMorePhotos(false);
+    }
+
+    setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
+  } catch (err) {
+    console.error("사진 로드 실패:", err);
+  } finally {
+    setLoading(false);
+    isFetchingRef.current = false;
+  }
+}, []); // 의존성을 비워서 함수가 절대로 새로 생성되지 않게 함
+
+/* 2. 초기화 로직: 오직 activeIndex가 바뀔 때만 실행 */
+useEffect(() => {
+  if (activeIndex === 0) {
+    setPhotos([]);
+    setPhotoPage(0);
+    setHasMorePhotos(true);
+    fetchPhotos(0); // 고정된 함수이므로 안전하게 호출
+  } else {
+    fetchAlbums();
+  }
+  // 의존성 배열에서 fetchPhotos를 제거하거나, 
+  // useCallback([]) 처리를 했으므로 그대로 두어도 루프가 발생하지 않습니다.
+}, [activeIndex]); 
+
+/* 3. 무한 스크롤 Observer: threshold 조절 */
+useEffect(() => {
+  if (activeIndex !== 0 || !hasMorePhotos) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    // 1.0은 요소가 100% 다 보여야 작동하므로 0.5 정도로 낮추는 게 좋습니다.
+    if (entries[0].isIntersecting && !isFetchingRef.current && hasMorePhotos) {
+      setPhotoPage((prev) => {
+        const nextPage = prev + 1;
+        fetchPhotos(nextPage);
+        return nextPage;
       });
-
-      if (res.data.success) {
-        alert("앨범이 생성되었습니다.");
-        fetchAlbums();
-        setIsModalOpen(false);
-      }
-    } catch (err) {
-      alert(err.response?.data?.data || "앨범 생성 실패");
     }
-  };
+  }, { threshold: 0.5 });
 
-  useEffect(() => {
-    if (activeIndex === 0) {
-      setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0);
-    } else {
-      fetchAlbums();
-    }
-  }, [activeIndex, fetchPhotos]);
-
-  useEffect(() => {
-    if (activeIndex !== 0 || !hasMorePhotos) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingRef.current) {
-        setPhotoPage((prev) => {
-          const nextPage = prev + 1;
-          fetchPhotos(nextPage);
-          return nextPage;
-        });
-      }
-    }, { threshold: 1.0 });
-
-    if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
-    return () => observer.disconnect();
-  }, [activeIndex, hasMorePhotos, fetchPhotos]);
+  if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
+  return () => observer.disconnect();
+}, [activeIndex, hasMorePhotos, fetchPhotos]);
 
   /* [기능] 사진 업로드 */
   const handleFileUpload = async (e) => {
