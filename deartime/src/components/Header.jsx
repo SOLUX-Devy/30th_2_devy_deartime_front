@@ -54,7 +54,6 @@ export default function Header() {
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-      alert("로그인이 필요합니다.");
       navigate("/");
       return;
     }
@@ -75,7 +74,7 @@ export default function Header() {
         localStorage.clear();
         setUser(null);
         setIsProfileOpen(false);
-        navigate("/login");
+        navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("[Logout] Error:", err);
