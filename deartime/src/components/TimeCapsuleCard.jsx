@@ -1,18 +1,18 @@
-import React, { useMemo } from 'react';
-import capsuleDefaultImg from '../assets/timecapsule_small.png';
+import React, { useMemo } from "react";
+import capsuleDefaultImg from "../assets/timecapsule_small.png";
 
 function formatDateYYYYMMDD(iso) {
-  if (!iso) return '';
+  if (!iso) return "";
   const d = new Date(iso);
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}.${m}.${day}`;
 }
 
 // openAt 기준 D-day 계산 (날짜 기준)
 function calcDDay(openAt) {
-  if (!openAt) return '';
+  if (!openAt) return "";
   const now = new Date();
   const target = new Date(openAt);
 
@@ -21,7 +21,7 @@ function calcDDay(openAt) {
 
   const diffDays = Math.round((t - n) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'D-day';
+  if (diffDays === 0) return "D-day";
   if (diffDays > 0) return `D-${diffDays}`;
   return `D+${Math.abs(diffDays)}`;
 }
@@ -40,21 +40,49 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
   const dday = useMemo(() => calcDDay(openAt), [openAt]);
   const created = useMemo(() => formatDateYYYYMMDD(createdAt), [createdAt]);
 
-  const variantClass = !canAccess
-    ? 'tc-card--locked'
-    : opened
-    ? 'tc-card--opened'
-    : 'tc-card--accessible';
+  // ✅ 규칙 1) canAccess=false면 opened는 무조건 false로 "취급"
+  const effectiveOpened = canAccess ? !!opened : false;
 
-  const imgSrc =
-    canAccess && opened ? imageUrl || capsuleDefaultImg : capsuleDefaultImg;
+  // ✅ 상태 정리 (요구사항 그대로)
+  const isLocked = canAccess === false; // 클릭/깜빡 전부 X
+  const isSparkle = canAccess === true && effectiveOpened === false; // 깜빡 + 클릭 가능(클릭 시 모달 + opened true)
+  const isOpened = canAccess === true && effectiveOpened === true; // 클릭 가능 + 사진 노출 + 안깜빡
+
+  // ✅ 스타일 클래스
+  const variantClass = isLocked
+    ? "tc-card--locked"
+    : isOpened
+    ? "tc-card--opened"
+    : "tc-card--accessible"; // sparkle
+
+  // ✅ 이미지: 완전 열린 상태만 서버 이미지 노출
+  const imgSrc = isOpened ? imageUrl || capsuleDefaultImg : capsuleDefaultImg;
+
+  // ✅ 클릭 핸들러
+  const handleClick = () => {
+    // 요구사항: canAccess=false면 아예 클릭도 안되고 깜빡도 X
+    if (isLocked) return;
+
+    // sparkle 상태에서 클릭하면:
+    // - 모달 켜짐
+    // - 동시에 opened=true로 바뀌어야 함(부모에서 처리)
+    if (isSparkle) {
+      onClick?.(capsule, { markOpened: true });
+      return;
+    }
+
+    // opened=true 상태에서 클릭하면 그냥 사진 띄우기(부모에서 처리)
+    onClick?.(capsule, { markOpened: false });
+  };
 
   return (
     <>
       <button
         type="button"
-        className={`tc-card ${variantClass}`}
-        onClick={onClick}
+        className={`tc-card ${variantClass} ${isLocked ? "tc-card--disabled" : ""}`}
+        onClick={handleClick}
+        disabled={isLocked}              // ✅ 키보드 접근도 막기
+        aria-disabled={isLocked}
       >
         <div className="tc-card__top">
           <span className="tc-card__dday">{dday}</span>
@@ -93,12 +121,29 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           text-align: center;
         }
 
-        /* 접근 불가 */
-        .tc-card--locked {
-          background: transparent;
+        /* ✅ 잠긴 캡슐: 클릭/포커스/깜빡 전부 없음 */
+        .tc-card--disabled {
+          cursor: default;
+          pointer-events: none; /* 🔥 마우스 클릭 자체 차단 */
+          opacity: 0.9;
+        }
+        .tc-card:disabled {
+          outline: none;
+        }
+        .tc-card:disabled:focus,
+        .tc-card:disabled:focus-visible {
+          outline: none;
+          box-shadow: none;
         }
 
-        /* 🔥 OPEN ME – 채도 다운 & 은은 */
+        /* 접근 불가(locked): 배경/애니메이션 X */
+        .tc-card--locked {
+          background: transparent;
+          animation: none !important;
+          box-shadow: none !important;
+        }
+
+        /* 🔥 canAccess=true && opened=false: 깜빡 + 클릭 가능 */
         .tc-card--accessible {
           animation: openMeGlow 3.2s ease-in-out infinite;
           will-change: background-color, box-shadow;
@@ -121,10 +166,11 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           }
         }
 
-        /* 열린 캡슐 */
+        /* ✅ canAccess=true && opened=true: 클릭 가능 + 사진 노출 + 안깜빡 */
         .tc-card--opened {
           background: rgba(0, 0, 0, 0.2);
           box-shadow: inset 0 0 0 2.5px rgba(14, 119, 188, 0.5);
+          animation: none !important;
         }
 
         .tc-card__top {
@@ -147,7 +193,6 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           color: rgba(255, 255, 255, 0.85);
         }
 
-        /* ✅ 이미지 래퍼 – 무조건 20px 라운드 */
         .tc-card__imgWrap {
           width: 200px;
           height: 200px;
@@ -157,10 +202,9 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           justify-content: center;
 
           border-radius: 20px;
-          overflow: hidden; /* 중요 */
+          overflow: hidden;
         }
 
-        /* ✅ 이미지 자체도 20px 라운드 */
         .tc-card__img {
           width: 200px;
           height: 200px;

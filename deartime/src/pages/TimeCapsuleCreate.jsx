@@ -190,33 +190,27 @@ export default function TimeCapsuleCreatePage() {
   };
 
   // ✅ 다른 사람(receiver)이 선택돼 있으면 '나에게로' 토글 비활성화
-  const isOtherReceiverSelected = !!receiver && !!myUserId && receiver.id !== myUserId;
+// ✅ 나에게로 비활성 조건 (내 정보 로딩 중 OR 다른 사람 선택됨)
+const isSelfToggleDisabled =
+  !myUserId || (!!receiver && receiver.id !== myUserId);
 
   // ✅ 나에게로 토글
-  const toggleSendToMe = () => {
-    // myUserId 아직 없으면(불러오는 중) 막기
-    if (!myUserId) {
-      alert("내 정보를 불러오는 중이에요. 잠시 후 다시 눌러주세요!");
-      return;
-    }
+const toggleSendToMe = () => {
+  if (isSelfToggleDisabled) return;
 
-    // 다른 사람이 선택돼 있으면 토글 막기
-    if (isOtherReceiverSelected) return;
+  const next = !sendToMe;
+  setSendToMe(next);
 
-    const next = !sendToMe;
-    setSendToMe(next);
-
-    if (next) {
-      setReceiver({
-        id: myUserId,
-        nickname: `${myNickname} (나)`,
-        raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
-      });
-    } else {
-      setReceiver(null);
-    }
-  };
-
+  if (next) {
+    setReceiver({
+      id: myUserId,
+      nickname: `${myNickname} (나)`,
+      raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
+    });
+  } else {
+    setReceiver(null);
+  }
+};
   return (
     <div className="tc-create-page" style={{ backgroundImage: `url(${bg})` }}>
       <div className="tc-create-overlay">
@@ -244,30 +238,30 @@ export default function TimeCapsuleCreatePage() {
 
                 {/* ✅ 나에게로 체크박스: 다른 사람 선택 중이면 disabled */}
                 <div
-                  className={`tc-create-selfRow ${sendToMe ? "selected" : ""} ${
-                    isOtherReceiverSelected ? "disabled" : ""
-                  }`}
-                  onClick={() => {
-                    if (isOtherReceiverSelected) return;
-                    toggleSendToMe();
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-disabled={isOtherReceiverSelected}
-                >
-                  <input
-                    type="checkbox"
-                    checked={sendToMe}
-                    disabled={isOtherReceiverSelected}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      if (isOtherReceiverSelected) return;
-                      toggleSendToMe();
-                    }}
-                    aria-label="나에게로"
-                  />
-                  <span>나에게로</span>
-                </div>
+  className={`tc-create-selfRow ${sendToMe ? "selected" : ""} ${
+    isSelfToggleDisabled ? "disabled" : ""
+  }`}
+  onClick={() => {
+    if (isSelfToggleDisabled) return;
+    toggleSendToMe();
+  }}
+  role="button"
+  tabIndex={isSelfToggleDisabled ? -1 : 0}
+  aria-disabled={isSelfToggleDisabled}
+>
+  <input
+    type="checkbox"
+    checked={sendToMe}
+    disabled={isSelfToggleDisabled}
+    onChange={(e) => {
+      e.stopPropagation();
+      if (isSelfToggleDisabled) return;
+      toggleSendToMe();
+    }}
+  />
+  <span>나에게로</span>
+</div>
+
 
                 <button
                   type="button"

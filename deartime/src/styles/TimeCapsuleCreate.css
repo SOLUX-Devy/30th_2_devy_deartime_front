@@ -357,7 +357,3 @@
   border-color: rgba(255, 255, 255, 0.25); /* hover로 파래지지 않게 */
 }
 
-.tc-create-receiver:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
