@@ -1,10 +1,10 @@
 export async function setProxy(friendId, expiredAt) {
   const token = localStorage.getItem("accessToken");
-  if (!token) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  if (!token) throw new Error("로그인이 필요합니다.");
 
-  const res = await fetch(`/api/friends/${friendId}/proxy`, {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const res = await fetch(`${apiBaseUrl}/api/friends/${friendId}/proxy`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -13,11 +13,13 @@ export async function setProxy(friendId, expiredAt) {
     body: JSON.stringify({ expiredAt }),
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
 
-  if (!res.ok || !json.success) {
-    throw new Error(json.message || "대리인 설정 실패");
+  const success = json?.success ?? (json?.code === 200) ?? false;
+
+  if (!res.ok || !success) {
+    throw new Error(json?.message || "대리인 설정 실패");
   }
 
-  return json.data;
+  return json?.data ?? null;
 }

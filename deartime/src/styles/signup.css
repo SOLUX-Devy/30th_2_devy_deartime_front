@@ -167,3 +167,49 @@
 
 
 
+/* =========================
+   Nickname check message (one-line)
+========================= */
+.field-msg {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.2;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+.field-msg.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.field-msg.success {
+  color: #8BE2B6; /* 민트 계열: 성공 */
+}
+
+.field-msg.error {
+  color: #ff6b6b; /* 빨강 계열: 에러 */
+}
+
+/* =========================
+   Duplicate check button disabled
+========================= */
+.input-group button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* =========================
+   Signup button disabled style
+========================= */
+.signup-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.signup-button:disabled:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
