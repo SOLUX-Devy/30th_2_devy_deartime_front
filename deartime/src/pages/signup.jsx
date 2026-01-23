@@ -9,7 +9,6 @@ import React, { useState, useEffect } from "react";
 
 const Signup = () => {
   const navigate = useNavigate();
-
   // ✅ 팀 규칙: env base url 사용
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -52,6 +51,13 @@ const Signup = () => {
   // 닉네임 중복 확인 상태
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
+
+  const isSignupDisabled =
+    !form.nickname.trim() ||
+    !form.birthDate ||
+    !form.bio.trim() ||
+    !nicknameChecked ||
+    isNicknameAvailable !== true;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,7 +114,7 @@ const Signup = () => {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
-        }
+        },
       );
 
       // ✅ 명세 응답: { status, success, message, data: { nickname, isAvailable } }
@@ -129,7 +135,7 @@ const Signup = () => {
         message ||
           (isAvailable
             ? "사용 가능한 닉네임입니다."
-            : "이미 사용 중인 닉네임입니다.")
+            : "이미 사용 중인 닉네임입니다."),
       );
     } catch (error) {
       console.error("닉네임 중복 확인 실패", error);
@@ -185,7 +191,7 @@ const Signup = () => {
         "request",
         new Blob([JSON.stringify(signupData)], {
           type: "application/json",
-        })
+        }),
       );
 
       if (profileFile) {
@@ -201,7 +207,7 @@ const Signup = () => {
             Authorization: `Bearer ${tempToken}`,
             // ❗ FormData에서는 Content-Type 직접 넣지 말기
           },
-        }
+        },
       );
 
       const { accessToken, refreshToken } = response.data.data;
@@ -261,10 +267,10 @@ const Signup = () => {
 
           <div className="input-group">
             <label>닉네임</label>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="nickname-row">
               <input
                 name="nickname"
-                placeholder="닉네임"
+                placeholder="닉네임을 입력해주세요"
                 value={form.nickname}
                 onChange={handleChange}
               />
@@ -295,7 +301,11 @@ const Signup = () => {
           </div>
         </div>
 
-        <button className="signup-button" onClick={handleSubmit}>
+        <button
+          className={`signup-button ${isSignupDisabled ? "disabled" : ""}`}
+          onClick={handleSubmit}
+          disabled={isSignupDisabled}
+        >
           회원가입
         </button>
       </div>
