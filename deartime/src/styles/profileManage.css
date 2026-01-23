@@ -46,13 +46,14 @@
 
 .close-btn {
   position: absolute;
-  right: 18px; /* ✅ 모달 우측 여백 */
-  top: 16px;   /* ✅ 모달 상단 여백 */
+  right: 18px;
+  top: 16px;
   background: none;
   border: none;
   color: white;
   font-size: 18px;
   cursor: pointer;
+  z-index: 10; /* ✅ 혹시 가려질까봐 */
 }
 
 /* ===== 폼 ===== */
@@ -229,9 +230,9 @@
   white-space: nowrap;
 }
 
-.input-group button:hover {
+.input-group button:not(:disabled):hover {
   background-color: #2A4280;
-  opacity: 80%;
+  opacity: 0.8;
 }
 
 .input-group button:active {
@@ -307,4 +308,52 @@
 
 .profile-manage-image:hover .profile-img {
   filter: blur(1.5px) brightness(0.85);
+}
+
+/* ========================= */
+/* FriendSelect Scrollbar   */
+/* app-scroll-area 스타일 참고 */
+/* ========================= */
+
+/* 네모(전체 영역) */
+.fs-grid::-webkit-scrollbar {
+  width: 9px;
+  background: transparent;
+}
+
+/* 화살표 제거 */
+.fs-grid::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 트랙 (작대기) */
+.fs-grid::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 49, 94, 0.55) 0%,
+    rgba(42, 66, 128, 0.55) 100%
+  );
+  border-radius: 999px;
+}
+
+/* 썸 (동그라미) */
+.fs-grid::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85);
+  border-radius: 999px;
+
+  /* Windows에서 얇아 보이게 */
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* 호버 */
+.fs-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 220, 220, 1);
+}
+
+/* 코너 제거 */
+.fs-grid::-webkit-scrollbar-corner {
+  background: transparent;
 }
