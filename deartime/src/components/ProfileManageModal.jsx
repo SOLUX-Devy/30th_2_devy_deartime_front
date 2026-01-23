@@ -1,30 +1,23 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import DefaultProfile from "../assets/default_profile2.png";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
 import { useUser } from "../context/UserContext";
 import EditProfileIcon from "../assets/edit-profile.png";
-import { setProxy } from "../api/proxy";
+import { setProxy, removeProxy } from "../api/proxy";
 import { useLocation } from "react-router-dom";
+
+const formatLocalDateTime = (date) => {
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+};
 
 export default function ProfileManageModal({ userProfile, onClose }) {
   const { setUser } = useUser();
   const fileInputRef = useRef(null);
-
-  const originalNickname = userProfile?.nickname || "";
-
-  const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
-  const [selectedDelegate, setSelectedDelegate] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [nickname, setNickname] = useState(originalNickname);
-  const [bio, setBio] = useState(userProfile?.bio || "");
-  const [birthDate, setBirthDate] = useState(userProfile?.birthDate || "");
-
-  const [profileImageFile, setProfileImageFile] = useState(null);
-  const [profileImagePreview, setProfileImagePreview] = useState(
-    userProfile?.profileImageUrl || DefaultProfile,
-  );
 
   const location = useLocation();
   const didMountRef = useRef(false);
@@ -37,17 +30,61 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     onClose();
   }, [location.pathname, onClose]);
 
-  // =========================
-  // Nickname check states
-  // =========================
-  const [nicknameChecked, setNicknameChecked] = useState(false);
-  const [nicknameAvailable, setNicknameAvailable] = useState(null); // null | true | false
-  const [nicknameMsg, setNicknameMsg] = useState("");
-  const [nicknameMsgType, setNicknameMsgType] = useState(""); // "error" | "success" | ""
+  const originalNickname = userProfile?.nickname || "";
 
-  // =========================
-  // Derived values (required/dirty)
-  // =========================
+  const [nickname, setNickname] = useState(originalNickname);
+  const [bio, setBio] = useState(userProfile?.bio || "");
+  const [birthDate, setBirthDate] = useState(userProfile?.birthDate || "");
+
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(
+    userProfile?.profileImageUrl || DefaultProfile,
+  );
+
+  const [selectedDelegate, setSelectedDelegate] = useState(null);
+  const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
+
+  const initialProxyUserIdRef = useRef(userProfile?.proxyUserId ?? null);
+
+  const [delegateSuccessMsg, setDelegateSuccessMsg] = useState("");
+
+  useEffect(() => {
+    setNickname(userProfile?.nickname || "");
+    setBio(userProfile?.bio || "");
+    setBirthDate(userProfile?.birthDate || "");
+
+    setProfileImageFile(null);
+    setProfileImagePreview(userProfile?.profileImageUrl || DefaultProfile);
+
+    initialProxyUserIdRef.current = userProfile?.proxyUserId ?? null;
+
+    if (userProfile?.proxyUserId && userProfile?.proxyNickname) {
+      setSelectedDelegate({
+        friendId: userProfile.proxyUserId,
+        friendNickname: userProfile.proxyNickname,
+        friendProfileImageUrl: null,
+      });
+    } else {
+      setSelectedDelegate(null);
+    }
+
+    setDelegateSuccessMsg("");
+  }, [
+    userProfile?.nickname,
+    userProfile?.bio,
+    userProfile?.birthDate,
+    userProfile?.profileImageUrl,
+    userProfile?.proxyUserId,
+    userProfile?.proxyNickname,
+  ]);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState(null);
+  const [nicknameMsg, setNicknameMsg] = useState("");
+  const [nicknameMsgType, setNicknameMsgType] = useState("");
+
   const normalizedNickname = (nickname ?? "").replace(/\u200B/g, "").trim();
   const normalizedOriginalNickname = (originalNickname ?? "")
     .replace(/\u200B/g, "")
@@ -69,10 +106,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     normalizedBirth !== (userProfile?.birthDate ?? "").trim();
   const isProfileImageChanged = !!profileImageFile;
 
-  // delegateId가 userProfile에 없으면 비교가 무의미할 수 있음.
-  // 프로젝트에서 delegateId가 없으면 아래 줄을 지워도 됨.
-  const isDelegateChanged =
-    (selectedDelegate?.friendId ?? null) !== (userProfile?.delegateId ?? null);
+  const isDelegateChanged = useMemo(() => {
+    const initialId = initialProxyUserIdRef.current ?? null;
+    const currentId = selectedDelegate?.friendId ?? null;
+    return String(initialId ?? "") !== String(currentId ?? "");
+  }, [selectedDelegate]);
 
   const isDirty =
     isNicknameChanged ||
@@ -81,15 +119,12 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     isProfileImageChanged ||
     isDelegateChanged;
 
-  // ✅ 저장 버튼: "모든 칸 채움 + 변경사항 있음" 일 때만 활성화
   const isSaveDisabled = !isAllFilled || !isDirty || isSaving;
 
-  // =========================
-  // Handlers
-  // =========================
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
+    setDelegateSuccessMsg("");
   };
 
   const handleProfileImageChange = (e) => {
@@ -104,7 +139,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   };
 
   const handleCheckNickname = async () => {
-    if (!normalizedNickname) return; // placeholder + disabled로 유도
+    if (!normalizedNickname) return;
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -148,48 +183,116 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
   };
 
+  const refreshMe = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+    const meRes = await fetch(`${apiBaseUrl}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const meJson = await meRes.json().catch(() => ({}));
+    const meData = meJson?.data;
+
+    if (!meRes.ok || !meData) return null;
+
+    setUser(meData);
+
+    if (meData?.userId) localStorage.setItem("userId", String(meData.userId));
+    if (meData?.nickname) localStorage.setItem("nickname", meData.nickname);
+    if (meData?.profileImageUrl)
+      localStorage.setItem("profileImageUrl", meData.profileImageUrl);
+
+    if (meData?.proxyUserId != null)
+      localStorage.setItem("proxyUserId", String(meData.proxyUserId));
+    else localStorage.removeItem("proxyUserId");
+
+    if (meData?.proxyNickname != null)
+      localStorage.setItem("proxyNickname", meData.proxyNickname);
+    else localStorage.removeItem("proxyNickname");
+
+    return meData;
+  };
+
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
-    // ✅ 닉네임이 변경된 경우에만: 중복확인 + 사용가능(true)여야 API 호출
     if (isNicknameChanged) {
       if (!nicknameChecked) {
         setNicknameMsg("닉네임 중복 확인을 해주세요");
         setNicknameMsgType("error");
-        return; // ✅ API 호출 금지
+        return;
       }
       if (nicknameAvailable !== true) {
         setNicknameMsg("이미 사용 중인 닉네임입니다.");
         setNicknameMsgType("error");
-        return; // ✅ API 호출 금지
+        return;
       }
     }
 
     setIsSaving(true);
-
-    const handleSaveProxy = async () => {
-      if (!selectedDelegate) return;
-
-      try {
-        const expiredAt = new Date();
-        expiredAt.setFullYear(expiredAt.getFullYear() + 1);
-        const expiredAtStr = expiredAt.toISOString().slice(0, 19);
-
-        await setProxy(selectedDelegate.friendId, expiredAtStr);
-
-        // ✅ alert 제거 (요구사항)
-        console.log("[Proxy Set] success");
-      } catch (err) {
-        console.error("대리인 설정 실패", err);
-        // 필요하면 여기도 인라인 메시지로 따로 빼야 함(현재 요구사항은 닉네임만)
-      }
-    };
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
       setIsSaving(false);
       return;
     }
+
+    // ✅ 대리인 저장/삭제 처리 (정상 리턴: true면 변경 발생)
+    // ✅ 대리인 저장/삭제 처리 (정상 리턴: true면 변경 발생)
+const applyProxyChange = async () => {
+  // 기존 proxyUserId (삭제 대상)
+  // ✅ ref가 가끔 null로 꼬일 수 있으니 userProfile.proxyUserId 우선
+    const initialId =
+      userProfile?.proxyUserId ?? initialProxyUserIdRef.current ?? null;
+
+    // 현재 선택된 delegate의 id (설정 대상)
+    const currentId = selectedDelegate?.friendId ?? null;
+
+    console.log("[Proxy Debug]", {
+      initialId,
+      currentId,
+      ref: initialProxyUserIdRef.current,
+      fromProfile: userProfile?.proxyUserId,
+    });
+
+    // ✅ 안전 비교(숫자/문자 섞여도 OK)
+    const same =
+      initialId != null &&
+      currentId != null &&
+      String(initialId) === String(currentId);
+
+    // 1) 변경 없음: 둘 다 null(없음) 이거나, 둘 다 같은 값이면 끝
+    if ((initialId == null && currentId == null) || same) {
+      console.log("[Proxy] no change detected");
+      return false;
+    }
+
+    // 2) 삭제: 기존 있었는데 지금은 없음
+    if (initialId != null && currentId == null) {
+      await removeProxy(initialId);
+      console.log("[Proxy Remove] success");
+      setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
+      return true;
+    }
+
+    // 3) 설정/변경: 현재가 있으면 setProxy
+    if (currentId != null) {
+      const expiredAt = new Date();
+      expiredAt.setFullYear(expiredAt.getFullYear() + 1);
+      const expiredAtStr = formatLocalDateTime(expiredAt);
+
+      await setProxy(currentId, expiredAtStr);
+      console.log("[Proxy Set] success");
+      setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
+      return true;
+    }
+
+    return false;
+  };
+
 
     try {
       const formData = new FormData();
@@ -225,7 +328,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (res.ok && json.success) {
         setUser(json.data);
 
-        // ✅ 추가: 다른 페이지에서도 즉시 반영되도록 localStorage 최신화
         if (json?.data?.userId)
           localStorage.setItem("userId", String(json.data.userId));
         if (json?.data?.nickname)
@@ -233,12 +335,34 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         if (json?.data?.profileImageUrl)
           localStorage.setItem("profileImageUrl", json.data.profileImageUrl);
 
-        // ✅ 대리인 저장은 1번만
-        if (selectedDelegate) {
-          await handleSaveProxy();
+        // ✅ 대리인 변경 적용
+        try {
+          await applyProxyChange();
+        } catch (e) {
+          console.error("대리인 처리 실패", e);
         }
 
-        onClose();
+        // ✅ 최신 me로 확정 반영
+        const me = await refreshMe();
+        if (me) {
+          initialProxyUserIdRef.current = me?.proxyUserId ?? null;
+        }
+
+
+        // ✅ 초기값 업데이트 + 현재 대리인 표시도 me 기준으로 정렬
+        if (me) {
+          initialProxyUserIdRef.current = me?.proxyUserId ?? null;
+
+          if (me?.proxyUserId && me?.proxyNickname) {
+            setSelectedDelegate({
+              friendId: me.proxyUserId,
+              friendNickname: me.proxyNickname,
+              friendProfileImageUrl: null,
+            });
+          } else {
+            setSelectedDelegate(null);
+          }
+        }
       } else {
         const msg = json.message || "프로필 업데이트에 실패했습니다.";
 
@@ -252,7 +376,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       }
     } catch (err) {
       console.error("[Profile Update] Error:", err);
-      // ✅ alert 제거 (요구사항)
     } finally {
       setIsSaving(false);
     }
@@ -307,15 +430,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               <div className="nickname-row">
                 <input
                   value={nickname}
-                  placeholder="닉네임을 입력해주세요." // ✅ 요구사항 3
+                  placeholder="닉네임을 입력해주세요."
                   onChange={(e) => {
                     setNickname(e.target.value);
-
-                    // ✅ 닉네임 변경 시 중복확인 결과 리셋
                     setNicknameChecked(false);
                     setNicknameAvailable(null);
-
-                    // ✅ 메시지도 리셋 (한 줄만)
                     setNicknameMsg("");
                     setNicknameMsgType("");
                   }}
@@ -325,13 +444,12 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                   className="nickname-check-btn"
                   type="button"
                   onClick={handleCheckNickname}
-                  disabled={isNicknameEmpty} // ✅ 요구사항 2
+                  disabled={isNicknameEmpty}
                 >
                   중복확인
                 </button>
               </div>
 
-              {/* ✅ 메시지는 "딱 한 줄"만: nicknameMsg 하나로만 출력 */}
               {nicknameMsg && (
                 <div
                   className={`field-msg ${nicknameMsgType} ${nicknameMsg ? "show" : ""}`}
@@ -363,7 +481,8 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                 }`}
                 type="button"
                 onClick={() => {
-                  if (!selectedDelegate) setIsDelegateSelectOpen(true);
+                  setIsDelegateSelectOpen(true);
+                  setDelegateSuccessMsg("");
                 }}
               >
                 <span className="delegate-text">
@@ -371,12 +490,14 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                     ? selectedDelegate.friendNickname
                     : "친구 선택"}
                 </span>
+
                 {selectedDelegate ? (
                   <span
                     className="delegate-remove"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedDelegate(null);
+                      setDelegateSuccessMsg("");
                     }}
                   >
                     ✕
@@ -386,6 +507,10 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                 )}
               </button>
             </div>
+
+            {delegateSuccessMsg && (
+              <div className="field-msg success show">{delegateSuccessMsg}</div>
+            )}
 
             <div className="save-row">
               <button
