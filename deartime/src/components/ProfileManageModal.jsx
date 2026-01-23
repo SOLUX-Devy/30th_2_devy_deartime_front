@@ -29,9 +29,16 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
 
-  const isNicknameChanged = nickname.trim() !== originalNickname;
-  const isSaveDisabled = !nickname.trim() || !birthDate.trim() || !bio.trim();
-  const isNicknameEmpty = !nickname.trim();
+  const normalizedNickname = (nickname ?? "").replace(/\u200B/g, "").trim();
+
+  const isNicknameChanged =
+    normalizedNickname !==
+    (originalNickname ?? "").replace(/\u200B/g, "").trim();
+
+  const isNicknameEmpty = normalizedNickname.length === 0;
+
+  const isSaveDisabled =
+    normalizedNickname.length === 0 || !birthDate.trim() || !bio.trim();
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
@@ -50,7 +57,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   };
 
   const handleCheckNickname = async () => {
-    if (!nickname.trim()) {
+    if (!normalizedNickname) {
       alert("닉네임을 입력해주세요.");
       return;
     }
@@ -63,7 +70,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
     try {
       const res = await fetch(
-        `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
+        `/api/users/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -140,7 +147,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         new Blob(
           [
             JSON.stringify({
-              nickname,
+              nickname: normalizedNickname,
               bio,
               birthDate,
             }),
@@ -236,7 +243,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                   type="button"
                   onClick={handleCheckNickname}
                   disabled={isNicknameEmpty}
-                  className={isNicknameEmpty ? "disabled" : ""}
                 >
                   중복확인
                 </button>

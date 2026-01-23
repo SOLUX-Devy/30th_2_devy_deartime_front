@@ -1,26 +1,26 @@
-/* ===== overlay ===== */
+/* =========================
+   overlay
+========================= */
 .profile-manage-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-
   background: url("../assets/background.svg") center / cover no-repeat;
 
   overflow-y: auto;
   display: flex;
-  padding-top: 100px;
-  padding-bottom: 50px;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 100px 0 50px;
 }
 
-/* ===== 카드 ===== */
+/* =========================
+   modal
+========================= */
 .profile-manage-modal {
   width: 450px;
   height: auto;
 
-  background: #000D32;
-  border: 1px solid #2A4280;
+  background: #000d32;
+  border: 1px solid #2a4280;
   border-radius: 20px;
   padding: 40px;
   box-sizing: border-box;
@@ -30,9 +30,29 @@
   align-items: center;
   margin: auto;
 
-  position: relative; /* ✅ X 버튼 기준 */
+  position: relative; /* ✅ close-btn 기준 */
 }
 
+/* ✅ X 버튼: 모달 우상단 고정 */
+.profile-manage-modal .close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+
+  z-index: 50;
+}
+
+/* header */
 .profile-manage-header {
   width: 100%;
   text-align: center;
@@ -40,208 +60,98 @@
   font-family: "Josefin Slab";
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 10px;
-  position: static; /* ✅ relative 필요 없음 */
+  margin-bottom: 12px;
 }
 
-.close-btn {
-  position: absolute;
-  right: 18px;
-  top: 16px;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  z-index: 10; /* ✅ 혹시 가려질까봐 */
-}
-
-/* ===== 폼 ===== */
+/* =========================
+   form layout
+========================= */
 .profile-manage-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0; /* ✅ form 자체 gap 제거 */
 }
 
-/* ✅ 항목(세트) 간격은 input-group이 담당 */
+/* ✅ 라벨-입력은 붙이고, 세트끼리는 띄우기 */
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;           /* ✅ 라벨-입력 간격(가깝게) */
-  margin-bottom: 14px; /* ✅ 세트끼리 간격(넉넉하게) */
+  margin-bottom: 16px; /* ✅ 세트 간격 */
 }
 
 .input-group label {
   display: block;
   color: #fff;
   font-size: 13px;
-  margin-bottom: 0;
   line-height: 1.2;
+  margin-bottom: 2px; /* ✅ 라벨-입력 간격(작게) */
 }
 
+/* input / textarea 기본 */
 .input-group input,
 .input-group textarea {
   width: 100%;
-  height: 36px;
-  padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #2A4280;
+  border: 1px solid #2a4280;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   font-size: 14px;
   box-sizing: border-box;
 }
 
-/* ✅ 닉네임 입력+중복확인 줄 */
+/* input 높이 */
+.input-group input {
+  height: 36px;
+  padding: 0 12px;
+}
+
+/* textarea 높이 */
+.input-group textarea {
+  min-height: 80px;
+  padding: 10px 12px;
+  resize: none;
+}
+
+/* =========================
+   nickname row
+========================= */
 .nickname-row {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-top: 0; /* ✅ 라벨 바로 아래 */
 }
 
-/* textarea는 기본 height 36px 적용되면 너무 낮을 수 있어 별도 높이 */
-.input-group textarea {
-  height: auto;
-  min-height: 80px;
-  padding: 10px 12px;
-  resize: none; /* 원하면 제거 */
+/* 닉네임 input은 버튼이랑 같이 있으니 폭 조절 */
+.nickname-row input {
+  flex: 1;
 }
 
-/* ===== 대리인 ===== */
-.delegate-row {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.delegate-label {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.action-btn {
-  height: 40px;
-  padding: 0 14px;
-  width: 150px;
-  border-radius: 10px;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #D6DEE6;
-  display: flex;
-  justify-content: space-between;
-}
-
-.delegate-text {
-  margin-top: 11px;
-  color: #000;
-}
-
-.delegate-arrow {
-  font-size: 0;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
-
-.delegate-arrow::before {
-  content: "";
-  display: block;
-  width: 14px;
-  height: 2px;
-  background-color: #000;
-  border-radius: 2px;
-}
-
-.delegate-arrow::after {
-  content: "";
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-top: 2px solid #000;
-  border-right: 2px solid #000;
-  transform: rotate(45deg);
-  margin-left: -9px;
-}
-
-.delegate-remove {
-  font-size: 14px;
-  color: black;
-  cursor: pointer;
-  margin-top: 9px;
-}
-
-.action-btn.selected {
-  background-color: #C5E8EC;
-}
-
-/* ===== 저장 버튼 ===== */
-.save-row {
-  display: flex;
-  margin-top: 22px; /* ✅ 대리인과 거리 늘림 */
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.save-btn {
-  width: 100px;
-  height: 40px;
-  border-radius: 10px;
-  border: 1.5px solid #2A4280;
-  background: transparent;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.save-btn:not(.disabled):hover {
-  background-color: rgba(42, 66, 128, 0.8);
-}
-
-.save-btn:not(.disabled):active {
-  background-color: #0E77BC;
-}
-
-.save-btn.disabled {
-  cursor: not-allowed;
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(42, 66, 128, 0.4);
-  color: rgba(255, 255, 255, 0.45);
-}
-
-/* ===== 중복확인 버튼 ===== */
+/* =========================
+   duplicate check button
+========================= */
 .input-group button {
   padding: 10px 14px;
   font-size: 13px;
-  border: none;
   border-radius: 8px;
-  border: 2px solid #2A4280;
-  background: rgba(255, 255, 255, 0.00);
+  border: 2px solid #2a4280;
+  background: rgba(255, 255, 255, 0);
   color: #fff;
   cursor: pointer;
   white-space: nowrap;
 }
 
+/* ✅ 활성일 때만 hover/active 먹게 */
 .input-group button:not(:disabled):hover {
-  background-color: #2A4280;
+  background-color: #2a4280;
   opacity: 0.8;
 }
 
-.input-group button:active {
-  background-color: #0E77BC;
+.input-group button:not(:disabled):active {
+  background-color: #0e77bc;
 }
 
-/* ✅ 중복확인 버튼 disabled */
-.input-group button:disabled,
-.input-group button.disabled {
+/* ✅ disabled: 저장버튼이랑 동일한 톤으로 어둡게 */
+.input-group button:disabled {
   cursor: not-allowed;
   opacity: 1;
   background: rgba(255, 255, 255, 0.08);
@@ -249,13 +159,9 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.input-group button:disabled:hover,
-.input-group button:disabled:active {
-  background: rgba(255, 255, 255, 0.08);
-  opacity: 1;
-}
-
-/* ===== 프로필 이미지 ===== */
+/* =========================
+   profile image
+========================= */
 .profile-manage-image {
   position: relative;
   width: 120px;
@@ -310,25 +216,136 @@
   filter: blur(1.5px) brightness(0.85);
 }
 
-/* ========================= */
-/* FriendSelect Scrollbar   */
-/* app-scroll-area 스타일 참고 */
-/* ========================= */
+/* =========================
+   delegate
+========================= */
+.delegate-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
 
-/* 네모(전체 영역) */
+.delegate-label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.action-btn {
+  height: 40px;
+  padding: 0 14px;
+  width: 150px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #d6dee6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* ✅ 텍스트 중앙 */
+}
+
+.delegate-text {
+  color: #000;
+}
+
+.delegate-remove {
+  font-size: 14px;
+  color: black;
+  cursor: pointer;
+}
+
+.action-btn.selected {
+  background-color: #c5e8ec;
+}
+
+/* 화살표 */
+.delegate-arrow {
+  font-size: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.delegate-arrow::before {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 2px;
+  background-color: #000;
+  border-radius: 2px;
+}
+
+.delegate-arrow::after {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #000;
+  border-right: 2px solid #000;
+  transform: rotate(45deg);
+  margin-left: -9px;
+}
+
+/* =========================
+   save button
+========================= */
+.save-row {
+  display: flex;
+  margin-top: 26px; /* ✅ 대리인과 더 떨어지게 */
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.save-btn {
+  width: 100px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid #2a4280;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-btn:not(.disabled):hover {
+  background-color: rgba(42, 66, 128, 0.8);
+}
+
+.save-btn:not(.disabled):active {
+  background-color: #0e77bc;
+}
+
+.save-btn.disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================
+   FriendSelect Scrollbar
+========================= */
+/* ✅ fs-grid가 "스크롤 되는 요소"일 때만 적용됨 */
+.fs-grid {
+  overflow-y: auto; /* ✅ 이거 없으면 스크롤바 스타일이 안 먹을 수 있음 */
+}
+
 .fs-grid::-webkit-scrollbar {
   width: 9px;
   background: transparent;
 }
 
-/* 화살표 제거 */
 .fs-grid::-webkit-scrollbar-button {
   display: none;
   width: 0;
   height: 0;
 }
 
-/* 트랙 (작대기) */
 .fs-grid::-webkit-scrollbar-track {
   background: linear-gradient(
     to bottom,
@@ -338,22 +355,17 @@
   border-radius: 999px;
 }
 
-/* 썸 (동그라미) */
 .fs-grid::-webkit-scrollbar-thumb {
   background: rgba(220, 220, 220, 0.85);
   border-radius: 999px;
-
-  /* Windows에서 얇아 보이게 */
   border: 1px solid transparent;
   background-clip: padding-box;
 }
 
-/* 호버 */
 .fs-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(220, 220, 220, 1);
 }
 
-/* 코너 제거 */
 .fs-grid::-webkit-scrollbar-corner {
   background: transparent;
 }
