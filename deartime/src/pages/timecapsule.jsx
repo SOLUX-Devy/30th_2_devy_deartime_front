@@ -13,9 +13,8 @@ const TimeCapsule = () => {
   const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
-  const myUserId = Number(localStorage.getItem("userId"));
+  const myUserId = Number(localStorage.getItem("userId")) || 2;
 
-  
   // ✅ UI는 1부터
   const [page, setPage] = useState(1);
   const pageSize = 8;
@@ -23,8 +22,8 @@ const TimeCapsule = () => {
   // ✅ 정렬
   const sortOrder = "desc"; // 필요하면 state로
 
-  // ✅ API 데이터
-  const [capsules, setCapsules] = useState([]);
+  // ✅ API 데이터(원본)
+  const [rawCapsules, setRawCapsules] = useState([]);
   const [pageInfo, setPageInfo] = useState({
     currentPage: 0,
     totalPages: 1,
@@ -44,16 +43,10 @@ const TimeCapsule = () => {
   // 탭 + 토글 → API type 매핑
   // -------------------------
   const apiType = useMemo(() => {
-    // ⚠️ 토글 문구가 "열린 캡슐만 보기"인데
-    // API 타입이 OPENED(열어본 캡슐)인지,
-    // canAccess(열 수 있는 캡슐)인지 팀 정의 맞춰야 함.
-    // 지금은 스펙에 맞춰 OPENED로 매핑함.
-    if (showOpenOnly) return "OPENED";
-
     if (activeIndex === 0) return "ALL";
     if (activeIndex === 1) return "RECEIVED";
-    return "SENT"; // "나의 캡슐"을 SENT로 쓸지(내가 보낸 캡슐), 팀 정의에 맞춰 조정
-  }, [activeIndex, showOpenOnly]);
+    return "SENT";
+  }, [activeIndex]);
 
   // -------------------------
   // API 호출
@@ -65,8 +58,7 @@ const TimeCapsule = () => {
 
         const accessToken = localStorage.getItem("accessToken");
         if (!accessToken) {
-          // 로그인 전이면 빈 화면 처리 or 로그인 유도
-          setCapsules([]);
+          setRawCapsules([]);
           setPageInfo((prev) => ({
             ...prev,
             totalElements: 0,
@@ -85,7 +77,6 @@ const TimeCapsule = () => {
         params.set("size", String(pageSize));
         params.set("sort", `createdAt,${sortOrder}`);
 
-        // ✅ 엔드포인트: 너가 말한 /api/timecapsules 기준
         const res = await fetch(
           `${apiBaseUrl}/api/timecapsules?${params.toString()}`,
           {
@@ -99,11 +90,9 @@ const TimeCapsule = () => {
         const json = await res.json();
 
         if (!res.ok || json?.success === false) {
-          // 예: INVALID_CAPSULE_TYPE (400)
           throw new Error(json?.message || "타임캡슐 목록 조회 실패");
         }
 
-        // ✅ 응답 구조: json.data.data = 리스트, 나머지 페이지 정보
         const payload = json?.data;
         const list = payload?.data ?? [];
 
@@ -114,22 +103,7 @@ const TimeCapsule = () => {
           receiverId: Number(c.receiverId),
         }));
 
-        // ✅ 규칙 적용: receiver가 "나"인 캡슐만 보여주기
-        // (나→나 포함, 남→나 포함, 나→남 제외)
-        // ✅ 규칙: (1) RECEIVED 타입이거나 (2) 나→나(보낸/받는 사람 둘 다 나)만 렌더
-        const filtered = normalized.filter((c) => {
-          const isSelfToSelf =
-            c.senderId === myUserId && c.receiverId === myUserId;
-
-          // 서버 응답에서 type 필드명이 다를 수 있어서 둘 다 대응
-          const capsuleType = c.type ?? c.capsuleType;
-
-          const isReceivedType = capsuleType === "RECEIVED";
-
-          return isReceivedType || isSelfToSelf;
-        });
-
-        setCapsules(filtered);
+        setRawCapsules(normalized);
 
         setPageInfo({
           currentPage: payload?.currentPage ?? apiPage,
@@ -141,7 +115,7 @@ const TimeCapsule = () => {
         });
       } catch (e) {
         console.error(e);
-        setCapsules([]);
+        setRawCapsules([]);
         setPageInfo((prev) => ({
           ...prev,
           totalElements: 0,
@@ -154,14 +128,37 @@ const TimeCapsule = () => {
     };
 
     fetchCapsules();
-  }, [apiType, page, pageSize, sortOrder, activeIndex, myUserId]);
+  }, [apiType, page, pageSize, sortOrder, apiBaseUrl]);
 
   // -------------------------
-  // 페이지네이션 (UI용)
+  // ✅ 탭별 필터 규칙 (너가 원하는 룰)
+  // 전체캡슐 : 나->나 && 남->나
+  // 받은캡슐 : 남->나
+  // 나의캡슐 : 나->나
+  // -------------------------
+  const tabFiltered = useMemo(() => {
+    // 0) 공통: 나에게 온 것만 (나->남 제거)
+    const onlyToMe = rawCapsules.filter((c) => c.receiverId === myUserId);
+
+    // 1) 탭별
+    let base = onlyToMe;
+    if (activeIndex === 1)
+      base = onlyToMe.filter((c) => c.senderId !== myUserId); // 받은: 남->나
+    if (activeIndex === 2)
+      base = onlyToMe.filter((c) => c.senderId === myUserId); // 나의: 나->나
+
+    // 2) 토글별 (ON일 때만 열린 것만)
+    if (showOpenOnly) return base.filter((c) => c.canAccess);
+
+    // OFF면 잠긴 것도 포함해서 전부
+    return base;
+  }, [rawCapsules, activeIndex, myUserId, showOpenOnly]);
+
+  // -------------------------
+  // 페이지네이션/빈칸 계산 (UI용)
   // -------------------------
   const totalPages = Math.max(1, pageInfo.totalPages || 1);
 
-  // page state가 totalPages보다 커질 때 자동 보정 (버그 방지)
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
     if (page < 1) setPage(1);
@@ -172,9 +169,8 @@ const TimeCapsule = () => {
     [totalPages],
   );
 
-  const emptyCount = Math.max(0, pageSize - capsules.length);
+  const emptyCount = Math.max(0, pageSize - tabFiltered.length);
 
-  // ✅ "11개 중 1-8" 표시 (API totalElements 기반)
   const rangeText = useMemo(() => {
     const total = pageInfo.totalElements ?? 0;
     if (total === 0) return `0개 중 0-0`;
@@ -208,7 +204,7 @@ const TimeCapsule = () => {
                 key={tab}
                 onClick={() => {
                   setActiveIndex(index);
-                  setShowOpenOnly(false); // 탭 바꾸면 열린필터 끄고 싶으면 유지
+                  setShowOpenOnly(false);
                   setPage(1);
                 }}
                 style={{
@@ -283,7 +279,7 @@ const TimeCapsule = () => {
                 <div key={`empty-${idx}`} className="tc-card--empty" />
               ))}
             </>
-          ) : capsules.length === 0 ? (
+          ) : tabFiltered.length === 0 ? (
             <>
               <div className="tc-empty">캡슐이 없습니다.</div>
               {Array.from({ length: pageSize }).map((_, idx) => (
@@ -292,7 +288,7 @@ const TimeCapsule = () => {
             </>
           ) : (
             <>
-              {capsules.map((capsule) => (
+              {tabFiltered.map((capsule) => (
                 <TimeCapsuleCard
                   key={capsule.id}
                   capsule={capsule}
