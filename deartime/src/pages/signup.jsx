@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
@@ -6,6 +5,7 @@ import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
 import defaultProfileImg from "../assets/nophoto.png";
 import { jwtDecode } from "jwt-decode";
+import React, { useState, useEffect } from "react";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -27,6 +27,18 @@ const Signup = () => {
       console.error("토큰 디코딩 실패", e);
     }
   }
+
+  useEffect(() => {
+    const tempToken = localStorage.getItem("tempToken");
+    const accessToken = localStorage.getItem("accessToken");
+
+    // 회원가입 플로우는 tempToken이 기본 전제.
+    // 이미 가입이 끝난 상태라 accessToken만 있다면 홈으로 보내도 됨.
+    if (!tempToken) {
+      if (accessToken) navigate("/home", { replace: true });
+      else navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const [form, setForm] = useState({
     nickname: "",
