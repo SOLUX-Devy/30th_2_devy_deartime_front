@@ -136,7 +136,7 @@
 }
 
 /* 닉네임 중복확인 버튼 정렬 수정 */
-.nickname-row button {
+.nickname-check-btn {
   height: 36px;
   padding: 0 14px;
   display: flex;
