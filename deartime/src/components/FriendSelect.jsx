@@ -59,11 +59,11 @@ export default function FriendSelect({ onClose, onSelect }) {
     );
   }, [friends, keyword]);
 
-  // ✅ 선택된 친구 찾기: userId 기준
-  const selectedFriend = useMemo(() => {
-    if (selectedId == null) return null;
-    return friends.find((f) => String(f.userId) === String(selectedId)) || null;
-  }, [friends, selectedId]);
+const selectedFriend = useMemo(() => {
+  if (selectedId == null) return null;
+  // f.userId가 아니라 f.friendId로 찾도록 수정
+  return friends.find((f) => String(f.friendId) === String(selectedId)) || null;
+}, [friends, selectedId]);
 
   const canConfirm = !!selectedFriend;
   const countText = `${count || friends.length}명의 친구`;
@@ -71,9 +71,9 @@ export default function FriendSelect({ onClose, onSelect }) {
   const handleConfirm = () => {
     if (!selectedFriend) return;
 
-    // ✅ 외부로는 friendId 라는 이름으로 보내더라도, 값은 "상대 유저ID(userId)"를 보내기
+
     onSelect({
-      friendId: selectedFriend.userId,
+      friendId: selectedFriend.friendId, 
       friendNickname: selectedFriend.friendNickname,
     });
   };
@@ -135,14 +135,13 @@ export default function FriendSelect({ onClose, onSelect }) {
           )}
 
           {filteredFriends.map((f) => {
-            // ✅ 선택 비교도 userId 기준
-            const isSelected = String(selectedId) === String(f.userId);
+            const isSelected = String(selectedId) === String(f.friendId);
 
             return (
               <div
-                key={f.userId} // ✅ 중복 key 문제 해결
+                key={f.friendId} 
                 className={`fs-cardSlot ${isSelected ? "selected" : ""}`}
-                onClick={() => setSelectedId(f.userId)} // ✅ 선택값도 userId
+                onClick={() => setSelectedId(f.friendId)} 
                 role="button"
                 tabIndex={0}
               >
