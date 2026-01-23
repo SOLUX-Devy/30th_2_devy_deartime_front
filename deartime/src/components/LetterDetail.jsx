@@ -30,10 +30,7 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsR
                     if (isMounted && json.success) { // 마운트된 상태일 때만 set
                     setDetailData(json.data);
 
-                    if (json.data.isRead === false){
-                        // 편지 읽음 처리 API 호출
-                        onMarkAsRead(letterId);
-                    }
+                    onMarkAsRead(letterId);
                 }
             } catch (err) {
                 if (isMounted) console.error("에러 발생:", err);
