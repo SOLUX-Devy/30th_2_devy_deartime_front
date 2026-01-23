@@ -79,8 +79,9 @@ const TimeCapsule = () => {
           ...c,
           senderId: Number(c.senderId),
           receiverId: Number(c.receiverId),
-          canAccess: Boolean(c.canAccess),
-          opened: Boolean(c.opened),
+          
+          canAccess: c.canAccess,
+          opened: c.opened,
         }));
 
         setRawCapsules(normalized);
