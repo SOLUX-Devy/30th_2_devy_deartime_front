@@ -5,6 +5,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
+  
   background: url("../assets/background.svg") center / cover no-repeat;
 
   overflow-y: auto;
@@ -430,4 +431,54 @@
 
 .fs-grid::-webkit-scrollbar-corner {
   background: transparent;
+}
+/* ✅ 화면(오버레이) 스크롤바 커스텀 */
+.profile-manage-overlay::-webkit-scrollbar {
+  width: 9px;
+  background: transparent;
+}
+
+.profile-manage-overlay::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.profile-manage-overlay::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 49, 94, 0.55) 0%,
+    rgba(42, 66, 128, 0.55) 100%
+  );
+  border-radius: 999px;
+}
+
+.profile-manage-overlay::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.profile-manage-overlay::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 220, 220, 1);
+}
+
+.profile-manage-overlay::-webkit-scrollbar-corner {
+  background: transparent;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 9px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: rgba(32, 49, 94, 0.55);
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85);
+  border-radius: 999px;
 }
