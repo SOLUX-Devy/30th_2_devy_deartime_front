@@ -4,23 +4,21 @@ import { X } from 'lucide-react';
 
 const AlbumCreateModal = ({ isOpen, onClose, onCreate }) => {
   const [albumTitle, setAlbumTitle] = useState('');
-  const [previewImage, setPreviewImage] = useState('https://via.placeholder.com/300'); // 기본 이미지
-  
-  // [추가] 파일 입력창을 가리키기 위한 Ref
+  const [previewImage, setPreviewImage] = useState('https://via.placeholder.com/300');
+  const [selectedFile, setSelectedFile] = useState(null); // [추가] 실제 파일 객체 저장
+
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
 
-  // [추가] 사진 변경 버튼 클릭 시 숨겨진 input을 클릭하는 함수
   const handleLogoClick = () => {
     fileInputRef.current.click();
   };
 
-  // [추가] 파일이 선택되었을 때 실행되는 함수
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 선택한 파일을 미리보기 URL로 변환
+      setSelectedFile(file); // 서버 전송용 파일 저장
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
     }
@@ -31,11 +29,18 @@ const AlbumCreateModal = ({ isOpen, onClose, onCreate }) => {
       alert("앨범 제목을 입력해주세요.");
       return;
     }
-    onCreate({ title: albumTitle, coverUrl: previewImage });
-    onClose();
-    // 초기화 (필요시)
+    
+    // [수정] 파일 객체와 제목을 함께 전달
+    onCreate({ 
+      title: albumTitle, 
+      imageFile: selectedFile 
+    });
+
+    // 초기화 및 닫기
     setAlbumTitle('');
     setPreviewImage('https://via.placeholder.com/300');
+    setSelectedFile(null);
+    onClose();
   };
 
   return (
@@ -55,12 +60,10 @@ const AlbumCreateModal = ({ isOpen, onClose, onCreate }) => {
               <img src={previewImage} alt="Cover Preview" />
             </div>
 
-            {/* [수정] 버튼 클릭 시 handleLogoClick 호출 */}
             <button className="change-cover-btn" onClick={handleLogoClick}>
               표지 사진 변경
             </button>
 
-            {/* [추가] 숨겨진 파일 입력창 */}
             <input 
               type="file" 
               ref={fileInputRef} 
