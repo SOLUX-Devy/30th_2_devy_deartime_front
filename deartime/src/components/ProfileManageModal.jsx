@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import DefaultProfile from "../assets/default_profile2.png";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
@@ -6,7 +6,6 @@ import { useUser } from "../context/UserContext";
 import EditProfileIcon from "../assets/edit-profile.png";
 import { setProxy } from "../api/proxy";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
   const { setUser } = useUser();
@@ -26,8 +25,8 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [profileImagePreview, setProfileImagePreview] = useState(
     userProfile?.profileImageUrl || DefaultProfile,
   );
-  const location = useLocation();
 
+  const location = useLocation();
   const didMountRef = useRef(false);
 
   useEffect(() => {
@@ -38,25 +37,56 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     onClose();
   }, [location.pathname, onClose]);
 
-  // 닉네임 중복 확인 상태
+  // =========================
+  // Nickname check states
+  // =========================
   const [nicknameChecked, setNicknameChecked] = useState(false);
-
-  // ✅ 닉네임 안내 문구(인라인 메시지)
+  const [nicknameAvailable, setNicknameAvailable] = useState(null); // null | true | false
   const [nicknameMsg, setNicknameMsg] = useState("");
   const [nicknameMsgType, setNicknameMsgType] = useState(""); // "error" | "success" | ""
 
+  // =========================
+  // Derived values (required/dirty)
+  // =========================
   const normalizedNickname = (nickname ?? "").replace(/\u200B/g, "").trim();
+  const normalizedOriginalNickname = (originalNickname ?? "")
+    .replace(/\u200B/g, "")
+    .trim();
 
-  const isNicknameChanged =
-    normalizedNickname !==
-    (originalNickname ?? "").replace(/\u200B/g, "").trim();
+  const normalizedBio = (bio ?? "").trim();
+  const normalizedBirth = (birthDate ?? "").trim();
 
+  const isNicknameChanged = normalizedNickname !== normalizedOriginalNickname;
   const isNicknameEmpty = normalizedNickname.length === 0;
 
-  // 저장은 막지 않음(요구사항)
-  const isSaveDisabled =
-    normalizedNickname.length === 0 || !birthDate.trim() || !bio.trim();
+  const isAllFilled =
+    normalizedNickname.length > 0 &&
+    normalizedBirth.length > 0 &&
+    normalizedBio.length > 0;
 
+  const isBioChanged = normalizedBio !== (userProfile?.bio ?? "").trim();
+  const isBirthChanged =
+    normalizedBirth !== (userProfile?.birthDate ?? "").trim();
+  const isProfileImageChanged = !!profileImageFile;
+
+  // delegateId가 userProfile에 없으면 비교가 무의미할 수 있음.
+  // 프로젝트에서 delegateId가 없으면 아래 줄을 지워도 됨.
+  const isDelegateChanged =
+    (selectedDelegate?.friendId ?? null) !== (userProfile?.delegateId ?? null);
+
+  const isDirty =
+    isNicknameChanged ||
+    isBioChanged ||
+    isBirthChanged ||
+    isProfileImageChanged ||
+    isDelegateChanged;
+
+  // ✅ 저장 버튼: "모든 칸 채움 + 변경사항 있음" 일 때만 활성화
+  const isSaveDisabled = !isAllFilled || !isDirty || isSaving;
+
+  // =========================
+  // Handlers
+  // =========================
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
@@ -74,14 +104,12 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   };
 
   const handleCheckNickname = async () => {
-    if (!normalizedNickname) {
-      setNicknameMsg("닉네임을 입력해주세요.");
-      setNicknameMsgType("error");
-      return;
-    }
+    if (!normalizedNickname) return; // placeholder + disabled로 유도
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
+      setNicknameChecked(false);
+      setNicknameAvailable(null);
       setNicknameMsg("로그인이 필요합니다.");
       setNicknameMsgType("error");
       return;
@@ -89,7 +117,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-      const res = await fetch(`${apiBaseUrl}/api/users/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`,
+
+      const res = await fetch(
+        `${apiBaseUrl}/api/users/check-nickname?nickname=${encodeURIComponent(
+          normalizedNickname,
+        )}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
@@ -98,16 +130,19 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
       setNicknameChecked(true);
 
-      if (json.data.isAvailable) {
+      if (json?.data?.isAvailable) {
+        setNicknameAvailable(true);
         setNicknameMsg("사용 가능한 닉네임입니다.");
         setNicknameMsgType("success");
       } else {
+        setNicknameAvailable(false);
         setNicknameMsg("이미 사용 중인 닉네임입니다.");
         setNicknameMsgType("error");
       }
     } catch (err) {
       console.error("닉네임 중복 확인 실패", err);
       setNicknameChecked(false);
+      setNicknameAvailable(null);
       setNicknameMsg("닉네임 확인 중 오류가 발생했습니다.");
       setNicknameMsgType("error");
     }
@@ -116,15 +151,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
-    // ✅ 닉네임이 변경됐는데 중복확인 안 했으면 저장은 하되 안내만 띄우기
-    if (isNicknameChanged && !nicknameChecked) {
-      setNicknameMsg("닉네임 중복 확인 해주세요.");
-      setNicknameMsgType("error");
-      // 저장을 막지 않으려면 return 하면 안 됨
-      // 하지만 서버에서 닉네임 중복/검증 걸릴 가능성이 높아서
-      // UX상 여기서 return 하는 게 보통 맞긴 함.
-      // 요청대로 "막지 않기"를 지키려면 아래 줄은 주석 처리 유지.
-      // return;
+    // ✅ 닉네임이 변경된 경우에만: 중복확인 + 사용가능(true)여야 API 호출
+    if (isNicknameChanged) {
+      if (!nicknameChecked) {
+        setNicknameMsg("닉네임 중복 확인을 해주세요");
+        setNicknameMsgType("error");
+        return; // ✅ API 호출 금지
+      }
+      if (nicknameAvailable !== true) {
+        setNicknameMsg("이미 사용 중인 닉네임입니다.");
+        setNicknameMsgType("error");
+        return; // ✅ API 호출 금지
+      }
     }
 
     setIsSaving(true);
@@ -137,22 +175,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         expiredAt.setFullYear(expiredAt.getFullYear() + 1);
         const expiredAtStr = expiredAt.toISOString().slice(0, 19);
 
-        const proxyData = await setProxy(
-          selectedDelegate.friendId,
-          expiredAtStr,
-        );
+        await setProxy(selectedDelegate.friendId, expiredAtStr);
 
-        alert("대리인이 설정되었습니다.");
-        console.log("[Proxy Set]", proxyData);
+        // ✅ alert 제거 (요구사항)
+        console.log("[Proxy Set] success");
       } catch (err) {
         console.error("대리인 설정 실패", err);
-        alert(err.message);
+        // 필요하면 여기도 인라인 메시지로 따로 빼야 함(현재 요구사항은 닉네임만)
       }
     };
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      alert("로그인이 필요합니다.");
       setIsSaving(false);
       return;
     }
@@ -190,7 +224,9 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
       if (res.ok && json.success) {
         setUser(json.data);
-        alert("프로필이 업데이트 되었습니다.");
+
+        // ✅ alert 제거 (요구사항)
+        // alert("프로필이 업데이트 되었습니다.");
 
         if (selectedDelegate) {
           await handleSaveProxy();
@@ -198,28 +234,24 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
         onClose();
       } else {
-        // 서버가 닉네임 중복 메시지를 주면, 그걸 닉네임 밑에 띄우기
         const msg = json.message || "프로필 업데이트에 실패했습니다.";
+
+        // 서버가 닉네임 관련 메시지를 주면 인라인에 출력
         if (
           msg.toLowerCase().includes("닉네임") ||
           msg.toLowerCase().includes("nickname")
         ) {
           setNicknameMsg(msg);
           setNicknameMsgType("error");
-        } else {
-          alert(msg);
         }
       }
     } catch (err) {
       console.error("[Profile Update] Error:", err);
-      alert("프로필 업데이트 중 오류가 발생했습니다.");
+      // ✅ alert 제거 (요구사항)
     } finally {
       setIsSaving(false);
     }
   };
-
-  const shouldAskNicknameCheck =
-    isNicknameChanged && normalizedNickname.length > 0 && !nicknameChecked;
 
   return (
     <>
@@ -267,41 +299,38 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <div className="input-group">
               <label>닉네임</label>
 
-              {/* ✅ 같은 줄: input + 버튼 */}
               <div className="nickname-row">
                 <input
                   value={nickname}
+                  placeholder="닉네임을 입력해주세요." // ✅ 요구사항 3
                   onChange={(e) => {
                     setNickname(e.target.value);
-                    setNicknameChecked(false);
 
-                    // ✅ 닉네임 바뀌면 메시지 초기화
+                    // ✅ 닉네임 변경 시 중복확인 결과 리셋
+                    setNicknameChecked(false);
+                    setNicknameAvailable(null);
+
+                    // ✅ 메시지도 리셋 (한 줄만)
                     setNicknameMsg("");
                     setNicknameMsgType("");
                   }}
                 />
 
-                {/* ✅ 버튼에 클래스 하나 줘서 CSS로 정렬 잡기 쉬움 */}
                 <button
                   className="nickname-check-btn"
                   type="button"
                   onClick={handleCheckNickname}
-                  disabled={isNicknameEmpty}
+                  disabled={isNicknameEmpty} // ✅ 요구사항 2
                 >
                   중복확인
                 </button>
               </div>
 
-              {/* ✅ “중복확인 해주세요” 안내 (닉네임 변경 + 미확인 상태) */}
-              {shouldAskNicknameCheck && (
-                <div className="field-msg error">
-                  닉네임 중복 확인 해주세요.
-                </div>
-              )}
-
-              {/* ✅ 중복확인 결과/에러 메시지 (alert 대신) */}
+              {/* ✅ 메시지는 "딱 한 줄"만: nicknameMsg 하나로만 출력 */}
               {nicknameMsg && (
-                <div className={`field-msg ${nicknameMsgType || "error"}`}>
+                <div
+                  className={`field-msg ${nicknameMsgType} ${nicknameMsg ? "show" : ""}`}
+                >
                   {nicknameMsg}
                 </div>
               )}
@@ -324,7 +353,9 @@ export default function ProfileManageModal({ userProfile, onClose }) {
             <div className="delegate-row">
               <span className="delegate-label">대리인</span>
               <button
-                className={`action-btn primary ${selectedDelegate ? "selected" : ""}`}
+                className={`action-btn primary ${
+                  selectedDelegate ? "selected" : ""
+                }`}
                 type="button"
                 onClick={() => {
                   if (!selectedDelegate) setIsDelegateSelectOpen(true);
@@ -353,8 +384,8 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="save-row">
               <button
-                className={`save-btn ${isSaveDisabled || isSaving ? "disabled" : ""}`}
-                disabled={isSaveDisabled || isSaving}
+                className={`save-btn ${isSaveDisabled ? "disabled" : ""}`}
+                disabled={isSaveDisabled}
                 onClick={handleSave}
               >
                 {isSaving ? "저장 중..." : "저장"}
