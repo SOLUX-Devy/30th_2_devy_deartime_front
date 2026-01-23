@@ -6,7 +6,7 @@ import FriendCard from "./FriendCard";
 
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
-  const [selectedId, setSelectedId] = useState(null); 
+  const [selectedId, setSelectedId] = useState(null);
 
   const [friends, setFriends] = useState([]);
   const [count, setCount] = useState(0);
@@ -55,15 +55,17 @@ export default function FriendSelect({ onClose, onSelect }) {
     const k = keyword.trim().toLowerCase();
     if (!k) return friends;
     return friends.filter((f) =>
-      (f.friendNickname || "").toLowerCase().includes(k)
+      (f.friendNickname || "").toLowerCase().includes(k),
     );
   }, [friends, keyword]);
 
-const selectedFriend = useMemo(() => {
-  if (selectedId == null) return null;
-  // f.userId가 아니라 f.friendId로 찾도록 수정
-  return friends.find((f) => String(f.friendId) === String(selectedId)) || null;
-}, [friends, selectedId]);
+  const selectedFriend = useMemo(() => {
+    if (selectedId == null) return null;
+    // f.userId가 아니라 f.friendId로 찾도록 수정
+    return (
+      friends.find((f) => String(f.friendId) === String(selectedId)) || null
+    );
+  }, [friends, selectedId]);
 
   const canConfirm = !!selectedFriend;
   const countText = `${count || friends.length}명의 친구`;
@@ -71,13 +73,12 @@ const selectedFriend = useMemo(() => {
   const handleConfirm = () => {
     if (!selectedFriend) return;
 
-
     onSelect({
-      friendId: selectedFriend.friendId, 
+      friendId: selectedFriend.friendId,
       friendNickname: selectedFriend.friendNickname,
+      friendProfileImageUrl: selectedFriend.friendProfileImageUrl || null,
     });
   };
-
   return (
     <div className="fs-overlay" onClick={onClose}>
       <div className="fs-modal" onClick={(e) => e.stopPropagation()}>
@@ -104,7 +105,11 @@ const selectedFriend = useMemo(() => {
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="친구들 검색하세요"
               />
-              <button type="button" className="fs-search-btn" aria-label="search">
+              <button
+                type="button"
+                className="fs-search-btn"
+                aria-label="search"
+              >
                 <img className="fs-search-icon" src={finder} alt="" />
               </button>
             </div>
@@ -139,9 +144,9 @@ const selectedFriend = useMemo(() => {
 
             return (
               <div
-                key={f.friendId} 
+                key={f.friendId}
                 className={`fs-cardSlot ${isSelected ? "selected" : ""}`}
-                onClick={() => setSelectedId(f.friendId)} 
+                onClick={() => setSelectedId(f.friendId)}
                 role="button"
                 tabIndex={0}
               >
