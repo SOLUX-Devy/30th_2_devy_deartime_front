@@ -65,7 +65,8 @@ const isAutoReadType = (type) => {
   return (
     t === "LETTER_RECEIVED" ||
     t === "CAPSULE_RECEIVED" ||
-    t === "CAPSULE_OPENED"
+    t === "CAPSULE_OPENED" ||
+    t === "FRIEND_ACCEPT"
   );
 };
 
