@@ -11,8 +11,6 @@ const Gallery = () => {
   const location = useLocation();
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
-
-  // 무한 루프 방지를 위해 API 호출 중복 방지용 Ref 사용
   const isFetchingRef = useRef(false);
 
   const BASE_PATH = "/api";
@@ -35,16 +33,15 @@ const Gallery = () => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-const ensureHttps = (url) => {
+  // 명세서에 포함된 < > 기호를 제거하고 안전한 https 경로를 반환합니다.
+  const ensureHttps = (url) => {
     if (!url) return url;
-    // 🚩 혹시 URL에 < > 기호가 섞여 들어올 경우 제거
-    let cleanedUrl = url.replace(/[<>]/g, "");
-    return cleanedUrl.replace(/^http:\/\//i, 'https://');
+    const cleanedUrl = url.replace(/[<>]/g, ""); 
+    return cleanedUrl.replace(/^http:\/\//i, "https://");
   };
 
-  /* [기능 1] 사진 데이터 로드 (무한 스크롤 연동) */
-  
-const fetchPhotos = useCallback(async (page) => {
+  /* [목록 조회] 명세서 구조(res.data.data.data) 반영 */
+  const fetchPhotos = useCallback(async (page) => {
     if (isFetchingRef.current || !hasMorePhotos) return;
 
     isFetchingRef.current = true;
@@ -53,26 +50,28 @@ const fetchPhotos = useCallback(async (page) => {
     try {
       const res = await axios.get(`${BASE_PATH}/photos`, {
         headers: getAuthHeader(),
-        params: { sort: "takenAt,desc", page: page, size: 20 }
+        params: { sort: "takenAt,desc", page: page, size: 20 },
       });
 
+      // 응답 구조: res.data(전체) -> data(상위 wrapper) -> data(실제 배열)
       const responseWrapper = res.data.data;
       const newPhotos = Array.isArray(responseWrapper.data) ? responseWrapper.data : [];
 
+      // 명세서의 isLast 필드를 사용하여 무한 스크롤 중단 여부 결정
       if (responseWrapper.isLast || newPhotos.length < 20) {
         setHasMorePhotos(false);
       }
 
-      setPhotos(prev => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
+      setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
     } catch (err) {
-      console.error("사진 로드 실패:", err);
+      console.error("사진 목록 조회 실패:", err);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
     }
   }, [hasMorePhotos]);
 
-  /* [기능 2] 앨범 목록 로드 */
+  /* [앨범 조회] */
   const fetchAlbums = async () => {
     setLoading(true);
     try {
@@ -80,15 +79,16 @@ const fetchPhotos = useCallback(async (page) => {
         headers: getAuthHeader(),
       });
       const responseData = res.data.data;
-      setAlbums(Array.isArray(responseData) ? responseData : responseData?.content || []);
+      // 앨범도 사진과 같은 구조일 경우를 대비해 .data 체크 추가
+      setAlbums(Array.isArray(responseData) ? responseData : responseData?.data || []);
     } catch (err) {
-      console.error("앨범 로드 실패:", err);
+      console.error("앨범 목록 조회 실패:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  /* [기능 3] 탭 변경 및 초기화 */
+  /* 탭 및 페이지 초기화 */
   useEffect(() => {
     if (activeIndex === 0) {
       setPhotos([]);
@@ -98,9 +98,9 @@ const fetchPhotos = useCallback(async (page) => {
     } else {
       fetchAlbums();
     }
-  }, [activeIndex]);
+  }, [activeIndex, fetchPhotos]);
 
-  /* [기능 4] 무한 스크롤 옵저버 설정 */
+  /* 무한 스크롤 감지 */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
 
@@ -128,43 +128,56 @@ const fetchPhotos = useCallback(async (page) => {
 
   const totalAlbumPages = Math.ceil(albums.length / ALBUMS_PER_PAGE);
 
-  /* [기능 5] 사진 업로드 처리 (백엔드 키값 'files' 반영) */
+  /* [업로드] 명세서의 files(Multipart) 및 request(JSON) 필드 반영 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const formData = new FormData();
-      // 백엔드 명세에 맞춰 'file'에서 'files'로 수정
-      formData.append("files", file);
+    if (!file) return;
 
-      try {
-        await axios.post(`${BASE_PATH}/photos`, formData, {
-          headers: {
-            ...getAuthHeader(),
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        
-        // 업로드 성공 후 리스트 초기화 및 첫 페이지 재로드
+    setLoading(true);
+    const formData = new FormData();
+    
+    // 1. 이미지 파일 (명세서 키: files)
+    formData.append("files", file);
+
+    // 2. 메타데이터 (명세서 키: request, 타입: JSON Blob)
+    const requestPayload = {
+      caption: file.name, // 기본값으로 파일 이름 사용
+      albumId: null,      // 특정 앨범에 속하게 하려면 ID 입력
+    };
+    const blob = new Blob([JSON.stringify(requestPayload)], { type: "application/json" });
+    formData.append("request", blob);
+
+    try {
+      const res = await axios.post(`${BASE_PATH}/photos`, formData, {
+        headers: { ...getAuthHeader() }, 
+        // Content-Type은 axios가 boundary를 포함해 자동으로 설정하게 둠
+      });
+
+      if (res.status === 201 || res.data.success) {
+        alert("사진 업로드 성공! ✨");
         setPhotos([]);
         setPhotoPage(0);
         setHasMorePhotos(true);
         fetchPhotos(0);
-      } catch (err) {
-        console.error("업로드 실패 원인:", err.response?.data);
-        alert("업로드 실패: " + (err.response?.data?.message || "서버 에러가 발생했습니다."));
       }
+    } catch (err) {
+      console.error("업로드 실패:", err.response?.data);
+      alert("업로드 실패: " + (err.response?.data?.message || "서버 응답 오류"));
+    } finally {
+      setLoading(false);
+      e.target.value = ""; // 파일 선택 리셋
     }
   };
 
-  /* [기능 6] 캡션 및 제목 수정 */
+  /* 수정 처리 */
   const handleEditComplete = async (e, id) => {
     if (e.key === "Enter") {
       try {
-        if (activeIndex === 0) {
+        if (activeIndex === 0)
           await axios.post(`${BASE_PATH}/photos/${id}/caption`, { caption: e.target.value }, { headers: getAuthHeader() });
-        } else {
+        else
           await axios.post(`${BASE_PATH}/albums/${id}/title`, { title: e.target.value }, { headers: getAuthHeader() });
-        }
+        
         activeIndex === 0 ? (setPhotos([]), setPhotoPage(0), fetchPhotos(0)) : fetchAlbums();
       } catch (err) {
         alert("수정 실패");
@@ -175,14 +188,12 @@ const fetchPhotos = useCallback(async (page) => {
     }
   };
 
-  /* [기능 7] 사진 날짜별 그룹화 로직 */
+  /* [데이터 가공] 명세서 필드 'takenAt' 기준으로 날짜 그룹화 */
   const groupedPhotos = useMemo(() => {
     if (!Array.isArray(photos)) return {};
     return photos.reduce((acc, photo) => {
-      // 🚩 수정: 명세서의 필드명인 'takenAt' 사용
-      const dateStr = photo.takenAt || "Unknown";
-      const date = dateStr.split('T')[0]; // "2025-12-28" 추출
-      
+      // "2025-12-28T17:27:56..." -> "2025-12-28" 추출
+      const date = photo.takenAt?.split("T")[0] || "날짜 미상";
       if (!acc[date]) acc[date] = [];
       acc[date].push(photo);
       return acc;
@@ -194,7 +205,6 @@ const fetchPhotos = useCallback(async (page) => {
       <AlbumCreateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={fetchAlbums} />
       <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleFileUpload} />
 
-      {/* 상단 바 영역 */}
       <div className="tc-topbar">
         <div className="gallery-topnav">
           {tabs.map((tab, index) => (
@@ -211,40 +221,39 @@ const fetchPhotos = useCallback(async (page) => {
         </div>
       </div>
 
-      {/* 본문 영역 */}
       <div className="gallery-content-wrapper">
         {activeIndex === 0 ? (
           <>
-            {Object.keys(groupedPhotos).length > 0 ? (
-              Object.keys(groupedPhotos).map((date) => (
-                <section key={date} className="date-group">
-                  <h2 className="date-title">{date}</h2>
-                  <div className="photo-grid">
-                    {groupedPhotos[date].map((photo) => (
-                      <div key={photo.photoId} className="photo-item">
-                        <div className="img-box">
-                          <img src={ensureHttps(photo.imageUrl)} alt={photo.caption || ""} />
-                        </div>
-                        {editingId === photo.photoId ? (
-                          <input
-                            className="edit-title-input"
-                            defaultValue={photo.caption}
-                            autoFocus
-                            onKeyDown={(e) => handleEditComplete(e, photo.photoId)}
-                            onBlur={() => setEditingId(null)}
-                          />
-                        ) : (
-                          <p className="photo-title">{photo.caption || "설명 없음"}</p>
-                        )}
+            {Object.keys(groupedPhotos).map((date) => (
+              <section key={date} className="date-group">
+                <h2 className="date-title">{date}</h2>
+                <div className="photo-grid">
+                  {groupedPhotos[date].map((photo) => (
+                    <div key={photo.photoId} className="photo-item">
+                      <div className="img-box">
+                        <img src={ensureHttps(photo.imageUrl)} alt={photo.caption} />
                       </div>
-                    ))}
-                  </div>
-                </section>
-              ))
-            ) : (
-              !loading && <p className="empty-msg">업로드된 사진이 없습니다.</p>
-            )}
-            <div ref={scrollObserverRef} className="scroll-observer" />
+                      {editingId === photo.photoId ? (
+                        <input
+                          className="edit-title-input"
+                          defaultValue={photo.caption}
+                          autoFocus
+                          onKeyDown={(e) => handleEditComplete(e, photo.photoId)}
+                          onBlur={() => setEditingId(null)}
+                        />
+                      ) : (
+                        <p className="photo-title" onClick={() => setEditingId(photo.photoId)}>
+                          {photo.caption || "설명 없음"}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+            {/* 스크롤 하단 감지 타겟 */}
+            <div ref={scrollObserverRef} className="scroll-observer" style={{ height: "20px" }} />
+            {loading && <p className="loading-txt">데이터를 불러오는 중입니다...</p>}
           </>
         ) : (
           <div className="album-section">
