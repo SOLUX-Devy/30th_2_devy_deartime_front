@@ -71,17 +71,6 @@ export default function FriendSelect({ onClose, onSelect }) {
   const handleConfirm = () => {
     if (!selectedFriend) return;
 
-    // ✅ 부모(다음 페이지)에서 쓰기 좋게 필요한 값만 내려주기
-    onSelect({
-      friendId: selectedFriend.friendId,
-      friendNickname: selectedFriend.friendNickname,
-      // 필요하면 프로필/바이오도 같이:
-      // friendProfileImageUrl: selectedFriend.friendProfileImageUrl,
-      // friendBio: selectedFriend.friendBio,
-    });
-
-    if (!selectedFriend) return;
-
     console.log("확정된 친구:", {
       id: selectedFriend.friendId,
       nickname: selectedFriend.friendNickname,

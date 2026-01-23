@@ -131,6 +131,7 @@ export function useNotifications({ navigate, userId }) {
     }
   };
 
+
   const hasUnread = notifications.some((n) => !n.isRead);
 
   return {

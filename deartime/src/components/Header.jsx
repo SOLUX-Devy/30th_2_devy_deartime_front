@@ -23,6 +23,8 @@ export default function Header() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
 
+  const isFriendRequest = noti.type === "FRIEND_REQUEST";
+
   /* =========================
       UTIL & HOOKS
   ========================= */
@@ -173,6 +175,22 @@ export default function Header() {
                               {body && <span className="noti-text">{body}</span>}
                               {sub && <span className="noti-sub">{sub}</span>}
                             </div>
+                            {isFriendRequest && (
+                              <div className="noti-actions">
+                                <button
+                                  className="accept-btn"
+                                  onClick={() => handleAcceptFriend(noti.senderId, noti.notificationId)}
+                                >
+                                  수락
+                                </button>
+                                <button
+                                  className="reject-btn"
+                                  onClick={() => handleRejectFriend(noti.senderId, noti.notificationId)}
+                                >
+                                  거절
+                                </button>
+                              </div>
+                            )}
                             <span className="noti-time">{formatTime(noti.createdAt)}</span>
                           </li>
                         );
