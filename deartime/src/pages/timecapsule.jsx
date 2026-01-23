@@ -13,6 +13,7 @@ const TimeCapsule = () => {
   const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+
   const myUserId = Number(localStorage.getItem("userId")) || 2;
 
   // ✅ UI는 1부터
@@ -20,9 +21,9 @@ const TimeCapsule = () => {
   const pageSize = 8;
 
   // ✅ 정렬
-  const sortOrder = "desc"; // 필요하면 state로
+  const sortOrder = "desc";
 
-  // ✅ API 데이터(원본)
+  // ✅ API 원본 데이터
   const [rawCapsules, setRawCapsules] = useState([]);
   const [pageInfo, setPageInfo] = useState({
     currentPage: 0,
@@ -36,11 +37,12 @@ const TimeCapsule = () => {
 
   // ✅ 잠김 모달
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
-  const [lockedMessage, setLockedMessage] =
-    useState("아직 열 수 없는 타임캡슐이에요");
+  const [lockedMessage, setLockedMessage] = useState(
+    "아직 열 수 없는 타임캡슐이에요",
+  );
 
   // -------------------------
-  // 탭 + 토글 → API type 매핑
+  // 탭 → API type 매핑 (토글이 showOpenOnly여도 type은 바꾸지 않음!)
   // -------------------------
   const apiType = useMemo(() => {
     if (activeIndex === 0) return "ALL";
@@ -96,7 +98,7 @@ const TimeCapsule = () => {
         const payload = json?.data;
         const list = payload?.data ?? [];
 
-        // ✅ id 타입(문자/숫자) 섞여도 안전하게 숫자로 맞춤
+        // ✅ 숫자 타입 통일
         const normalized = list.map((c) => ({
           ...c,
           senderId: Number(c.senderId),
@@ -131,31 +133,38 @@ const TimeCapsule = () => {
   }, [apiType, page, pageSize, sortOrder, apiBaseUrl]);
 
   // -------------------------
-  // ✅ 탭별 필터 규칙 (너가 원하는 룰)
-  // 전체캡슐 : 나->나 && 남->나
-  // 받은캡슐 : 남->나
-  // 나의캡슐 : 나->나
+  // ✅ 탭/토글 최종 필터 (너가 확정한 규칙)
+  // - 전체: receiverId === 나 (나->나 + 남->나)
+  // - 받은: receiverId === 나 && senderId !== 나
+  // - 나의: receiverId === 나 && senderId === 나
+  // - 나->남( senderId===나 && receiverId!==나 )는 전부 제외 (receiverId 1차 필터로 제거)
+  // - 토글 ON: canAccess === true만
   // -------------------------
-  const tabFiltered = useMemo(() => {
-    // 0) 공통: 나에게 온 것만 (나->남 제거)
-    const onlyToMe = rawCapsules.filter((c) => c.receiverId === myUserId);
+  const capsules = useMemo(() => {
+    const myId = myUserId;
 
-    // 1) 탭별
+    // 1) "나에게 온 것만" (나->남 완전 제거)
+    const onlyToMe = rawCapsules.filter((c) => c.receiverId === myId);
+
+    // 2) 탭별
     let base = onlyToMe;
-    if (activeIndex === 1)
-      base = onlyToMe.filter((c) => c.senderId !== myUserId); // 받은: 남->나
-    if (activeIndex === 2)
-      base = onlyToMe.filter((c) => c.senderId === myUserId); // 나의: 나->나
+    if (activeIndex === 1) {
+      // 받은: 남->나
+      base = onlyToMe.filter((c) => c.senderId !== myId);
+    } else if (activeIndex === 2) {
+      // 나의: 나->나
+      base = onlyToMe.filter((c) => c.senderId === myId);
+    }
 
-    // 2) 토글별 (ON일 때만 열린 것만)
-    if (showOpenOnly) return base.filter((c) => c.canAccess);
-
-    // OFF면 잠긴 것도 포함해서 전부
+    // 3) 토글별 (ON일 때만 열린 것만)
+    if (showOpenOnly) {
+      return base.filter((c) => c.canAccess === true);
+    }
     return base;
   }, [rawCapsules, activeIndex, myUserId, showOpenOnly]);
 
   // -------------------------
-  // 페이지네이션/빈칸 계산 (UI용)
+  // 페이지네이션 (UI용)
   // -------------------------
   const totalPages = Math.max(1, pageInfo.totalPages || 1);
 
@@ -169,8 +178,9 @@ const TimeCapsule = () => {
     [totalPages],
   );
 
-  const emptyCount = Math.max(0, pageSize - tabFiltered.length);
+  const emptyCount = Math.max(0, pageSize - capsules.length);
 
+  // ✅ "11개 중 1-8" (서버 totalElements 기준)
   const rangeText = useMemo(() => {
     const total = pageInfo.totalElements ?? 0;
     if (total === 0) return `0개 중 0-0`;
@@ -204,7 +214,7 @@ const TimeCapsule = () => {
                 key={tab}
                 onClick={() => {
                   setActiveIndex(index);
-                  setShowOpenOnly(false);
+                  setShowOpenOnly(false); // 탭 바꾸면 토글 끄기
                   setPage(1);
                 }}
                 style={{
@@ -279,7 +289,7 @@ const TimeCapsule = () => {
                 <div key={`empty-${idx}`} className="tc-card--empty" />
               ))}
             </>
-          ) : tabFiltered.length === 0 ? (
+          ) : capsules.length === 0 ? (
             <>
               <div className="tc-empty">캡슐이 없습니다.</div>
               {Array.from({ length: pageSize }).map((_, idx) => (
@@ -288,11 +298,12 @@ const TimeCapsule = () => {
             </>
           ) : (
             <>
-              {tabFiltered.map((capsule) => (
+              {capsules.map((capsule) => (
                 <TimeCapsuleCard
                   key={capsule.id}
                   capsule={capsule}
                   onClick={() => {
+                    // ✅ canAccess=false면 detail nav 절대 없음
                     if (!capsule.canAccess) {
                       setLockedMessage("아직 열 수 없는 타임캡슐이에요");
                       setLockedModalOpen(true);
