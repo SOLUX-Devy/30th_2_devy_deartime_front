@@ -1,3 +1,4 @@
+// src/components/TimeCapsuleCard.jsx
 import React, { useMemo } from "react";
 import capsuleDefaultImg from "../assets/timecapsule_small.png";
 
@@ -26,10 +27,17 @@ function calcDDay(openAt) {
   return `D+${Math.abs(diffDays)}`;
 }
 
+/**
+ * ✅ 안전 boolean 변환
+ * - true / "true" / 1 / "1" 만 true
+ * - 그 외는 false
+ */
+function toBool(v) {
+  return v === true || v === "true" || v === 1 || v === "1";
+}
+
 export default function TimeCapsuleCard({ capsule, onClick }) {
   const {
-    canAccess,
-    opened,
     openAt,
     createdAt,
     imageUrl,
@@ -37,18 +45,22 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
     title,
   } = capsule;
 
+  // ✅ canAccess/opened 정규화 (문자열/숫자 섞여 와도 방어)
+  const canAccess = toBool(capsule?.canAccess);
+  const opened = toBool(capsule?.opened);
+
   const dday = useMemo(() => calcDDay(openAt), [openAt]);
   const created = useMemo(() => formatDateYYYYMMDD(createdAt), [createdAt]);
 
   // ✅ 규칙 1) canAccess=false면 opened는 무조건 false로 "취급"
-  const effectiveOpened = canAccess ? !!opened : false;
+  const effectiveOpened = canAccess ? opened : false;
 
   // ✅ 상태 정리 (요구사항 그대로)
   const isLocked = canAccess === false; // 클릭/깜빡 전부 X
-  const isSparkle = canAccess === true && effectiveOpened === false; // 깜빡 + 클릭 가능(클릭 시 모달 + opened true)
+  const isSparkle = canAccess === true && effectiveOpened === false; // 깜빡 + 클릭 가능
   const isOpened = canAccess === true && effectiveOpened === true; // 클릭 가능 + 사진 노출 + 안깜빡
 
-  // ✅ 스타일 클래스
+  // ✅ 스타일 클래스 (정규화된 값으로만 계산)
   const variantClass = isLocked
     ? "tc-card--locked"
     : isOpened
@@ -60,18 +72,13 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
 
   // ✅ 클릭 핸들러
   const handleClick = () => {
-    // 요구사항: canAccess=false면 아예 클릭도 안되고 깜빡도 X
     if (isLocked) return;
 
-    // sparkle 상태에서 클릭하면:
-    // - 모달 켜짐
-    // - 동시에 opened=true로 바뀌어야 함(부모에서 처리)
     if (isSparkle) {
       onClick?.(capsule, { markOpened: true });
       return;
     }
 
-    // opened=true 상태에서 클릭하면 그냥 사진 띄우기(부모에서 처리)
     onClick?.(capsule, { markOpened: false });
   };
 
@@ -81,7 +88,7 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
         type="button"
         className={`tc-card ${variantClass} ${isLocked ? "tc-card--disabled" : ""}`}
         onClick={handleClick}
-        disabled={isLocked}              // ✅ 키보드 접근도 막기
+        disabled={isLocked} // ✅ 키보드 접근도 막기
         aria-disabled={isLocked}
       >
         <div className="tc-card__top">
@@ -171,6 +178,15 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           background: rgba(0, 0, 0, 0.2);
           box-shadow: inset 0 0 0 2.5px rgba(14, 119, 188, 0.5);
           animation: none !important;
+        }
+
+        /* 🔥 최종 안전장치: locked/disabled면 어떤 경우에도 애니메이션/전환 금지 */
+        .tc-card--locked,
+        .tc-card--disabled,
+        .tc-card--locked *,
+        .tc-card--disabled * {
+          animation: none !important;
+          transition: none !important;
         }
 
         .tc-card__top {
