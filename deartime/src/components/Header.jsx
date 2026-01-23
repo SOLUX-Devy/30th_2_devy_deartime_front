@@ -9,7 +9,7 @@ import "../styles/header.css";
 import ProfileManageModal from "../components/ProfileManageModal";
 import { UserContext } from "../context/UserContext";
 // [FIX] 훅 import 추가
-import { useNotifications } from "../hooks/useNotifications"; 
+import { useNotifications } from "../hooks/useNotifications.js"; 
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
@@ -153,7 +153,7 @@ export default function Header() {
                   ) : (
                     <ul className="noti-list">
                       {notifications.map((noti) => {
-                        const { title, body } = splitNotiContent(noti.content);
+                        const { title, body, sub } = splitNotiContent(noti.content);
 
                         return (
                           <li
@@ -164,14 +164,14 @@ export default function Header() {
                             <div className="noti-icon">
                               <img src={getNotiIcon(noti.type)} alt="icon" 
                               onError={(e) => {
-    console.log("[ICON LOAD FAIL]", noti.type, e.currentTarget.src);
-  }}/>
+                              console.log("[ICON LOAD FAIL]", noti.type, e.currentTarget.src);
+                            }}/>
                             </div>
 
                             <div className="noti-content">
                               <p className="noti-text">{title}</p>
-
                               {body && <span className="noti-sub">{body}</span>}
+                              {sub && <span className="noti-sub">제목: {sub}</span>}
                             </div>
                             <span className="noti-time">{formatTime(noti.createdAt)}</span>
                           </li>

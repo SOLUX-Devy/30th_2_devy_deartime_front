@@ -5,28 +5,29 @@ import {
   disconnectNotificationSocket,
   readNotification,
 } from "../api/notification";
-import friendIcon from "../assets/default_profile2.png"; 
-import letterIcon from "../assets/letter.png";
-import capsuleIcon from "../assets/timecapsule.png";
+import friendIcon from "../assets/default_profile2.png?url"; 
+import letterIcon from "../assets/letter.png?url";
+import capsuleIcon from "../assets/timecapsule.png?url";
 
-export function useNotifications({ navigate, userId }) { // userId 추가
+export function useNotifications({ navigate, userId }) {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const getNotiIcon = useCallback((type) => {
-  const icon =
-      type === "LETTER_RECEIVED"
+    const t = String(type || "").toUpperCase();
+
+    const icon =
+      t === "LETTER_RECEIVED"
         ? letterIcon
-        : type === "CAPSULE_RECEIVED" || type === "CAPSULE_OPENED"
+        : t === "CAPSULE_RECEIVED" || t === "CAPSULE_OPENED"
           ? capsuleIcon
-          : type === "FRIEND_REQUEST" || type === "FRIEND_ACCEPT"
+          : t === "FRIEND_REQUEST" || t === "FRIEND_ACCEPT"
             ? friendIcon
             : friendIcon;
 
-    console.log("[NotiIcon]", { type, icon });
+    console.log("[NotiIcon]", { type: t, icon });
     return icon;
   }, []);
-
 
   /* UTIL: 시간 포맷 */
   const formatTime = useCallback((dateString) => {
@@ -38,13 +39,33 @@ export function useNotifications({ navigate, userId }) { // userId 추가
     return dateString.slice(0, 10).replace(/-/g, ".");
   }, []);
 
-  const splitNotiContent = useCallback((content) => {
-    if (!content) return { title: "", body: "" };
-    // "닉네임님이 ..." 형태 파싱
-    const match = content.match(/(.+님이)\s(.+)/);
-    if (!match) return { title: content, body: null };
-    return { title: match[1], body: match[2] };
+  const splitNotiContent = useCallback((noti) => {
+    if (!noti) return { title: "", body: "", sub: null };
+
+    const type = String(noti.type || "").toUpperCase();
+
+    if (type === "LETTER_RECEIVED") {
+      const sender = noti.senderNickname || "누군가";
+      const content = String(noti.content || "");
+
+      const m = content.match(/^(.+?님이)\s*(.*)$/);
+      const title = m ? m[1] : `${sender}님이`;
+      const body = m ? m[2] : "편지를 보냈습니다.";
+
+      return {
+        title,                
+        body,                 
+        sub: noti.contentTitle || null, 
+      };
+    }
+
+    const content = String(noti.content || "");
+    const m = content.match(/^(.+?님이)\s*(.*)$/);
+    if (!m) return { title: content, body: "", sub: null };
+
+    return { title: m[1], body: m[2] || "", sub: null };
   }, []);
+
 
   /* API 호출 및 소켓 연결 */
   useEffect(() => {
