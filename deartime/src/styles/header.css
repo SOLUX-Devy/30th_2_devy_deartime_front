@@ -141,7 +141,42 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  position: relative;   /* ✅ 추가 */
 }
+
+/* ✅ 프로필 파란 원(프로필 사진 바깥까지 보이게) */
+.profile-trigger::before {
+  content: "";
+  position: absolute;
+  left: 16px;           /* ✅ 프로필 원 중심쯤 */
+  top: 50%;
+  width: 43px;          /* 42보다 살짝 크게 */
+  height: 43px;
+  border-radius: 50%;
+  background: rgba(14, 119, 188, 0.8);
+
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.88);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+
+  pointer-events: none;
+  z-index: 0;           /* ✅ 뒤에 */
+}
+
+.profile-trigger:hover::before,
+.profile-trigger:focus-within::before,
+.profile-trigger.is-open::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ✅ 프로필/화살표는 항상 위 */
+.profile-circle-nav,
+.arrow-img {
+  position: relative;
+  z-index: 1;
+}
+
 
 /* ✅ 원 기준: 프로필 동그라미 */
 .profile-circle-nav {
@@ -155,32 +190,7 @@
 }
 
 /* ✅ 파란 원: 이미지 뒤에, 근데 요소 밖으로 안 숨게 */
-.profile-circle-nav::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
 
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(14, 119, 188, 0.8);
-
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.88);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-
-  pointer-events: none;
-  z-index: 0; /* ✅ -1 금지 */
-}
-
-/* hover / focus / 열림 */
-.profile-trigger:hover .profile-circle-nav::before,
-.profile-trigger:focus-within .profile-circle-nav::before,
-.profile-trigger.is-open .profile-circle-nav::before {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
 
 /* ✅ 프로필 이미지는 항상 원 위 */
 .profile-circle-nav img {

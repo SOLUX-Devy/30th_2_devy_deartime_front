@@ -4,7 +4,7 @@ import TimeCapsuleCard from "../components/TimeCapsuleCard";
 import RecordCard from "../components/RecordCard";
 import ConstellationCard from "../components/ConstellationCard";
 import "../styles/home.css";
-import backgroundImg from "../assets/background.svg";
+import backgroundImg from "../assets/background_star.png";
 import { useUser } from "../context/UserContext";
 
 export default function Home() {
@@ -34,7 +34,6 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      <img src={backgroundImg} alt="background" className="background-img" />
 
       <div className="description">
         별빛처럼 사라지지 않는 기억을 기록하는 곳
