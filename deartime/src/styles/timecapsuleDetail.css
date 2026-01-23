@@ -1,12 +1,12 @@
 .tc-detail-page {
-  min-height: 100vh;
+  min-height: 90vh;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .tc-detail-overlay {
-  height: calc(100vh - 80px);
+  height: calc(100vh - 90px);
   display: flex;
   align-items: center;
   justify-content: center;
