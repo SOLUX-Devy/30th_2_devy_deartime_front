@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/gallery.css";
 import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { Pen, Trash2, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pen, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 import axios from "axios";
@@ -11,12 +11,14 @@ const Gallery = () => {
   const location = useLocation();
   const fileInputRef = useRef(null);
   const scrollObserverRef = useRef(null);
-  const isFetchingRef = useRef(false);
+  const isFetchingRef = useRef(false); // 실제 네트워크 요청 중인지 체크하는 플래그
 
-  const BASE_PATH = "/api";
-  const getAuthHeader = () => ({
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const BASE_PATH = `${apiBaseUrl}/api`;
+
+  const getAuthHeader = useCallback(() => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-  });
+  }), []);
 
   const tabs = ["RECORD", "ALBUM"];
   const [activeIndex, setActiveIndex] = useState(location.state?.activeTab ?? 0);
@@ -32,21 +34,20 @@ const Gallery = () => {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // 컨텍스트 메뉴 상태
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, targetId: null });
 
   const ensureHttps = (url) => {
-    if (!url) return url;
-    const cleanedUrl = url.replace(/[<>]/g, ""); 
-    return cleanedUrl.replace(/^http:\/\//i, "https://");
+    if (!url) return "https://via.placeholder.com/300";
+    return url.replace(/[<>]/g, ""); 
   };
 
-  /* [기능] 사진 목록 조회 */
-  const fetchPhotos = useCallback(async (page) => {
-    if (isFetchingRef.current || !hasMorePhotos) return;
+  /* [1] 사진 목록 조회 - 의존성에서 hasMorePhotos 제거 */
+  const fetchPhotos = useCallback(async (page, isInitial = false) => {
+    // 이미 요청 중이면 중단
+    if (isFetchingRef.current) return;
+    
     isFetchingRef.current = true;
-    setLoading(true);
+    if (!isInitial) setLoading(true); // 초기 로딩이 아닐 때만 하단 로딩바 표시 (선택 사항)
 
     try {
       const res = await axios.get(`${BASE_PATH}/photos`, {
@@ -57,9 +58,9 @@ const Gallery = () => {
       const responseWrapper = res.data.data;
       const newPhotos = Array.isArray(responseWrapper.data) ? responseWrapper.data : [];
 
-      if (responseWrapper.isLast || newPhotos.length < 20) {
-        setHasMorePhotos(false);
-      }
+      // 다음 페이지 존재 여부 판단
+      const isLast = responseWrapper.isLast || newPhotos.length < 20;
+      setHasMorePhotos(!isLast);
 
       setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
     } catch (err) {
@@ -68,10 +69,10 @@ const Gallery = () => {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [BASE_PATH, getAuthHeader]); // 의존성을 최소화하여 함수 재생성 방지
 
-  /* [기능] 앨범 목록 조회 */
-  const fetchAlbums = async () => {
+  /* [2] 앨범 목록 조회 */
+  const fetchAlbums = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_PATH}/albums`, {
@@ -84,14 +85,26 @@ const Gallery = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [BASE_PATH, getAuthHeader]);
 
-  /* [기능] 앨범 생성 */
+  /* [3] 앨범 생성 로직 */
   const handleCreateAlbum = async (albumData) => {
+    setLoading(true);
     try {
+      let coverPhotoId = null;
+      if (albumData.imageFile) {
+        const formData = new FormData();
+        formData.append("files", albumData.imageFile);
+        const requestBlob = new Blob([JSON.stringify({ caption: `${albumData.title} 표지` })], { type: "application/json" });
+        formData.append("request", requestBlob);
+
+        const photoRes = await axios.post(`${BASE_PATH}/photos`, formData, { headers: getAuthHeader() });
+        coverPhotoId = photoRes.data.data[0]?.photoId;
+      }
+
       const res = await axios.post(`${BASE_PATH}/albums`, {
         title: albumData.title,
-        coverPhotoId: albumData.coverPhotoId || null
+        coverPhotoId: coverPhotoId 
       }, {
         headers: getAuthHeader()
       });
@@ -102,21 +115,30 @@ const Gallery = () => {
         setIsModalOpen(false);
       }
     } catch (err) {
-      alert(err.response?.data?.data || "앨범 생성 실패");
+      alert("앨범 생성 실패: " + (err.response?.data?.data || "서버 에러"));
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* 탭 변경 시 리셋 및 첫 페이지 로드 */
   useEffect(() => {
     if (activeIndex === 0) {
-      setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0);
+      setPhotos([]);
+      setPhotoPage(0);
+      setHasMorePhotos(true);
+      fetchPhotos(0, true);
     } else {
       fetchAlbums();
     }
-  }, [activeIndex, fetchPhotos]);
+  }, [activeIndex, fetchPhotos, fetchAlbums]);
 
+  /* 무한 스크롤 옵저버 */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
+
     const observer = new IntersectionObserver((entries) => {
+      // 1. 관찰 대상이 보이고 2. 로딩 중이 아닐 때만 실행
       if (entries[0].isIntersecting && !isFetchingRef.current) {
         setPhotoPage((prev) => {
           const nextPage = prev + 1;
@@ -124,13 +146,18 @@ const Gallery = () => {
           return nextPage;
         });
       }
-    }, { threshold: 1.0 });
+    }, { threshold: 0.1 });
 
-    if (scrollObserverRef.current) observer.observe(scrollObserverRef.current);
-    return () => observer.disconnect();
+    const target = scrollObserverRef.current;
+    if (target) observer.observe(target);
+    
+    return () => {
+      if (target) observer.unobserve(target);
+      observer.disconnect();
+    };
   }, [activeIndex, hasMorePhotos, fetchPhotos]);
 
-  /* [기능] 사진 업로드 */
+  /* [기능] 단일 사진 업로드 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -138,7 +165,6 @@ const Gallery = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append("files", file);
-
     const requestBlob = new Blob([JSON.stringify({ caption: file.name, albumId: null })], { type: "application/json" });
     formData.append("request", requestBlob);
 
@@ -146,48 +172,33 @@ const Gallery = () => {
       const res = await axios.post(`${BASE_PATH}/photos`, formData, { headers: getAuthHeader() });
       if (res.status === 201 || res.data.success) {
         alert("사진이 업로드되었습니다.");
-        setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0);
+        setPhotos([]); setPhotoPage(0); setHasMorePhotos(true); fetchPhotos(0, true);
       }
     } catch (err) {
-      alert("업로드 실패: " + (err.response?.data?.data || "서버 에러"));
+      alert("업로드 실패");
     } finally {
       setLoading(false);
       e.target.value = "";
     }
   };
 
-  /* [기능] 사진 삭제 */
+  /* 삭제 및 수정 (기존 로직 유지) */
   const handleDeletePhoto = async (photoId) => {
-    if (!window.confirm("정말 이 사진을 삭제하시겠습니까?")) return;
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      const res = await axios.delete(`${BASE_PATH}/photos/${photoId}`, { headers: getAuthHeader() });
-      if (res.status === 204 || res.data.success) {
-        setPhotos(prev => prev.filter(p => p.photoId !== photoId));
-        setContextMenu({ ...contextMenu, show: false });
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "삭제 권한이 없습니다.");
-    }
+      await axios.delete(`${BASE_PATH}/photos/${photoId}`, { headers: getAuthHeader() });
+      setPhotos(prev => prev.filter(p => p.photoId !== photoId));
+    } catch (err) { alert("삭제 권한이 없습니다."); }
+    setContextMenu({ ...contextMenu, show: false });
   };
 
-  /* [기능 추가] 앨범 삭제 명세 반영: DELETE /api/albums/{albumId} */
   const handleDeleteAlbum = async (albumId) => {
-    if (!window.confirm("정말 이 앨범을 삭제하시겠습니까? 앨범 안의 사진들은 삭제되지 않습니다.")) return;
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      const res = await axios.delete(`${BASE_PATH}/albums/${albumId}`, {
-        headers: getAuthHeader()
-      });
-
-      // 명세서 상 성공 응답: 204 또는 success: true
-      if (res.status === 204 || res.data.success) {
-        setAlbums(prev => prev.filter(a => a.albumId !== albumId));
-        setContextMenu({ ...contextMenu, show: false });
-      }
-    } catch (err) {
-      console.error("앨범 삭제 실패:", err.response?.data);
-      const msg = err.response?.data?.data || "앨범 삭제 권한이 없습니다.";
-      alert(msg);
-    }
+      await axios.delete(`${BASE_PATH}/albums/${albumId}`, { headers: getAuthHeader() });
+      setAlbums(prev => prev.filter(a => a.albumId !== albumId));
+    } catch (err) { alert("삭제 실패"); }
+    setContextMenu({ ...contextMenu, show: false });
   };
 
   const handleEditComplete = async (e, id) => {
@@ -195,19 +206,13 @@ const Gallery = () => {
     if (e.key === "Enter") {
       try {
         if (activeIndex === 0) {
-          const res = await axios.post(`${BASE_PATH}/photos/${id}/caption`, { caption: newText }, { headers: getAuthHeader() });
-          if (res.data.success) {
-            setPhotos(prev => prev.map(p => p.photoId === id ? { ...p, caption: newText } : p));
-          }
+          await axios.post(`${BASE_PATH}/photos/${id}/caption`, { caption: newText }, { headers: getAuthHeader() });
+          setPhotos(prev => prev.map(p => p.photoId === id ? { ...p, caption: newText } : p));
         } else {
-          const res = await axios.post(`${BASE_PATH}/albums/${id}/title`, { title: newText }, { headers: getAuthHeader() });
-          if (res.data.success) {
-            setAlbums(prev => prev.map(a => a.albumId === id ? { ...a, title: newText } : a));
-          }
+          await axios.post(`${BASE_PATH}/albums/${id}/title`, { title: newText }, { headers: getAuthHeader() });
+          setAlbums(prev => prev.map(a => a.albumId === id ? { ...a, title: newText } : a));
         }
-      } catch (err) {
-        alert("수정에 실패했습니다.");
-      }
+      } catch (err) { alert("수정 실패"); }
       setEditingId(null);
     } else if (e.key === "Escape") setEditingId(null);
   };
@@ -239,17 +244,13 @@ const Gallery = () => {
       <AlbumCreateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreateAlbum} />
       <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleFileUpload} />
 
-      {/* 우클릭 메뉴 */}
       {contextMenu.show && (
         <div className="custom-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
           <div className="menu-item" onClick={() => { setEditingId(contextMenu.targetId); setContextMenu({ ...contextMenu, show: false }); }}>
-            <Pen size={16} /> <span>{activeIndex === 0 ? "캡션 수정" : "이름 수정"}</span>
+            <Pen size={16} /> <span>수정</span>
           </div>
           <div className="menu-divider" />
-          <div className="menu-item delete" onClick={() => {
-            if (activeIndex === 0) handleDeletePhoto(contextMenu.targetId);
-            else handleDeleteAlbum(contextMenu.targetId);
-          }}>
+          <div className="menu-item delete" onClick={() => (activeIndex === 0 ? handleDeletePhoto(contextMenu.targetId) : handleDeleteAlbum(contextMenu.targetId))}>
             <Trash2 size={16} /> <span>삭제</span>
           </div>
         </div>
@@ -290,7 +291,9 @@ const Gallery = () => {
                 </div>
               </section>
             ))}
-            <div ref={scrollObserverRef} className="scroll-observer" style={{ height: "20px" }} />
+            {/* 데이터가 더 있고 로딩 중이 아닐 때만 옵저버 노출 */}
+            {!loading && hasMorePhotos && <div ref={scrollObserverRef} style={{ height: "50px" }} />}
+            {loading && <div style={{ textAlign: "center", padding: "20px", color: "white" }}>로딩 중...</div>}
           </>
         ) : (
           <div className="album-section">
@@ -313,11 +316,11 @@ const Gallery = () => {
             </div>
             {totalAlbumPages > 1 && (
               <div className="album-pagination">
-                <button onClick={() => setAlbumPage((p) => Math.max(1, p - 1))} disabled={albumPage === 1}><ChevronLeft size={20} /></button>
+                <button onClick={() => setAlbumPage(p => Math.max(1, p - 1))} disabled={albumPage === 1}><ChevronLeft size={20} /></button>
                 {[...Array(totalAlbumPages)].map((_, i) => (
                   <span key={i} className={`page-num ${albumPage === i + 1 ? "active" : ""}`} onClick={() => setAlbumPage(i + 1)}>{i + 1}p</span>
                 ))}
-                <button onClick={() => setAlbumPage((p) => Math.min(totalAlbumPages, p + 1))} disabled={albumPage === totalAlbumPages}><ChevronRight size={20} /></button>
+                <button onClick={() => setAlbumPage(p => Math.min(totalAlbumPages, p + 1))} disabled={albumPage === totalAlbumPages}><ChevronRight size={20} /></button>
               </div>
             )}
           </div>
