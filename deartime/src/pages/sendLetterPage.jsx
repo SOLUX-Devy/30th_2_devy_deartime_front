@@ -13,7 +13,6 @@ const SendLetter = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ 이전 페이지에서 넘어온 값 (초기값 용도)
   const { friendId, friendNickname } = location.state || {};
 
   const themes = useMemo(
@@ -32,7 +31,6 @@ const SendLetter = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // ✅ 초기 진입 시에만 friendId 사용
   const [selectedFriend, setSelectedFriend] = useState(
     friendId ? { friendId, friendNickname } : null
   );
@@ -43,7 +41,7 @@ const SendLetter = () => {
     !!selectedFriend && title.trim() !== "" && content.trim() !== "";
 
   const handleFriendSelect = (friend) => {
-    setSelectedFriend(friend); // ✅ 여기서 무조건 덮어씀
+    setSelectedFriend(friend); 
     setIsFriendSelectOpen(false);
   };
 

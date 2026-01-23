@@ -153,7 +153,7 @@ export default function Header() {
                   ) : (
                     <ul className="noti-list">
                       {notifications.map((noti) => {
-                        const { title, body, sub } = splitNotiContent(noti.content);
+                        const { title, body, sub } = splitNotiContent(noti);
 
                         return (
                           <li
@@ -170,8 +170,8 @@ export default function Header() {
 
                             <div className="noti-content">
                               <p className="noti-text">{title}</p>
-                              {body && <span className="noti-sub">{body}</span>}
-                              {sub && <span className="noti-sub">제목: {sub}</span>}
+                              {body && <span className="noti-text">{body}</span>}
+                              {sub && <span className="noti-sub">{sub}</span>}
                             </div>
                             <span className="noti-time">{formatTime(noti.createdAt)}</span>
                           </li>
