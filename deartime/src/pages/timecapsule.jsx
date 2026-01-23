@@ -14,6 +14,8 @@ const TimeCapsule = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const myUserId = Number(localStorage.getItem("userId"));
+
+  
   // ✅ UI는 1부터
   const [page, setPage] = useState(1);
   const pageSize = 8;
