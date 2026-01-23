@@ -10,9 +10,12 @@ import { jwtDecode } from "jwt-decode";
 const Signup = () => {
   const navigate = useNavigate();
 
+  // ✅ 팀 규칙: env base url 사용
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  // ✅ 회원가입 플로우에서는 tempToken 우선 (없으면 accessToken)
   const token =
-    localStorage.getItem("tempToken") ||
-    localStorage.getItem("accessToken");
+    localStorage.getItem("tempToken") || localStorage.getItem("accessToken");
 
   let email = "";
 
@@ -67,49 +70,69 @@ const Signup = () => {
     setProfileFile(file);
   };
 
-  // 닉네임 중복 확인
+  // ✅ 닉네임 중복 확인 (baseURL + 인증 포함 + 명세 파싱)
   const handleCheckNickname = async () => {
-    if (!form.nickname.trim()) {
+    const nickname = form.nickname.trim();
+    if (!nickname) {
       alert("닉네임을 입력해주세요.");
       return;
     }
 
-    const token =
-      localStorage.getItem("tempToken") ||
-      localStorage.getItem("accessToken");
+    // ✅ 중복확인도 인증이 필요하다고 했으니 tempToken 우선으로 넣음
+    const authToken =
+      localStorage.getItem("tempToken") || localStorage.getItem("accessToken");
 
-    if (!token) {
+    if (!authToken) {
       alert("로그인이 필요합니다.");
+      navigate("/login");
       return;
     }
 
     try {
-      const response = await axios.get("/api/users/check-nickname", {
-        params: { nickname: form.nickname },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `${apiBaseUrl}/api/users/check-nickname`,
+        {
+          params: { nickname },
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
 
-      const { isAvailable } = response.data.data;
+      // ✅ 명세 응답: { status, success, message, data: { nickname, isAvailable } }
+      const { success, message, data } = response.data || {};
+      const isAvailable = data?.isAvailable;
+
+      if (!success || typeof isAvailable !== "boolean") {
+        alert(message || "닉네임 확인 응답이 올바르지 않습니다.");
+        setNicknameChecked(false);
+        setIsNicknameAvailable(null);
+        return;
+      }
 
       setNicknameChecked(true);
       setIsNicknameAvailable(isAvailable);
 
       alert(
-        isAvailable
-          ? "사용 가능한 닉네임입니다."
-          : "이미 사용 중인 닉네임입니다."
+        message ||
+          (isAvailable
+            ? "사용 가능한 닉네임입니다."
+            : "이미 사용 중인 닉네임입니다.")
       );
     } catch (error) {
       console.error("닉네임 중복 확인 실패", error);
 
+      const serverMsg = error.response?.data?.message;
+
       if (error.response?.status === 401) {
-        alert("인증이 만료되었습니다. 다시 로그인해주세요.");
+        alert(serverMsg || "인증이 만료되었습니다. 다시 로그인해주세요.");
         navigate("/login");
-      } else {
-        alert("닉네임 확인 중 오류가 발생했습니다.");
+        return;
       }
+
+      alert(serverMsg || "닉네임 확인 중 오류가 발생했습니다.");
+      setNicknameChecked(false);
+      setIsNicknameAvailable(null);
     }
   };
 
@@ -129,6 +152,7 @@ const Signup = () => {
       return;
     }
 
+    // ✅ 회원가입은 tempToken 필요
     const tempToken = localStorage.getItem("tempToken");
     if (!tempToken) {
       alert("로그인이 필요합니다.");
@@ -156,11 +180,17 @@ const Signup = () => {
         formData.append("profileImage", profileFile);
       }
 
-      const response = await axios.post("/api/users/signup", formData, {
-        headers: {
-          Authorization: `Bearer ${tempToken}`,
-        },
-      });
+      // ✅ 회원가입도 baseURL 적용
+      const response = await axios.post(
+        `${apiBaseUrl}/api/users/signup`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${tempToken}`,
+            // ❗ FormData에서는 Content-Type 직접 넣지 말기
+          },
+        }
+      );
 
       const { accessToken, refreshToken } = response.data.data;
 
@@ -209,7 +239,12 @@ const Signup = () => {
         <div className="form-section">
           <div className="input-group">
             <label>아이디</label>
-            <input type="text" value={email} disabled className="disabled-input" />
+            <input
+              type="text"
+              value={email}
+              disabled
+              className="disabled-input"
+            />
           </div>
 
           <div className="input-group">
