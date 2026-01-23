@@ -8,8 +8,7 @@ import "../styles/header.css";
 
 import ProfileManageModal from "../components/ProfileManageModal";
 import { UserContext } from "../context/UserContext";
-// [FIX] 훅 import 추가
-import { useNotifications } from "../hooks/useNotifications.js"; 
+import { useNotifications } from "../hooks/useNotifications.js";
 
 export default function Header() {
   const itemClass = ({ isActive }) => `item ${isActive ? "active" : ""}`;
@@ -23,35 +22,38 @@ export default function Header() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
 
-  const isFriendRequest = noti.type === "FRIEND_REQUEST";
-
   /* =========================
-      UTIL & HOOKS
+      NOTIFICATION HOOK
   ========================= */
-  const handleImgError = (e) => {
-    e.target.src = DefaultProfile;
-  };
-
-  // 훅 사용 및 변수명 매핑
   const {
     notifications,
-    isOpen: isNotiOpen,       
-    setIsOpen: setIsNotiOpen, 
+    isOpen: isNotiOpen,
+    setIsOpen: setIsNotiOpen,
     hasUnread,
     onClickNotification,
     formatTime,
     getNotiIcon,
     splitNotiContent,
-  } = useNotifications({ navigate, userId: user?.userId });
 
-  // 회원가입 일수 계산
-  const joinDateObj = user?.createdAt ? new Date(user.createdAt) : null;
+    // ✅ 친구 요청 관련 (중요)
+    isFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+  } = useNotifications({
+    navigate,
+    userId: user?.userId,
+  });
 
-  const daysTogether = joinDateObj
-    ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24)) + 1
-    : 0;
+  /* =========================
+      UTIL
+  ========================= */
+  const handleImgError = (e) => {
+    e.target.src = DefaultProfile;
+  };
 
-  // 로그아웃
+  /* =========================
+      LOGOUT
+  ========================= */
   const handleLogout = async () => {
     const token = localStorage.getItem("accessToken");
 
@@ -70,6 +72,7 @@ export default function Header() {
           "Content-Type": "application/json",
         },
       });
+
       const json = await res.json();
 
       if (res.ok && json.success) {
@@ -79,26 +82,35 @@ export default function Header() {
         navigate("/", { replace: true });
       }
     } catch (err) {
-      console.error("[Logout] Error:", err);
+      console.error("[Logout Error]", err);
     }
   };
 
-  // 외부 클릭 닫기
+  /* =========================
+      OUTSIDE CLICK
+  ========================= */
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // 알림창 닫기
       if (notiRef.current && !notiRef.current.contains(e.target)) {
         setIsNotiOpen(false);
       }
-      // 프로필창 닫기
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setIsProfileOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [setIsNotiOpen]); // 의존성 배열 추가
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, [setIsNotiOpen]);
+
+  /* =========================
+      USER INFO
+  ========================= */
+  const joinDateObj = user?.createdAt ? new Date(user.createdAt) : null;
+  const daysTogether = joinDateObj
+    ? Math.floor((new Date() - joinDateObj) / (1000 * 60 * 60 * 24)) + 1
+    : 0;
 
   const userProfile = {
     nickname: user?.nickname || "사용자",
@@ -110,13 +122,13 @@ export default function Header() {
   };
 
   /* =========================
-       RENDER
+      RENDER
   ========================= */
   return (
     <>
       <header className="header">
         <div className="inner">
-          {/* 왼쪽 */}
+          {/* LEFT */}
           <div className="left-section">
             <NavLink to="/home" className="logo">
               <img src={DearTimeMini} alt="DearTime" />
@@ -130,22 +142,20 @@ export default function Header() {
             </nav>
           </div>
 
-          {/* 오른쪽 */}
+          {/* RIGHT */}
           <div className="right-section">
-            
-            {/* 알림 섹션 */}
+            {/* 🔔 NOTIFICATION */}
             <div ref={notiRef} style={{ position: "relative" }}>
               <button
                 className={`icon-img-btn ${isNotiOpen ? "is-open" : ""}`}
+                type="button"
                 onClick={() => {
                   setIsNotiOpen((v) => !v);
                   setIsProfileOpen(false);
                 }}
-                type="button"
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
-                {/* 읽지 않은 알림이 있으면 빨간 점 표시 (선택사항) */}
-                {hasUnread && <span className="red-dot"></span>}
+                {hasUnread && <span className="red-dot" />}
               </button>
 
               {isNotiOpen && (
@@ -155,43 +165,65 @@ export default function Header() {
                   ) : (
                     <ul className="noti-list">
                       {notifications.map((noti) => {
-                        const { title, body, sub } = splitNotiContent(noti);
+                        const { title, body, sub } =
+                          splitNotiContent(noti);
 
                         return (
                           <li
                             key={noti.id}
-                            className={`noti-item ${noti.isRead ? "read" : "unread"}`}
+                            className={`noti-item ${
+                              noti.isRead ? "read" : "unread"
+                            }`}
                             onClick={() => onClickNotification(noti)}
                           >
                             <div className="noti-icon">
-                              <img src={getNotiIcon(noti.type)} alt="icon" 
-                              onError={(e) => {
-                              console.log("[ICON LOAD FAIL]", noti.type, e.currentTarget.src);
-                            }}/>
+                              <img
+                                src={getNotiIcon(noti.type)}
+                                alt="icon"
+                                onError={(e) => {
+                                  console.log(
+                                    "[ICON LOAD FAIL]",
+                                    noti.type,
+                                    e.currentTarget.src
+                                  );
+                                }}
+                              />
                             </div>
 
                             <div className="noti-content">
                               <p className="noti-text">{title}</p>
-                              {body && <span className="noti-text">{body}</span>}
-                              {sub && <span className="noti-sub">{sub}</span>}
+                              {body && (
+                                <span className="noti-text">{body}</span>
+                              )}
+                              {sub && (
+                                <span className="noti-sub">{sub}</span>
+                              )}
                             </div>
-                            {isFriendRequest && (
+
+                            {isFriendRequest(noti) && !noti.handled && (
                               <div className="noti-actions">
                                 <button
-                                  className="accept-btn"
-                                  onClick={() => handleAcceptFriend(noti.senderId, noti.notificationId)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    acceptFriendRequest(noti);
+                                  }}
                                 >
                                   수락
                                 </button>
                                 <button
-                                  className="reject-btn"
-                                  onClick={() => handleRejectFriend(noti.senderId, noti.notificationId)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    rejectFriendRequest(noti);
+                                  }}
                                 >
                                   거절
                                 </button>
                               </div>
                             )}
-                            <span className="noti-time">{formatTime(noti.createdAt)}</span>
+
+                            <span className="noti-time">
+                              {formatTime(noti.createdAt)}
+                            </span>
                           </li>
                         );
                       })}
@@ -201,10 +233,12 @@ export default function Header() {
               )}
             </div>
 
-            {/* 프로필 섹션 */}
+            {/* 👤 PROFILE */}
             <div ref={profileRef} style={{ position: "relative" }}>
               <div
-                className={`profile-trigger ${isProfileOpen ? "is-open" : ""}`}
+                className={`profile-trigger ${
+                  isProfileOpen ? "is-open" : ""
+                }`}
                 onClick={() => {
                   setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);
@@ -238,6 +272,7 @@ export default function Header() {
                   </div>
 
                   <p>{userProfile.bio}</p>
+
                   <button
                     className="p-btn"
                     onClick={() => {
@@ -247,6 +282,7 @@ export default function Header() {
                   >
                     프로필 관리
                   </button>
+
                   <button className="p-btn" onClick={handleLogout}>
                     로그아웃
                   </button>
