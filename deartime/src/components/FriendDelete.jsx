@@ -1,10 +1,14 @@
 // ==========================
-// FriendDelete.jsx (완성본: DELETE 연동 + 스타일 포함, Mixed Content 해결)
+// FriendDelete.jsx (완성본: DELETE 연동 + 스타일 포함)
+// ✅ 팀 규칙: apiBaseUrl = import.meta.env.VITE_API_BASE_URL 사용
 // ==========================
 import React, { useEffect, useState } from "react";
 
 export default function FriendDelete({ friendId, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);
+
+  // ✅ 팀 규칙: env base url 사용
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   // ESC로 닫기
   useEffect(() => {
@@ -16,7 +20,8 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
   }, [onCancel]);
 
   const handleDelete = async () => {
-    if (!friendId) return;
+    const id = Number(friendId);
+    if (!Number.isFinite(id)) return;
 
     try {
       setIsLoading(true);
@@ -27,23 +32,23 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
         return;
       }
 
-      // ✅ 핵심: 절대주소(http://ec2...) 금지 → /api 로만 요청 (Vercel rewrites 타게)
-      const res = await fetch(`/api/friends/${friendId}`, {
+      const res = await fetch(`${apiBaseUrl}/api/friends/${id}`, {
         method: "DELETE",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
       const data = await res.json().catch(() => null);
+      console.log("DELETE /api/friends/:id =>", res.status, data);
 
       if (!res.ok) {
         alert(data?.message ?? "친구 삭제에 실패했습니다.");
         return;
       }
 
-      // ✅ 성공: 부모(FriendList)에게 알려서 UI에서 제거하게 함
-      onSuccess?.(friendId);
+      onSuccess?.(id);
     } catch (e) {
       alert("네트워크 오류가 발생했습니다.");
     } finally {

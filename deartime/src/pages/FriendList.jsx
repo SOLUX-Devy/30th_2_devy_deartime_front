@@ -1,5 +1,6 @@
 // ==========================
 // FriendList.jsx (GET 연동 + 삭제는 FriendDelete.jsx에서 처리)
+// ✅ 팀 규칙: apiBaseUrl = import.meta.env.VITE_API_BASE_URL 사용
 // ==========================
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -31,6 +32,9 @@ export default function FriendList() {
   const longPressTimerRef = useRef(null);
   const pressTargetElRef = useRef(null);
 
+  // ✅ 팀 규칙: env base url 사용
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
   // =========================
   // 친구 목록 조회 API (GET)
   // =========================
@@ -42,8 +46,7 @@ export default function FriendList() {
         return;
       }
 
-      // ✅ 핵심: 절대주소 금지 → /api 로만 요청 (Vercel rewrites 타게)
-      const res = await fetch(`/api/friends`, {
+      const res = await fetch(`${apiBaseUrl}/api/friends`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -65,6 +68,7 @@ export default function FriendList() {
 
   useEffect(() => {
     fetchFriends();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // =========================
