@@ -7,7 +7,6 @@ import FriendCard from "./FriendCard";
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
   const [selectedId, setSelectedId] = useState(null);
-  
 
   const [friends, setFriends] = useState([]);
   const [count, setCount] = useState(0);
@@ -55,13 +54,15 @@ export default function FriendSelect({ onClose, onSelect }) {
     const k = keyword.trim().toLowerCase();
     if (!k) return friends;
     return friends.filter((f) =>
-      (f.friendNickname || "").toLowerCase().includes(k)
+      (f.friendNickname || "").toLowerCase().includes(k),
     );
   }, [friends, keyword]);
 
   const selectedFriend = useMemo(() => {
     if (!selectedId) return null;
-    return friends.find((f) => String(f.friendId) === String(selectedId)) || null;
+    return (
+      friends.find((f) => String(f.friendId) === String(selectedId)) || null
+    );
   }, [friends, selectedId]);
 
   const canConfirm = !!selectedFriend;
@@ -78,6 +79,18 @@ export default function FriendSelect({ onClose, onSelect }) {
       // friendProfileImageUrl: selectedFriend.friendProfileImageUrl,
       // friendBio: selectedFriend.friendBio,
     });
+
+    if (!selectedFriend) return;
+
+    console.log("확정된 친구:", {
+      id: selectedFriend.friendId,
+      nickname: selectedFriend.friendNickname,
+    });
+
+    onSelect({
+      friendId: selectedFriend.friendId,
+      friendNickname: selectedFriend.friendNickname,
+    });
   };
 
   return (
@@ -86,7 +99,12 @@ export default function FriendSelect({ onClose, onSelect }) {
         {/* 헤더 */}
         <div className="fs-header">
           <div className="fs-title">친구 선택</div>
-          <button type="button" className="fs-close" onClick={onClose} aria-label="close">
+          <button
+            type="button"
+            className="fs-close"
+            onClick={onClose}
+            aria-label="close"
+          >
             ×
           </button>
         </div>
@@ -101,7 +119,11 @@ export default function FriendSelect({ onClose, onSelect }) {
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="친구들 검색하세요"
               />
-              <button type="button" className="fs-search-btn" aria-label="search">
+              <button
+                type="button"
+                className="fs-search-btn"
+                aria-label="search"
+              >
                 <img className="fs-search-icon" src={finder} alt="" />
               </button>
             </div>
@@ -121,7 +143,9 @@ export default function FriendSelect({ onClose, onSelect }) {
 
         {/* 상태 */}
         {isLoading && <div className="fs-state">불러오는 중…</div>}
-        {!!errorMsg && !isLoading && <div className="fs-state error">{errorMsg}</div>}
+        {!!errorMsg && !isLoading && (
+          <div className="fs-state error">{errorMsg}</div>
+        )}
 
         {/* 카드 그리드 */}
         <div className="fs-grid">
@@ -141,7 +165,10 @@ export default function FriendSelect({ onClose, onSelect }) {
                 tabIndex={0}
               >
                 <div className="fs-cardInner">
-                  <FriendCard friend={f} className={isSelected ? "fs-selectedCard" : ""} />
+                  <FriendCard
+                    friend={f}
+                    className={isSelected ? "fs-selectedCard" : ""}
+                  />
                 </div>
               </div>
             );
