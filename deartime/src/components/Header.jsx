@@ -3,7 +3,7 @@ import DearTimeMini from "../assets/logo.svg?url";
 import { useState, useEffect, useRef, useContext } from "react";
 import NotiIcon from "../assets/noti_bell.svg?url";
 import ArrowDown from "../assets/arrow_down.svg?url";
-import DefaultProfile from "../assets/profile.jpg";
+import DefaultProfile from "../assets/default_profile2.png";
 import "../styles/header.css";
 
 import ProfileManageModal from "../components/ProfileManageModal";
@@ -55,7 +55,9 @@ export default function Header() {
     if (!token) return;
 
     try {
-      const res = await fetch("/api/auth/logout", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      
+      const res = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

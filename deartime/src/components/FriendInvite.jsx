@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import profileImageFallback from "../assets/profile.jpg";
+import profileImageFallback from "../assets/default_profile2.png";
 
 /**
  * FriendInvite (전문)

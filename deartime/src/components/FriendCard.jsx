@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
-import defaultProfile from "../assets/profile.jpg";
+import defaultProfile from "../assets/default_profile2.png";
 
 export default function FriendCard({ friend }) {
   const imageSrc =
-    friend?.friendProfileImageUrl === "profile.jpg"
+    friend?.friendProfileImageUrl === "default_profile2.png"
       ? defaultProfile
       : friend?.friendProfileImageUrl || defaultProfile;
 
