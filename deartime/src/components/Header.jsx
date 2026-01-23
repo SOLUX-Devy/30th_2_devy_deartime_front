@@ -21,13 +21,16 @@ export default function Header() {
 
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
-
+  useEffect(() => {
+    if (user?.userId) {
+      localStorage.setItem("lastUserId", String(user.userId));
+    }
+  }, [user?.userId]);
 
   const {
     notifications,
     isOpen: isNotiOpen,
     setIsOpen: setIsNotiOpen,
-    hasUnread,
     onClickNotification,
     formatTime,
     getNotiIcon,
@@ -39,12 +42,11 @@ export default function Header() {
     navigate,
     userId: user?.userId,
   });
-
+  const hasUnreadNoti = notifications.length > 0;
 
   const handleImgError = (e) => {
     e.target.src = DefaultProfile;
   };
-
 
   const handleLogout = async () => {
     const token = localStorage.getItem("accessToken");
@@ -68,16 +70,21 @@ export default function Header() {
       const json = await res.json();
 
       if (res.ok && json.success) {
-        localStorage.clear();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("tempToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("joinDate");
+
         setUser(null);
         setIsProfileOpen(false);
+        setIsNotiOpen(false);
         navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("[Logout Error]", err);
     }
   };
-
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -92,7 +99,6 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setIsNotiOpen]);
-
 
   const joinDateObj = user?.createdAt ? new Date(user.createdAt) : null;
   const daysTogether = joinDateObj
@@ -147,7 +153,7 @@ export default function Header() {
                 }}
               >
                 <img src={NotiIcon} alt="알림" className="noti-img" />
-                {hasUnread && <span className="red-dot" />}
+                {hasUnreadNoti && <span className="red-dot" />}
               </button>
 
               {isNotiOpen && (
@@ -187,7 +193,9 @@ export default function Header() {
 
                             <div className="noti-content">
                               <p className="noti-text">{title}</p>
-                              {body && <span className="noti-text">{body}</span>}
+                              {body && (
+                                <span className="noti-text">{body}</span>
+                              )}
                               {sub && <span className="noti-sub">{sub}</span>}
 
                               {/* ✅ 친구요청이면: 버튼 + 시간 같은 줄 */}
