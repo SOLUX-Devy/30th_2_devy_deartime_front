@@ -4,6 +4,7 @@ import TimeCapsuleCard from "../components/TimeCapsuleCard";
 import RecordCard from "../components/RecordCard";
 import ConstellationCard from "../components/ConstellationCard";
 import "../styles/home.css";
+import backgroundImg from "../assets/background_star.png";
 import { useUser } from "../context/UserContext";
 
 export default function Home() {
@@ -18,6 +19,12 @@ export default function Home() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
+    if (user) {
+      console.log("[Home] 유저 데이터:", user);
+      console.log("생일:", user.birthDate); 
+      console.log("이미지:", user.profileImageUrl);
+    }
+  }, [user]);
 
   if (loading) {
     return <div className="loading-screen">정보를 불러오는 중...</div>;
@@ -54,4 +61,4 @@ export default function Home() {
       </section>
     </div>
   );
-})}
+}
