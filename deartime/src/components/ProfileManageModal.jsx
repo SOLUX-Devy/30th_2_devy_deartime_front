@@ -28,14 +28,18 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   );
   const location = useLocation();
 
+  const didMountRef = useRef(false);
+
   useEffect(() => {
-    // 라우트(메뉴) 변경 시 모달 자동 닫기
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     onClose();
-  }, [location.pathname]);
+  }, [location.pathname, onClose]);
 
   // 닉네임 중복 확인 상태
   const [nicknameChecked, setNicknameChecked] = useState(false);
-  const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
 
   // ✅ 닉네임 안내 문구(인라인 메시지)
   const [nicknameMsg, setNicknameMsg] = useState("");
@@ -93,7 +97,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (!res.ok) throw new Error(json.message);
 
       setNicknameChecked(true);
-      setIsNicknameAvailable(json.data.isAvailable);
 
       if (json.data.isAvailable) {
         setNicknameMsg("사용 가능한 닉네임입니다.");
@@ -105,7 +108,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     } catch (err) {
       console.error("닉네임 중복 확인 실패", err);
       setNicknameChecked(false);
-      setIsNicknameAvailable(null);
       setNicknameMsg("닉네임 확인 중 오류가 발생했습니다.");
       setNicknameMsgType("error");
     }
@@ -270,7 +272,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                   onChange={(e) => {
                     setNickname(e.target.value);
                     setNicknameChecked(false);
-                    setIsNicknameAvailable(null);
 
                     // ✅ 닉네임 바뀌면 메시지 초기화
                     setNicknameMsg("");

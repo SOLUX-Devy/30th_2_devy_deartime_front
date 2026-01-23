@@ -55,7 +55,9 @@ export default function Header() {
     if (!token) return;
 
     try {
-      const res = await fetch("/api/auth/logout", {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      
+      const res = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

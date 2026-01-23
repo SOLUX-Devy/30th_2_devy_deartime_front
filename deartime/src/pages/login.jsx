@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+// import React, { useEffect } from "react";
 import backgroundImg from "../assets/background.svg";
 import logoImg from "../assets/logo.svg";
 import "../styles/landing.css";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   
