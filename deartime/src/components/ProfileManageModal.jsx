@@ -31,6 +31,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
   const isNicknameChanged = nickname.trim() !== originalNickname;
   const isSaveDisabled = !nickname.trim() || !birthDate.trim() || !bio.trim();
+  const isNicknameEmpty = !nickname.trim();
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
@@ -231,7 +232,12 @@ export default function ProfileManageModal({ userProfile, onClose }) {
                     setIsNicknameAvailable(null);
                   }}
                 />
-                <button type="button" onClick={handleCheckNickname}>
+                <button
+                  type="button"
+                  onClick={handleCheckNickname}
+                  disabled={isNicknameEmpty}
+                  className={isNicknameEmpty ? "disabled" : ""}
+                >
                   중복확인
                 </button>
               </div>

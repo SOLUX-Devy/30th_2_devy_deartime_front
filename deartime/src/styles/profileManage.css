@@ -2,14 +2,14 @@
 .profile-manage-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999; 
+  z-index: 9999;
 
   background: url("../assets/background.svg") center / cover no-repeat;
-  
-  overflow-y: auto; 
+
+  overflow-y: auto;
   display: flex;
-  padding-top: 100px;   
-  padding-bottom: 50px;  
+  padding-top: 100px;
+  padding-bottom: 50px;
   padding-left: 0;
   padding-right: 0;
 }
@@ -17,8 +17,8 @@
 /* ===== 카드 ===== */
 .profile-manage-modal {
   width: 450px;
-  height: auto; 
-  
+  height: auto;
+
   background: #000D32;
   border: 1px solid #2A4280;
   border-radius: 20px;
@@ -29,6 +29,8 @@
   flex-direction: column;
   align-items: center;
   margin: auto;
+
+  position: relative; /* ✅ X 버튼 기준 */
 }
 
 .profile-manage-header {
@@ -39,13 +41,13 @@
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 10px;
-  position: relative;
+  position: static; /* ✅ relative 필요 없음 */
 }
 
 .close-btn {
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 18px; /* ✅ 모달 우측 여백 */
+  top: 16px;   /* ✅ 모달 상단 여백 */
   background: none;
   border: none;
   color: white;
@@ -53,25 +55,27 @@
   cursor: pointer;
 }
 
+/* ===== 폼 ===== */
 .profile-manage-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 4px;  /* ✅ 8px -> 4px */
+  gap: 0; /* ✅ form 자체 gap 제거 */
 }
 
+/* ✅ 항목(세트) 간격은 input-group이 담당 */
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;          /* ✅ 라벨-입력 간격 */
-  margin-bottom: 6px; /* ✅ 항목 덩어리 간격 */
+  gap: 2px;           /* ✅ 라벨-입력 간격(가깝게) */
+  margin-bottom: 14px; /* ✅ 세트끼리 간격(넉넉하게) */
 }
 
 .input-group label {
   display: block;
   color: #fff;
   font-size: 13px;
-  margin-bottom: 0;  /* ✅ 4px -> 0 (input-group gap이 대신함) */
+  margin-bottom: 0;
   line-height: 1.2;
 }
 
@@ -88,6 +92,23 @@
   box-sizing: border-box;
 }
 
+/* ✅ 닉네임 입력+중복확인 줄 */
+.nickname-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 0; /* ✅ 라벨 바로 아래 */
+}
+
+/* textarea는 기본 height 36px 적용되면 너무 낮을 수 있어 별도 높이 */
+.input-group textarea {
+  height: auto;
+  min-height: 80px;
+  padding: 10px 12px;
+  resize: none; /* 원하면 제거 */
+}
+
+/* ===== 대리인 ===== */
 .delegate-row {
   width: 100%;
   display: flex;
@@ -122,37 +143,30 @@
 }
 
 .delegate-arrow {
-  font-size: 0; 
-  display: inline-flex;  /* 내부 요소 가로 정렬 */
-  align-items: center;   /* 수직 중앙 정렬 */
+  font-size: 0;
+  display: inline-flex;
+  align-items: center;
   vertical-align: middle;
 }
 
 .delegate-arrow::before {
   content: "";
   display: block;
-  width: 14px;          /* 꼬리 길이 (조절 가능) */
-  height: 2px;          /* 선 두께 */
-  background-color: #000; /* 색상 */
+  width: 14px;
+  height: 2px;
+  background-color: #000;
   border-radius: 2px;
 }
 
-/* 2. 화살표 머리 (꺾쇠) */
 .delegate-arrow::after {
   content: "";
   display: block;
-  width: 8px;           /* 머리 크기 */
+  width: 8px;
   height: 8px;
-  
-  /* 위쪽, 오른쪽 테두리로 꺾쇠 만듦 */
-  border-top: 2px solid #000; 
-  border-right: 2px solid #000; 
-  
-  /* 45도 회전 */
+  border-top: 2px solid #000;
+  border-right: 2px solid #000;
   transform: rotate(45deg);
-  
-  /* 꼬리와 자연스럽게 이어지도록 위치 조정 */
-  margin-left: -9px; 
+  margin-left: -9px;
 }
 
 .delegate-remove {
@@ -166,9 +180,10 @@
   background-color: #C5E8EC;
 }
 
+/* ===== 저장 버튼 ===== */
 .save-row {
   display: flex;
-  margin-top: 10px;
+  margin-top: 22px; /* ✅ 대리인과 거리 늘림 */
   justify-content: flex-end;
   width: 100%;
 }
@@ -186,22 +201,22 @@
 }
 
 .save-btn:not(.disabled):hover {
-  background-color: rgba(42, 66, 128, 0.8); 
+  background-color: rgba(42, 66, 128, 0.8);
 }
 
 .save-btn:not(.disabled):active {
-  background-color: #0E77BC; 
+  background-color: #0E77BC;
 }
 
 .save-btn.disabled {
   cursor: not-allowed;
-  opacity: 1; /* ✅ 투명해지기보단 어둡게 */
+  opacity: 1;
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(42, 66, 128, 0.4);
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* 중복확인 버튼 */
+/* ===== 중복확인 버튼 ===== */
 .input-group button {
   padding: 10px 14px;
   font-size: 13px;
@@ -223,6 +238,23 @@
   background-color: #0E77BC;
 }
 
+/* ✅ 중복확인 버튼 disabled */
+.input-group button:disabled,
+.input-group button.disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.input-group button:disabled:hover,
+.input-group button:disabled:active {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+/* ===== 프로필 이미지 ===== */
 .profile-manage-image {
   position: relative;
   width: 120px;
@@ -230,29 +262,26 @@
   margin: 0 auto 16px;
   cursor: pointer;
 
-  /* flex로 이미지 중앙 정렬 */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 프로필 이미지 */
 .profile-img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
   transition: filter 0.25s ease;
-  display: block; /* 부모 flex에 영향 안 받도록 */
+  display: block;
 }
 
-/* 수정 아이콘 */
 .edit-icon {
-  position: absolute;        /* 부모 기준 절대 위치 */
+  position: absolute;
   top: 57%;
   left: 50%;
-  transform: translate(-50%, -50%); /* 정확히 가운데 */
-  
+  transform: translate(-50%, -50%);
+
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -262,18 +291,16 @@
   align-items: center;
   justify-content: center;
 
-  opacity: 0;                /* 기본 숨김 */
+  opacity: 0;
   transition: opacity 0.25s ease;
 }
 
-/* 아이콘 이미지 */
 .edit-icon img {
   width: 18px;
   height: 18px;
-  filter: brightness(0.9);   /* 살짝 흐리게 */
+  filter: brightness(0.9);
 }
 
-/* hover 시 아이콘 표시, 이미지 살짝 흐리게 */
 .profile-manage-image:hover .edit-icon {
   opacity: 1;
 }
