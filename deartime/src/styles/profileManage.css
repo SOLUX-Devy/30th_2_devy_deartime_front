@@ -1,26 +1,26 @@
-/* ===== overlay ===== */
+/* =========================
+   overlay
+========================= */
 .profile-manage-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999; 
-
+  z-index: 9999;
   background: url("../assets/background.svg") center / cover no-repeat;
-  
-  overflow-y: auto; 
+
+  overflow-y: auto;
   display: flex;
-  padding-top: 100px;   
-  padding-bottom: 50px;  
-  padding-left: 0;
-  padding-right: 0;
+  padding: 100px 0 50px;
 }
 
-/* ===== 카드 ===== */
+/* =========================
+   modal
+========================= */
 .profile-manage-modal {
   width: 450px;
-  height: auto; 
-  
-  background: #000D32;
-  border: 1px solid #2A4280;
+  height: auto;
+
+  background: #000d32;
+  border: 1px solid #2a4280;
   border-radius: 20px;
   padding: 40px;
   box-sizing: border-box;
@@ -29,8 +29,37 @@
   flex-direction: column;
   align-items: center;
   margin: auto;
+
+  position: relative; /* ✅ close-btn 기준 */
+}
+/* 이메일 input만 비활성 회색 느낌 */
+.email-input:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(42, 66, 128, 0.35);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: not-allowed;
 }
 
+/* ✅ X 버튼: 모달 우상단 고정 */
+.profile-manage-modal .close-btn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+
+  z-index: 50;
+}
+
+/* header */
 .profile-manage-header {
   width: 100%;
   text-align: center;
@@ -38,48 +67,185 @@
   font-family: "Josefin Slab";
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 10px;
-  position: relative;
+  margin-bottom: 12px;
 }
 
-.close-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-}
-
+/* =========================
+   form layout
+========================= */
 .profile-manage-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+
+/* ✅ 라벨-입력은 붙이고, 세트끼리는 띄우기 */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
 }
 
 .input-group label {
   display: block;
   color: #fff;
   font-size: 13px;
-  margin-bottom: 4px;
+  line-height: 1.2;
+  margin-bottom: 2px; /* ✅ 라벨-입력 간격(작게) */
 }
 
+/* 입력 요소 아래에 간격 주기 */
+.input-group input,
+.input-group textarea {
+  margin-bottom: 16px;
+}
+
+/* input / textarea 기본 */
 .input-group input,
 .input-group textarea {
   width: 100%;
-  height: 36px;
-  padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid #2A4280;
+  border: 1px solid #2a4280;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   font-size: 14px;
   box-sizing: border-box;
 }
 
+/* input 높이 */
+.input-group input {
+  height: 36px;
+  padding: 0 12px;
+}
+
+/* textarea 높이 */
+.input-group textarea {
+  min-height: 80px;
+  padding: 10px 12px;
+  resize: none;
+}
+
+/* =========================
+   nickname row
+========================= */
+.nickname-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+/* 닉네임 중복확인 버튼 정렬 수정 */
+.nickname-row button {
+  height: 36px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 닉네임 input은 버튼이랑 같이 있으니 폭 조절 */
+.nickname-row input {
+  flex: 1;
+}
+
+/* =========================
+   duplicate check button
+========================= */
+.input-group button {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 2px solid #2a4280;
+  background: rgba(255, 255, 255, 0);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ✅ 활성일 때만 hover/active 먹게 */
+.input-group button:not(:disabled):hover {
+  background-color: #2a4280;
+  opacity: 0.8;
+}
+
+.input-group button:not(:disabled):active {
+  background-color: #0e77bc;
+}
+
+/* ✅ disabled: 저장버튼이랑 동일한 톤으로 어둡게 */
+.input-group button:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================
+   profile image
+========================= */
+.profile-manage-image {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: filter 0.25s ease;
+  display: block;
+}
+
+.edit-icon {
+  position: absolute;
+  top: 57%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.edit-icon img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0.9);
+}
+
+.profile-manage-image:hover .edit-icon {
+  opacity: 1;
+}
+
+.profile-manage-image:hover .profile-img {
+  filter: blur(1.5px) brightness(0.85);
+}
+
+/* =========================
+   delegate
+========================= */
 .delegate-row {
   width: 100%;
   display: flex;
@@ -103,64 +269,59 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  background: #D6DEE6;
+  background: #d6dee6;
   display: flex;
   justify-content: space-between;
+  align-items: center; /* ✅ 텍스트 중앙 */
 }
 
 .delegate-text {
-  margin-top: 11px;
   color: #000;
-}
-
-.delegate-arrow {
-  font-size: 0; 
-  display: inline-flex;  /* 내부 요소 가로 정렬 */
-  align-items: center;   /* 수직 중앙 정렬 */
-  vertical-align: middle;
-}
-
-.delegate-arrow::before {
-  content: "";
-  display: block;
-  width: 14px;          /* 꼬리 길이 (조절 가능) */
-  height: 2px;          /* 선 두께 */
-  background-color: #000; /* 색상 */
-  border-radius: 2px;
-}
-
-/* 2. 화살표 머리 (꺾쇠) */
-.delegate-arrow::after {
-  content: "";
-  display: block;
-  width: 8px;           /* 머리 크기 */
-  height: 8px;
-  
-  /* 위쪽, 오른쪽 테두리로 꺾쇠 만듦 */
-  border-top: 2px solid #000; 
-  border-right: 2px solid #000; 
-  
-  /* 45도 회전 */
-  transform: rotate(45deg);
-  
-  /* 꼬리와 자연스럽게 이어지도록 위치 조정 */
-  margin-left: -9px; 
 }
 
 .delegate-remove {
   font-size: 14px;
   color: black;
   cursor: pointer;
-  margin-top: 9px;
 }
 
 .action-btn.selected {
-  background-color: #C5E8EC;
+  background-color: #c5e8ec;
 }
 
+/* 화살표 */
+.delegate-arrow {
+  font-size: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.delegate-arrow::before {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 2px;
+  background-color: #000;
+  border-radius: 2px;
+}
+
+.delegate-arrow::after {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #000;
+  border-right: 2px solid #000;
+  transform: rotate(45deg);
+  margin-left: -9px;
+}
+
+/* =========================
+   save button
+========================= */
 .save-row {
   display: flex;
-  margin-top: 10px;
+  margin-top: 35px; /* ✅ 대리인과 더 떨어지게 */
   justify-content: flex-end;
   width: 100%;
 }
@@ -169,7 +330,7 @@
   width: 100px;
   height: 40px;
   border-radius: 10px;
-  border: 1.5px solid #2A4280;
+  border: 1.5px solid #2a4280;
   background: transparent;
   color: white;
   font-size: 14px;
@@ -178,95 +339,87 @@
 }
 
 .save-btn:not(.disabled):hover {
-  background-color: rgba(42, 66, 128, 0.8); 
+  background-color: rgba(42, 66, 128, 0.8);
 }
 
 .save-btn:not(.disabled):active {
-  background-color: #0E77BC; 
+  background-color: #0e77bc;
 }
 
 .save-btn.disabled {
   cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* 중복확인 버튼 */
-.input-group button {
-  padding: 10px 14px;
-  font-size: 13px;
-  border: none;
-  border-radius: 8px;
-  border: 2px solid #2A4280;
-  background: rgba(255, 255, 255, 0.00);
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.input-group button:hover {
-  background-color: #2A4280;
-  opacity: 80%;
-}
-
-.input-group button:active {
-  background-color: #0E77BC;
-}
-
-.profile-manage-image {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 16px;
-  cursor: pointer;
-
-  /* flex로 이미지 중앙 정렬 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 프로필 이미지 */
-.profile-img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  transition: filter 0.25s ease;
-  display: block; /* 부모 flex에 영향 안 받도록 */
-}
-
-/* 수정 아이콘 */
-.edit-icon {
-  position: absolute;        /* 부모 기준 절대 위치 */
-  top: 57%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* 정확히 가운데 */
-  
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  opacity: 0;                /* 기본 숨김 */
-  transition: opacity 0.25s ease;
-}
-
-/* 아이콘 이미지 */
-.edit-icon img {
-  width: 18px;
-  height: 18px;
-  filter: brightness(0.9);   /* 살짝 흐리게 */
-}
-
-/* hover 시 아이콘 표시, 이미지 살짝 흐리게 */
-.profile-manage-image:hover .edit-icon {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.profile-manage-image:hover .profile-img {
-  filter: blur(1.5px) brightness(0.85);
+/* =========================
+   FriendSelect Scrollbar
+========================= */
+/* ✅ fs-grid가 "스크롤 되는 요소"일 때만 적용됨 */
+.fs-grid {
+  overflow-y: auto; /* ✅ 이거 없으면 스크롤바 스타일이 안 먹을 수 있음 */
+}
+
+.fs-grid::-webkit-scrollbar {
+  width: 9px;
+  background: transparent;
+}
+
+.fs-grid::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.fs-grid::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 49, 94, 0.55) 0%,
+    rgba(42, 66, 128, 0.55) 100%
+  );
+  border-radius: 999px;
+}
+
+.fs-grid::-webkit-scrollbar-thumb {
+  background: rgba(220, 220, 220, 0.85);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.fs-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 220, 220, 1);
+}
+
+.fs-grid::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.input-group input[type="date"] {
+  color: white;
+  line-height: 36px;
+}
+
+.input-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+/* 닉네임 중복확인 안내/결과 메시지 */
+.field-msg {
+  margin-top: -10px;   /* nickname-row 바로 아래 붙게 */
+  margin-bottom: 16px; /* 다음 input-group 간격 */
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.field-msg.error {
+  color: #ff5a5a;
+}
+
+.field-msg.success {
+  color: #7cffb2;
 }

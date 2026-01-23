@@ -5,6 +5,8 @@ import FriendSelect from "../components/FriendSelect";
 import { useUser } from "../context/UserContext";
 import EditProfileIcon from "../assets/edit-profile.png";
 import { setProxy } from "../api/proxy";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function ProfileManageModal({ userProfile, onClose }) {
   const { setUser } = useUser();
@@ -22,15 +24,34 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(
-    userProfile?.profileImageUrl || DefaultProfile
+    userProfile?.profileImageUrl || DefaultProfile,
   );
+  const location = useLocation();
+
+  useEffect(() => {
+    // 라우트(메뉴) 변경 시 모달 자동 닫기
+    onClose();
+  }, [location.pathname]);
 
   // 닉네임 중복 확인 상태
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
 
-  const isNicknameChanged = nickname.trim() !== originalNickname;
-  const isSaveDisabled = !nickname.trim();
+  // ✅ 닉네임 안내 문구(인라인 메시지)
+  const [nicknameMsg, setNicknameMsg] = useState("");
+  const [nicknameMsgType, setNicknameMsgType] = useState(""); // "error" | "success" | ""
+
+  const normalizedNickname = (nickname ?? "").replace(/\u200B/g, "").trim();
+
+  const isNicknameChanged =
+    normalizedNickname !==
+    (originalNickname ?? "").replace(/\u200B/g, "").trim();
+
+  const isNicknameEmpty = normalizedNickname.length === 0;
+
+  // 저장은 막지 않음(요구사항)
+  const isSaveDisabled =
+    normalizedNickname.length === 0 || !birthDate.trim() || !bio.trim();
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
@@ -38,7 +59,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   };
 
   const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     setProfileImageFile(file);
@@ -49,23 +70,23 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   };
 
   const handleCheckNickname = async () => {
-    if (!nickname.trim()) {
-      alert("닉네임을 입력해주세요.");
+    if (!normalizedNickname) {
+      setNicknameMsg("닉네임을 입력해주세요.");
+      setNicknameMsgType("error");
       return;
     }
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      alert("로그인이 필요합니다.");
+      setNicknameMsg("로그인이 필요합니다.");
+      setNicknameMsgType("error");
       return;
     }
 
     try {
       const res = await fetch(
-        `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `/api/users/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const json = await res.json();
@@ -74,30 +95,34 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       setNicknameChecked(true);
       setIsNicknameAvailable(json.data.isAvailable);
 
-      alert(
-        json.data.isAvailable
-          ? "사용 가능한 닉네임입니다."
-          : "이미 사용 중인 닉네임입니다."
-      );
+      if (json.data.isAvailable) {
+        setNicknameMsg("사용 가능한 닉네임입니다.");
+        setNicknameMsgType("success");
+      } else {
+        setNicknameMsg("이미 사용 중인 닉네임입니다.");
+        setNicknameMsgType("error");
+      }
     } catch (err) {
       console.error("닉네임 중복 확인 실패", err);
-      alert("닉네임 확인 중 오류가 발생했습니다.");
+      setNicknameChecked(false);
+      setIsNicknameAvailable(null);
+      setNicknameMsg("닉네임 확인 중 오류가 발생했습니다.");
+      setNicknameMsgType("error");
     }
   };
 
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
-    // 닉네임 변경 시에만 중복 확인
-    if (isNicknameChanged) {
-      if (!nicknameChecked) {
-        alert("닉네임 중복 확인을 해주세요.");
-        return;
-      }
-      if (!isNicknameAvailable) {
-        alert("사용할 수 없는 닉네임입니다.");
-        return;
-      }
+    // ✅ 닉네임이 변경됐는데 중복확인 안 했으면 저장은 하되 안내만 띄우기
+    if (isNicknameChanged && !nicknameChecked) {
+      setNicknameMsg("닉네임 중복 확인 해주세요.");
+      setNicknameMsgType("error");
+      // 저장을 막지 않으려면 return 하면 안 됨
+      // 하지만 서버에서 닉네임 중복/검증 걸릴 가능성이 높아서
+      // UX상 여기서 return 하는 게 보통 맞긴 함.
+      // 요청대로 "막지 않기"를 지키려면 아래 줄은 주석 처리 유지.
+      // return;
     }
 
     setIsSaving(true);
@@ -106,12 +131,14 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (!selectedDelegate) return;
 
       try {
-        // 예시: 1년 뒤 만료
         const expiredAt = new Date();
         expiredAt.setFullYear(expiredAt.getFullYear() + 1);
-        const expiredAtStr = expiredAt.toISOString().slice(0, 19); // yyyy-MM-ddTHH:mm:ss
+        const expiredAtStr = expiredAt.toISOString().slice(0, 19);
 
-        const proxyData = await setProxy(selectedDelegate.friendId, expiredAtStr);
+        const proxyData = await setProxy(
+          selectedDelegate.friendId,
+          expiredAtStr,
+        );
 
         alert("대리인이 설정되었습니다.");
         console.log("[Proxy Set]", proxyData);
@@ -136,13 +163,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         new Blob(
           [
             JSON.stringify({
-              nickname,
+              nickname: normalizedNickname,
               bio,
               birthDate,
             }),
           ],
-          { type: "application/json" }
-        )
+          { type: "application/json" },
+        ),
       );
 
       if (profileImageFile) {
@@ -160,15 +187,24 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (res.ok && json.success) {
         setUser(json.data);
         alert("프로필이 업데이트 되었습니다.");
-        
-        // 대리인 설정
+
         if (selectedDelegate) {
           await handleSaveProxy();
         }
 
         onClose();
       } else {
-        alert(json.message || "프로필 업데이트에 실패했습니다.");
+        // 서버가 닉네임 중복 메시지를 주면, 그걸 닉네임 밑에 띄우기
+        const msg = json.message || "프로필 업데이트에 실패했습니다.";
+        if (
+          msg.toLowerCase().includes("닉네임") ||
+          msg.toLowerCase().includes("nickname")
+        ) {
+          setNicknameMsg(msg);
+          setNicknameMsgType("error");
+        } else {
+          alert(msg);
+        }
       }
     } catch (err) {
       console.error("[Profile Update] Error:", err);
@@ -178,19 +214,24 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
   };
 
+  const shouldAskNicknameCheck =
+    isNicknameChanged && normalizedNickname.length > 0 && !nicknameChecked;
+
   return (
     <>
       <div className="profile-manage-overlay">
         <div className="profile-manage-modal">
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
+
           <div className="profile-manage-header">
             <span>프로필 관리</span>
-            <button className="close-btn" onClick={onClose}>✕</button>
           </div>
 
-          {/* ⭐ 프로필 이미지 영역 */}
           <div
             className="profile-manage-image"
-            onClick={() => fileInputRef.current.click()}
+            onClick={() => fileInputRef.current?.click()}
           >
             <img
               src={profileImagePreview}
@@ -210,26 +251,57 @@ export default function ProfileManageModal({ userProfile, onClose }) {
           </div>
 
           <div className="profile-manage-form">
-            <div className="input-group">
+            <div className="input-group email-group">
               <label>이메일</label>
-              <input value={userProfile?.email || ""} disabled />
+              <input
+                className="email-input"
+                value={userProfile?.email || ""}
+                disabled
+              />
             </div>
 
             <div className="input-group">
               <label>닉네임</label>
-              <div style={{ display: "flex", gap: "8px" }}>
+
+              {/* ✅ 같은 줄: input + 버튼 */}
+              <div className="nickname-row">
                 <input
                   value={nickname}
                   onChange={(e) => {
                     setNickname(e.target.value);
                     setNicknameChecked(false);
                     setIsNicknameAvailable(null);
+
+                    // ✅ 닉네임 바뀌면 메시지 초기화
+                    setNicknameMsg("");
+                    setNicknameMsgType("");
                   }}
                 />
-                <button type="button" onClick={handleCheckNickname}>
+
+                {/* ✅ 버튼에 클래스 하나 줘서 CSS로 정렬 잡기 쉬움 */}
+                <button
+                  className="nickname-check-btn"
+                  type="button"
+                  onClick={handleCheckNickname}
+                  disabled={isNicknameEmpty}
+                >
                   중복확인
                 </button>
               </div>
+
+              {/* ✅ “중복확인 해주세요” 안내 (닉네임 변경 + 미확인 상태) */}
+              {shouldAskNicknameCheck && (
+                <div className="field-msg error">
+                  닉네임 중복 확인 해주세요.
+                </div>
+              )}
+
+              {/* ✅ 중복확인 결과/에러 메시지 (alert 대신) */}
+              {nicknameMsg && (
+                <div className={`field-msg ${nicknameMsgType || "error"}`}>
+                  {nicknameMsg}
+                </div>
+              )}
             </div>
 
             <div className="input-group">
@@ -278,7 +350,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="save-row">
               <button
-                className="save-btn"
+                className={`save-btn ${isSaveDisabled || isSaving ? "disabled" : ""}`}
                 disabled={isSaveDisabled || isSaving}
                 onClick={handleSave}
               >
