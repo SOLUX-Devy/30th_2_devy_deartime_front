@@ -1,3 +1,4 @@
+/* 레이아웃 및 헤더 */
 .shared-mailbox-container {
     display: flex;
     flex-direction: column;
@@ -12,146 +13,143 @@
     padding: 3px 0;
 }
 
-.mail-letterbox-header{
+.mail-letterbox-header {
     display: flex;
-    flex-direction: row; /* 기본값이 가로 정렬입니다 */
+    flex-direction: row;
     padding: 3px 0;
     gap: 10px;
 }
 
-.letter-count{
-    margin-top:1em;
+.letter-count {
+    margin-top: 1em;
+    color: #aaa;
+    font-size: 0.9rem;
 }
 
-.chat-list{
-    margin-top:5em;
-    flex-grow:1;
-    overflow-y:auto;
+.chat-list {
+    margin-top: 2em; /* 5em에서 2em으로 조정 */
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 140px; /* 하단 그라데이션 공간 확보 */
 }
 
+/* 사용자 태그 및 닫기 버튼 */
 .user-tag {
     background-color: #D1E9E9;
     color: #333;
-    padding: 7px 15px 7px 17px; /* 오른쪽 패딩을 살짝 조정 */
+    padding: 7px 15px 7px 17px;
     border-radius: 8px;
     font-weight: bold;
-    font-size:1em;
+    font-size: 1em;
     display: flex;
     align-items: center;
     gap: 8px;
-    width:12em;
-    height:3em;
+    width: 12em;
+    height: 3em;
     margin-left: calc(-1 * (50vw - 50%) + 60px);
-    margin-right: 1em;
 }
 
-/* X 버튼 스타일 리셋 및 커스텀 */
 .tag-close-btn {
-    margin-left:auto;
-    background: none;   
-    border: none;          
-    padding: 0;            
-    font-size: 1.8rem;    
+    margin-left: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1.8rem;
     line-height: 1;
-    color: #666;           
-    cursor: pointer;       
+    color: #666;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s, transform 0.2s; 
+    transition: color 0.2s, transform 0.2s;
 }
 
 .tag-close-btn:hover {
-    color: #d5282b;      
-    transform: scale(1.1); 
+    color: #d5282b;
+    transform: scale(1.1);
 }
 
-.tag-close-btn:active {
-    transform: scale(0.9); 
-}
-
-/* 날짜 구분선 */
-.date-separator {
-    text-align: center;
-    margin: 20px 0;
-    font-size: 0.9rem;
-    color: #aaa;
-}
-
-/* 채팅 공통 */
+/* 말풍선 공통 스타일*/
 .chat-item {
     display: flex;
     margin-bottom: 20px;
-    max-width: 80%;
+    max-width: 85%; /* 전체 가로 너비 제한 */
+    align-items: flex-end; 
 }
 
-/* 상대방 메시지 (왼쪽) */
+.message-bubble {
+    padding: 15px 20px; 
+    position: relative;
+    width: fit-content; 
+    max-width: 65%;    
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+}
+
+.message-content {
+    margin: 0 !important; 
+    line-height: 1.4;
+    font-size: 0.95rem;
+}
+
+.message-time {
+    font-size: 0.7rem; 
+    opacity: 0.6;
+    margin: 0 5px 2px 5px;
+    white-space: nowrap;
+}
+
+/* 상대방 메시지 (theirs) */
 .chat-item.theirs {
     align-self: flex-start;
-    gap: 30px;
-}
-
-.avatar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.avatar-circle {
-    width: 45px;
-    height: 45px;
-    background-color: #76a8f3; /* 임시 배경색 */
-    border-radius: 50%;
-}
-
-.sender-name {
-    font-size: 0.75rem;
-    margin-top: 5px;
+    gap: 10px; 
+    margin-left: 20px;
 }
 
 .theirs .message-bubble {
-    background-color: #D1E9E9; 
+    background-color: #D1E9E9;
     color: #333;
     border-radius: 0 15px 15px 15px;
 }
 
-/* 내 메시지 (오른쪽) */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    background-color: #76a8f3;
+}
+
+.sender-name {
+    font-size: 0.7rem;
+    margin-top: 5px;
+    color: #ccc;
+}
+
+/* 내 메시지 (mine) */
 .chat-item.mine {
     align-self: flex-end;
-    flex-direction: row-reverse;
-    max-width: 70%;
-
-    margin-right: 0;
-    margin-left: auto;
-    padding-right: 1em;
+    flex-direction: row-reverse; /* 말풍선-시간 순서 변경 */
+    margin-right: 20px;
 }
 
 .mine .message-bubble {
-    background-color: rgba(60, 80, 120, 0.6); 
+    background-color: rgba(60, 80, 120, 0.7);
     color: white;
     border-radius: 15px 0 15px 15px;
 }
 
-/* 메시지 공통 */
-.message-bubble {
-    padding: 15px 20px;
-    position: relative;
-    max-width: 500px;
+/* 기타 요소 */
+.date-separator {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
 }
 
-.message-content {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.message-time {
-    display: block;
-    font-size: 0.1rem;
-    margin-top: 1px;
-    opacity: 0.7;
-}
-
-/* shared mailbox 하단 검은 그라데이션(화면 하단 고정) */
 .shared-mailbox-container::after {
     content: "";
     position: fixed;
@@ -159,13 +157,11 @@
     bottom: 0;
     width: 100%;
     height: 140px;
-
     pointer-events: none;
-    z-index: 999; /* 내용 위에 보이게 */
-
+    z-index: 999;
     background: linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0) 0%,
-        rgba(0, 0, 0, 0.55) 100%
+        rgba(0, 0, 0, 0.7) 100%
     );
 }

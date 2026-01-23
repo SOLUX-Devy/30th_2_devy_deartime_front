@@ -88,7 +88,7 @@ const SharedMailbox = ({ friend, onBack }) => {
                                     )}
                                     <div className="message-bubble">
                                         <p className="message-content">{letter.content || letter.summary}</p>
-                                        <span className="message-time">{formatTime(letter.createdAt)}</span>
+                                        <span className="message-time">{formatTime(letter.sentAt)}</span>
                                     </div>
                                 </div>
                             </React.Fragment>
