@@ -2,7 +2,7 @@
 // FriendDelete.jsx (완성본: DELETE 연동 + 스타일 포함)
 // ✅ 팀 규칙: apiBaseUrl = import.meta.env.VITE_API_BASE_URL 사용
 // ==========================
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function FriendDelete({ friendId, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,28 +13,29 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
   // ESC로 닫기
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onCancel?.();
+      if (e.key === "Escape") onCancel();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     const id = Number(friendId);
     if (!Number.isFinite(id)) return;
-
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
 
     try {
       setIsLoading(true);
 
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
       const res = await fetch(`${apiBaseUrl}/api/friends/${id}`, {
         method: "DELETE",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
       });
@@ -47,16 +48,13 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
         return;
       }
 
-      // ✅ 부모 리스트 업데이트
       onSuccess?.(id);
-      // ✅ 모달 닫기까지 여기서 보장
-      onCancel?.();
     } catch (e) {
       alert("네트워크 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
-  }, [apiBaseUrl, friendId, onCancel, onSuccess]);
+  };
 
   return (
     <>
@@ -68,16 +66,13 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
 
           <div className="confirm-actions">
             <button
-              type="button"
               className="confirm-cancel"
               onClick={onCancel}
               disabled={isLoading}
             >
               취소
             </button>
-
             <button
-              type="button"
               className="confirm-delete"
               onClick={handleDelete}
               disabled={isLoading}
@@ -91,47 +86,42 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
       <style>{`
         .confirm-overlay {
           position: fixed;
-          inset: 0;
+          top: 0;
+          left: 0;
           width: 100vw;
           height: 100vh;
-          background: rgba(0, 0, 0, 0.62);
-          backdrop-filter: blur(2px);
+          background: rgba(0, 0, 0, 0.6);
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 10050; /* ✅ header/다른 모달보다 위 */
-          padding: 20px;
-          box-sizing: border-box;
+          z-index: 9999;
         }
 
         .confirm-modal {
           border-radius: 20px;
-          border: 1px solid rgba(42, 66, 128, 0.95);
-          background: rgba(0, 13, 50, 0.98);
+          border: 1px solid #2A4280;
+          background: #000D32;
           padding: 24px 22px;
           width: 320px;
           display: flex;
           flex-direction: column;
           gap: 12px;
-          box-shadow: 0 14px 40px rgba(0,0,0,0.4);
         }
 
         .confirm-title {
           font-size: 16px;
-          font-weight: 600;
+          font-weight: 500;
           text-align: center;
           margin: 0;
           color: white;
-          letter-spacing: -0.01em;
         }
 
         .confirm-desc {
           font-size: 12px;
           text-align: center;
-          color: rgba(255,255,255,0.85);
+          color: white;
           font-weight: 300;
           margin: 0 0 8px 0;
-          line-height: 1.4;
         }
 
         .confirm-actions {
@@ -140,35 +130,38 @@ export default function FriendDelete({ friendId, onSuccess, onCancel }) {
           margin-top: 10px;
         }
 
-        .confirm-cancel,
+        .confirm-cancel {
+          flex: 1;
+          height: 40px;
+          border: none;
+          border-radius: 10px;
+          border: 1.5px solid #2A4280;
+          background: rgba(255, 255, 255, 0.00);
+          font-size: 14px;
+          cursor: pointer;
+          color: #fff;
+        }
+
         .confirm-delete {
           flex: 1;
           height: 40px;
           border-radius: 10px;
-          border: 1.5px solid rgba(42, 66, 128, 0.95);
-          background: rgba(255, 255, 255, 0);
+          border: 1.5px solid #2A4280;
+          background: rgba(255, 255, 255, 0.00);
+          color: #fff;
           font-size: 14px;
           cursor: pointer;
-          color: #fff;
-          transition: 0.18s;
         }
-
+          
         .confirm-cancel:hover,
         .confirm-delete:hover {
           background-color: rgba(42, 66, 128, 1);
-          transform: translateY(-1px);
-        }
-
-        .confirm-cancel:active,
-        .confirm-delete:active {
-          transform: translateY(0px);
         }
 
         .confirm-cancel:disabled,
         .confirm-delete:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          transform: none;
         }
       `}</style>
     </>
