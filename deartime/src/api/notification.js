@@ -6,21 +6,26 @@ let stompClient = null;
 // [GET] 알림 목록 조회 
 export const fetchNotifications = async ({ page = 0, size = 20 }) => {
   const token = localStorage.getItem("accessToken");
-  const res = await fetch(`/api/notifications?page=${page}&size=${size}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!res.ok) throw new Error("알림 조회 실패");
-  return res.json();
-};
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const res = await fetch(`${apiBaseUrl}/api/notifications?page=${page}&size=${size}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) throw new Error("알림 조회 실패");
+    return res.json();
+  };
 
 // [PATCH] 알림 읽음 처리
 export const readNotification = async (id) => {
   const token = localStorage.getItem("accessToken");
-  const res = await fetch(`/api/notifications/${id}/read`, {
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const res = await fetch(`${apiBaseUrl}/api/notifications/${id}/read`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,

@@ -63,46 +63,61 @@ const SendLetter = () => {
   };
 
 
-  // const isFormValid = !!selectedFriend && title.trim() !== '' && content.trim() !== '';
-  const isFormValid = title.trim() !== '' && content.trim() !== '';
+  const isFormValid = !!selectedFriend && title.trim() !== '' && content.trim() !== '';
 
   const handleSend = async () => {
-    if (!title.trim() || !content.trim()) return;
+  if (!title.trim() || !content.trim()) return;
 
-    const payload = {
-      receiverId: 2,
-      theme: currentTheme.code,
-      title,
-      content,
-    };
+  if (!selectedFriend) {
+    alert("받는 사람을 선택해주세요!");
+    return;
+  }
 
-    try {
-      const response = await fetch("/api/letters", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      // 서버 응답 디버깅
-      console.log("[SendLetter] status:", response.status);
-      const data = await response.json();
-      console.log("[SendLetter] response data:", data);
-
-      if (!response.ok) {
-        throw new Error("편지 전송 실패");
-      }
-
-      alert("편지를 보냈습니다!");
-      navigate(-1);
-    } catch (error) {
-      console.error(error);
-      alert("편지 전송 중 오류가 발생했습니다.");
-    }
+  const payload = {
+    receiverId: selectedFriend.friendId, // ✅ 하드코딩 제거
+    theme: currentTheme.code,
+    title: title.trim(),
+    content: content.trim(),
   };
 
+  try {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    const token = localStorage.getItem("accessToken");
+
+    const res = await fetch(`${apiBaseUrl}/api/letters`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    console.log("[SendLetter] status:", res.status);
+
+    // JSON / 비JSON 방어 (배포에서 HTML 오는 경우도 대비)
+    const text = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("[SendLetter] Not JSON response:", text.slice(0, 200));
+    }
+
+    console.log("[SendLetter] response data:", data);
+
+    if (!res.ok) {
+      const msg = data?.message || "편지 전송 실패";
+      throw new Error(msg);
+    }
+
+    alert("편지를 보냈습니다!");
+    navigate(-1);
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "편지 전송 중 오류가 발생했습니다.");
+  }
+};
 
   return (
     <>
