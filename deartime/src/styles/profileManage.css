@@ -57,14 +57,22 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;  /* ✅ 8px -> 4px */
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;          /* ✅ 라벨-입력 간격 */
+  margin-bottom: 6px; /* ✅ 항목 덩어리 간격 */
 }
 
 .input-group label {
   display: block;
   color: #fff;
   font-size: 13px;
-  margin-bottom: 4px;
+  margin-bottom: 0;  /* ✅ 4px -> 0 (input-group gap이 대신함) */
+  line-height: 1.2;
 }
 
 .input-group input,
@@ -187,7 +195,10 @@
 
 .save-btn.disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 1; /* ✅ 투명해지기보단 어둡게 */
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 /* 중복확인 버튼 */

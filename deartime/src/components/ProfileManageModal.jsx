@@ -22,7 +22,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(
-    userProfile?.profileImageUrl || DefaultProfile
+    userProfile?.profileImageUrl || DefaultProfile,
   );
 
   // 닉네임 중복 확인 상태
@@ -30,7 +30,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(null);
 
   const isNicknameChanged = nickname.trim() !== originalNickname;
-  const isSaveDisabled = !nickname.trim();
+  const isSaveDisabled = !nickname.trim() || !birthDate.trim() || !bio.trim();
 
   const handleDelegateSelect = (friend) => {
     setSelectedDelegate(friend);
@@ -65,7 +65,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         `/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       const json = await res.json();
@@ -77,7 +77,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       alert(
         json.data.isAvailable
           ? "사용 가능한 닉네임입니다."
-          : "이미 사용 중인 닉네임입니다."
+          : "이미 사용 중인 닉네임입니다.",
       );
     } catch (err) {
       console.error("닉네임 중복 확인 실패", err);
@@ -111,7 +111,10 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         expiredAt.setFullYear(expiredAt.getFullYear() + 1);
         const expiredAtStr = expiredAt.toISOString().slice(0, 19); // yyyy-MM-ddTHH:mm:ss
 
-        const proxyData = await setProxy(selectedDelegate.friendId, expiredAtStr);
+        const proxyData = await setProxy(
+          selectedDelegate.friendId,
+          expiredAtStr,
+        );
 
         alert("대리인이 설정되었습니다.");
         console.log("[Proxy Set]", proxyData);
@@ -141,8 +144,8 @@ export default function ProfileManageModal({ userProfile, onClose }) {
               birthDate,
             }),
           ],
-          { type: "application/json" }
-        )
+          { type: "application/json" },
+        ),
       );
 
       if (profileImageFile) {
@@ -160,7 +163,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       if (res.ok && json.success) {
         setUser(json.data);
         alert("프로필이 업데이트 되었습니다.");
-        
+
         // 대리인 설정
         if (selectedDelegate) {
           await handleSaveProxy();
@@ -184,7 +187,9 @@ export default function ProfileManageModal({ userProfile, onClose }) {
         <div className="profile-manage-modal">
           <div className="profile-manage-header">
             <span>프로필 관리</span>
-            <button className="close-btn" onClick={onClose}>✕</button>
+            <button className="close-btn" onClick={onClose}>
+              ✕
+            </button>
           </div>
 
           {/* ⭐ 프로필 이미지 영역 */}
@@ -278,7 +283,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="save-row">
               <button
-                className="save-btn"
+                className={`save-btn ${isSaveDisabled || isSaving ? "disabled" : ""}`}
                 disabled={isSaveDisabled || isSaving}
                 onClick={handleSave}
               >
