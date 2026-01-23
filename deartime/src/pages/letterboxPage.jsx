@@ -1,5 +1,5 @@
 // src/pages/letterboxPage.jsx
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import "../styles/LetterboxPage.css";
 
 import LetterDetail from "../components/LetterDetail";
@@ -27,6 +27,8 @@ const THEME_IMAGES = {
   };
 
 export default function Letterbox() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   // UI는 1페이지부터 시작하지만, API는 0페이지부터 시작하므로 관리 주의
@@ -67,21 +69,17 @@ export default function Letterbox() {
   const pageSize = 8;
 
   // 엔드포인트 결정 함수 (실제 API 주소로 변경)
-  const getApiUrl = (index, pageNum) => {
-    const basePage = pageNum - 1; // UI(1~ ) -> API(0~ )
-    const commonParams = `sort=createdAt,desc&page=${basePage}&size=${pageSize}`;
-    
-    switch (index) {
-      case 0: // 받은 편지함 (주소가 /api/letters/received 라고 가정)
-        return `/api/letters/received?${commonParams}`;
-      case 1: // 보낸 편지함 (명세서 주소)
-        return `/api/letters/sent?${commonParams}`;
-      case 2: // 즐겨찾기 (주소가 /api/letters/bookmarks 라고 가정)
-        return `/api/letters/bookmarked?${commonParams}`;
-      default:
-        return null;
-    }
-  };
+  const getApiUrl = useCallback((index, pageNum) => {
+  const basePage = pageNum - 1;
+  const commonParams = `sort=createdAt,desc&page=${basePage}&size=${pageSize}`;
+  
+  switch (index) {
+    case 0: return `${BASE_URL}/api/letters/received?${commonParams}`;
+    case 1: return `${BASE_URL}/api/letters/sent?${commonParams}`;
+    case 2: return `${BASE_URL}/api/letters/bookmarked?${commonParams}`;
+    default: return null;
+  }
+}, [BASE_URL, pageSize]);
 
   // 2. API 호출 useEffect
   useEffect(() => {
@@ -123,7 +121,7 @@ export default function Letterbox() {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [activeIndex, page]); // 탭이 바뀌거나 페이지가 바뀔 때마다 다시 호출
+  }, [activeIndex, page, getApiUrl]); // 탭이 바뀌거나 페이지가 바뀔 때마다 다시 호출
 
   /// 페이지네이션 계산 (서버 데이터를 기준으로 변경)
   const { totalElements, totalPages } = serverPageInfo;
@@ -151,14 +149,14 @@ export default function Letterbox() {
     if (!targetLetter) return;
 
     // 서버에 상태 변경 요청
-    const response = await fetch(`/api/letters/${id}/bookmark`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-      body: JSON.stringify({ isBookmarked: !targetLetter.isBookmarked }),
-    });
+    const response = await fetch(`${BASE_URL}/api/letters/${id}/bookmark`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify({ isBookmarked: !targetLetter.isBookmarked }),
+      });
 
     const json = await response.json();
 
@@ -184,12 +182,12 @@ const handleConfirmDelete = async () => {
   if (!menu.targetId) return;
 
   try {
-    const response = await fetch(`/api/letters/${menu.targetId}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
+    const response = await fetch(`${BASE_URL}/api/letters/${menu.targetId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
 
     if (response.ok) {
       // 서버 삭제 성공 시 UI 업데이트
