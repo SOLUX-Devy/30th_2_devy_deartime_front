@@ -203,13 +203,13 @@ const handleConfirmDelete = async () => {
 };
 
   // 읽음 처리
-  const handleMarkAsRead = (id) => {
+  const handleMarkAsRead = useCallback((id) => {
     setLetters((prev) =>
       prev.map((letter) =>
         letter.letterId === id ? { ...letter, isRead: true } : letter
       )
     );
-  };
+  }, []);
 
   // 선택된 편지(포커스된 편지) ID
   const [selectedLetter, setSelectedLetter] = useState(null);

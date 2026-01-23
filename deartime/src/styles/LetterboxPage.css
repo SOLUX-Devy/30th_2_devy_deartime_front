@@ -1,9 +1,10 @@
 /* src/styles/LetterboxPage.css */
-
 .letterbox-container {
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(to bottom, #030715, #233a80);
+  background-attachment: fixed;
+
   color: white;
   padding: 20px 0;
   position: relative;
