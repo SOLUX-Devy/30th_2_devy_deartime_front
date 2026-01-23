@@ -35,46 +35,42 @@ const Gallery = () => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const ensureHttps = (url) => {
+const ensureHttps = (url) => {
     if (!url) return url;
-    return url.replace(/^http:\/\//i, "https://");
+    // 🚩 혹시 URL에 < > 기호가 섞여 들어올 경우 제거
+    let cleanedUrl = url.replace(/[<>]/g, "");
+    return cleanedUrl.replace(/^http:\/\//i, 'https://');
   };
 
   /* [기능 1] 사진 데이터 로드 (무한 스크롤 연동) */
-  const fetchPhotos = useCallback(
-    async (page) => {
-      if (isFetchingRef.current || !hasMorePhotos) return;
+  
+const fetchPhotos = useCallback(async (page) => {
+    if (isFetchingRef.current || !hasMorePhotos) return;
 
-      isFetchingRef.current = true;
-      setLoading(true);
+    isFetchingRef.current = true;
+    setLoading(true);
 
-      try {
-        const res = await axios.get(`${BASE_PATH}/photos`, {
-          headers: getAuthHeader(),
-          params: { sort: "takenAt,desc", page: page, size: 20 },
-        });
+    try {
+      const res = await axios.get(`${BASE_PATH}/photos`, {
+        headers: getAuthHeader(),
+        params: { sort: "takenAt,desc", page: page, size: 20 }
+      });
 
-        // 응답 데이터 구조 방어 로직: 서버 응답 형태에 따라 배열 추출
-        const responseData = res.data.data;
-        let newPhotos = [];
-        if (Array.isArray(responseData)) {
-          newPhotos = responseData;
-        } else if (responseData && Array.isArray(responseData.content)) {
-          newPhotos = responseData.content;
-        }
+      const responseWrapper = res.data.data;
+      const newPhotos = Array.isArray(responseWrapper.data) ? responseWrapper.data : [];
 
-        if (newPhotos.length < 20) setHasMorePhotos(false);
-
-        setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
-      } catch (err) {
-        console.error("사진 로드 실패:", err);
-      } finally {
-        setLoading(false);
-        isFetchingRef.current = false;
+      if (responseWrapper.isLast || newPhotos.length < 20) {
+        setHasMorePhotos(false);
       }
-    },
-    [hasMorePhotos]
-  );
+
+      setPhotos(prev => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
+    } catch (err) {
+      console.error("사진 로드 실패:", err);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [hasMorePhotos]);
 
   /* [기능 2] 앨범 목록 로드 */
   const fetchAlbums = async () => {
@@ -183,9 +179,10 @@ const Gallery = () => {
   const groupedPhotos = useMemo(() => {
     if (!Array.isArray(photos)) return {};
     return photos.reduce((acc, photo) => {
-      // 날짜 필드명(uploadedAt 또는 createdAt) 확인 필요
-      const dateStr = photo.uploadedAt || photo.createdAt || "Unknown";
-      const date = dateStr.split("T")[0];
+      // 🚩 수정: 명세서의 필드명인 'takenAt' 사용
+      const dateStr = photo.takenAt || "Unknown";
+      const date = dateStr.split('T')[0]; // "2025-12-28" 추출
+      
       if (!acc[date]) acc[date] = [];
       acc[date].push(photo);
       return acc;
