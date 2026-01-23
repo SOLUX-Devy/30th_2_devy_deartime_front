@@ -13,6 +13,7 @@ const TimeCapsule = () => {
   const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const myUserId = Number(localStorage.getItem("userId")) || 2;
 
   // ✅ UI는 1부터
   const [page, setPage] = useState(1);
@@ -35,9 +36,8 @@ const TimeCapsule = () => {
 
   // ✅ 잠김 모달
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
-  const [lockedMessage, setLockedMessage] = useState(
-    "아직 열 수 없는 타임캡슐이에요"
-  );
+  const [lockedMessage, setLockedMessage] =
+    useState("아직 열 수 없는 타임캡슐이에요");
 
   // -------------------------
   // 탭 + 토글 → API type 매핑
@@ -85,12 +85,15 @@ const TimeCapsule = () => {
         params.set("sort", `createdAt,${sortOrder}`);
 
         // ✅ 엔드포인트: 너가 말한 /api/timecapsules 기준
-        const res = await fetch(`${apiBaseUrl}/api/timecapsules?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
+        const res = await fetch(
+          `${apiBaseUrl}/api/timecapsules?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           },
-        });
+        );
 
         const json = await res.json();
 
@@ -103,7 +106,19 @@ const TimeCapsule = () => {
         const payload = json?.data;
         const list = payload?.data ?? [];
 
-        setCapsules(list);
+        // ✅ id 타입(문자/숫자) 섞여도 안전하게 숫자로 맞춤
+        const normalized = list.map((c) => ({
+          ...c,
+          senderId: Number(c.senderId),
+          receiverId: Number(c.receiverId),
+        }));
+
+        // ✅ 규칙 적용: receiver가 "나"인 캡슐만 보여주기
+        // (나→나 포함, 남→나 포함, 나→남 제외)
+        const filtered = normalized.filter((c) => c.receiverId === myUserId);
+
+        setCapsules(filtered);
+
         setPageInfo({
           currentPage: payload?.currentPage ?? apiPage,
           totalPages: payload?.totalPages ?? 1,
@@ -127,7 +142,7 @@ const TimeCapsule = () => {
     };
 
     fetchCapsules();
-  }, [apiType, page, pageSize, sortOrder]);
+  }, [apiType, page, pageSize, sortOrder, activeIndex, myUserId]);
 
   // -------------------------
   // 페이지네이션 (UI용)
@@ -142,7 +157,7 @@ const TimeCapsule = () => {
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
-    [totalPages]
+    [totalPages],
   );
 
   const emptyCount = Math.max(0, pageSize - capsules.length);
