@@ -5,28 +5,28 @@ import {
   disconnectNotificationSocket,
   readNotification,
 } from "../api/notification";
-import friendIcon from "../assets/default_profile.png"; 
-import letterIcon from "../assets/letter.svg?url";
-import capsuleIcon from "../assets/timecapsule.svg?url";
+import friendIcon from "../assets/default_profile2.png"; 
+import letterIcon from "../assets/letter.svg";
+import capsuleIcon from "../assets/timecapsule.svg";
 
 export function useNotifications({ navigate, userId }) { // userId 추가
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const getNotiIcon = useCallback((type) => {
-    switch (type) {
-      case "LETTER_RECEIVED":
-        return letterIcon;
-      case "CAPSULE_RECEIVED":
-      case "CAPSULE_OPENED":
-        return capsuleIcon;
-      case "FRIEND_REQUEST":
-      case "FRIEND_ACCEPT":
-        return friendIcon;
-      default:
-        return friendIcon;
-    }
+  const icon =
+      type === "LETTER_RECEIVED"
+        ? letterIcon
+        : type === "CAPSULE_RECEIVED" || type === "CAPSULE_OPENED"
+          ? capsuleIcon
+          : type === "FRIEND_REQUEST" || type === "FRIEND_ACCEPT"
+            ? friendIcon
+            : friendIcon;
+
+    console.log("[NotiIcon]", { type, icon });
+    return icon;
   }, []);
+
 
   /* UTIL: 시간 포맷 */
   const formatTime = useCallback((dateString) => {
