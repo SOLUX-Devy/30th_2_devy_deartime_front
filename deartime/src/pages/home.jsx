@@ -67,11 +67,11 @@ export default function Home() {
   const finalCapsule = displayCapsule || {
     canAccess: true,
     opened: false,
-    openAt: "2026-01-05",
-    createdAt: "2026-01-01",
+    openAt: null,
+    createdAt: null,
     imageUrl: null,
-    senderNickname: user?.nickname || "알 수 없음",
-    title: "어렸을 때의 추억",
+    senderNickname: user?.nickname || "Deartime",
+    title: "환영합니다",
   };
 
   if (loading) {
