@@ -5,6 +5,8 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsR
     const [detailData, setDetailData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
     useEffect(() => {
         if (!isOpen || !letterId) return;
 
@@ -15,7 +17,7 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsR
             setIsLoading(true);
             setDetailData(null);
             try {
-                const response = await fetch(`/api/letters/${letterId}`, {
+                const response = await fetch(`${BASE_URL}/api/letters/${letterId}`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -43,7 +45,7 @@ const LetterDetail = ({ isOpen, onClose, letterId, bgImage, themeCode, onMarkAsR
         fetchDetail();
 
     return () => { isMounted = false; }; // 언마운트 시 false로 변경
-}, [isOpen, letterId, onMarkAsRead]);
+}, [isOpen, letterId, onMarkAsRead, BASE_URL]);
 
     if (!isOpen) return null;
 
