@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "jwt-decode": "^4.0.0",
-    "lucide-react": "^0.562.0"
+    "lucide-react": "^0.562.0",
+    "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3"
   }
 }

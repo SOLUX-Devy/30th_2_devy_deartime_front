@@ -52,11 +52,15 @@ export default function Header() {
   // 로그아웃
   const handleLogout = async () => {
     const token = localStorage.getItem("accessToken");
-    if (!token) return;
+
+    if (!token) {
+      navigate("/");
+      return;
+    }
 
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-      
+
       const res = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: "POST",
         headers: {
@@ -70,7 +74,7 @@ export default function Header() {
         localStorage.clear();
         setUser(null);
         setIsProfileOpen(false);
-        navigate("/login");
+        navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("[Logout] Error:", err);
@@ -158,7 +162,10 @@ export default function Header() {
                             onClick={() => onClickNotification(noti)}
                           >
                             <div className="noti-icon">
-                              <img src={getNotiIcon(noti.type)} alt="icon" />
+                              <img src={getNotiIcon(noti.type)} alt="icon" 
+                              onError={(e) => {
+    console.log("[ICON LOAD FAIL]", noti.type, e.currentTarget.src);
+  }}/>
                             </div>
 
                             <div className="noti-content">
