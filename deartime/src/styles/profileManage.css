@@ -36,8 +36,8 @@
 /* ✅ X 버튼: 모달 우상단 고정 */
 .profile-manage-modal .close-btn {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 22px;
+  right: 22px;
 
   margin: 0;
   padding: 0;
@@ -76,7 +76,7 @@
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 16px; /* ✅ 세트 간격 */
+  margin-bottom: 0;
 }
 
 .input-group label {
@@ -85,6 +85,13 @@
   font-size: 13px;
   line-height: 1.2;
   margin-bottom: 2px; /* ✅ 라벨-입력 간격(작게) */
+}
+
+/* 입력 요소 아래에 간격 주기 */
+.input-group input,
+.input-group textarea,
+.nickname-row {
+  margin-bottom: 16px;
 }
 
 /* input / textarea 기본 */
@@ -294,7 +301,7 @@
 ========================= */
 .save-row {
   display: flex;
-  margin-top: 26px; /* ✅ 대리인과 더 떨어지게 */
+  margin-top: 35px; /* ✅ 대리인과 더 떨어지게 */
   justify-content: flex-end;
   width: 100%;
 }
@@ -368,4 +375,33 @@
 
 .fs-grid::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+.input-group input[type="date"] {
+  color: white;
+  line-height: 36px;
+}
+
+.input-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.email-group {
+  position: relative;
+}
+
+.email-group::after {
+  content: "수정 불가";
+  position: absolute;
+  right: 10px;
+  top: 26px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(42,66,128,0.45);
+  padding: 4px 8px;
+  border-radius: 999px;
+  pointer-events: none;
 }
