@@ -40,10 +40,13 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
   const dday = useMemo(() => calcDDay(openAt), [openAt]);
   const created = useMemo(() => formatDateYYYYMMDD(createdAt), [createdAt]);
 
-  // ✅ 상태 정리
-  const isLocked = canAccess === false; // detail nav 아예 X
-  const isOpened = canAccess === true && opened === true; // 사진 보이는 "완전 열린"
-  const isSparkle = canAccess === true && opened === false; // 빤짝빤짝 (OPEN ME)
+  // ✅ 규칙 1) canAccess=false면 opened는 무조건 false로 "취급"
+  const effectiveOpened = canAccess ? !!opened : false;
+
+  // ✅ 상태 정리 (요구사항 그대로)
+  const isLocked = canAccess === false; // 클릭/깜빡 전부 X
+  const isSparkle = canAccess === true && effectiveOpened === false; // 깜빡 + 클릭 가능(클릭 시 모달 + opened true)
+  const isOpened = canAccess === true && effectiveOpened === true; // 클릭 가능 + 사진 노출 + 안깜빡
 
   // ✅ 스타일 클래스
   const variantClass = isLocked
@@ -52,14 +55,24 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
     ? "tc-card--opened"
     : "tc-card--accessible"; // sparkle
 
-  // ✅ 이미지
-  // - 완전 열린 상태만 서버 이미지 노출
+  // ✅ 이미지: 완전 열린 상태만 서버 이미지 노출
   const imgSrc = isOpened ? imageUrl || capsuleDefaultImg : capsuleDefaultImg;
 
-  // ✅ 클릭: 잠긴 캡슐은 아예 클릭(네비게이트) 자체를 막음
+  // ✅ 클릭 핸들러
   const handleClick = () => {
-    if (isLocked) return; // 🔥 detail nav 없음
-    onClick?.();
+    // 요구사항: canAccess=false면 아예 클릭도 안되고 깜빡도 X
+    if (isLocked) return;
+
+    // sparkle 상태에서 클릭하면:
+    // - 모달 켜짐
+    // - 동시에 opened=true로 바뀌어야 함(부모에서 처리)
+    if (isSparkle) {
+      onClick?.(capsule, { markOpened: true });
+      return;
+    }
+
+    // opened=true 상태에서 클릭하면 그냥 사진 띄우기(부모에서 처리)
+    onClick?.(capsule, { markOpened: false });
   };
 
   return (
@@ -68,7 +81,7 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
         type="button"
         className={`tc-card ${variantClass} ${isLocked ? "tc-card--disabled" : ""}`}
         onClick={handleClick}
-        disabled={isLocked} // ✅ 키보드/포커스 접근도 막기
+        disabled={isLocked}              // ✅ 키보드 접근도 막기
         aria-disabled={isLocked}
       >
         <div className="tc-card__top">
@@ -108,19 +121,29 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           text-align: center;
         }
 
-        /* ✅ 잠긴 캡슐: 클릭/네비게이션 아예 없음 */
+        /* ✅ 잠긴 캡슐: 클릭/포커스/깜빡 전부 없음 */
         .tc-card--disabled {
           cursor: default;
           pointer-events: none; /* 🔥 마우스 클릭 자체 차단 */
           opacity: 0.9;
         }
-
-        /* 접근 불가 */
-        .tc-card--locked {
-          background: transparent;
+        .tc-card:disabled {
+          outline: none;
+        }
+        .tc-card:disabled:focus,
+        .tc-card:disabled:focus-visible {
+          outline: none;
+          box-shadow: none;
         }
 
-        /* 🔥 canAccess=true && opened=false: 빤짝빤짝 */
+        /* 접근 불가(locked): 배경/애니메이션 X */
+        .tc-card--locked {
+          background: transparent;
+          animation: none !important;
+          box-shadow: none !important;
+        }
+
+        /* 🔥 canAccess=true && opened=false: 깜빡 + 클릭 가능 */
         .tc-card--accessible {
           animation: openMeGlow 3.2s ease-in-out infinite;
           will-change: background-color, box-shadow;
@@ -143,10 +166,11 @@ export default function TimeCapsuleCard({ capsule, onClick }) {
           }
         }
 
-        /* ✅ canAccess=true && opened=true: 완전 열린 상태 */
+        /* ✅ canAccess=true && opened=true: 클릭 가능 + 사진 노출 + 안깜빡 */
         .tc-card--opened {
           background: rgba(0, 0, 0, 0.2);
           box-shadow: inset 0 0 0 2.5px rgba(14, 119, 188, 0.5);
+          animation: none !important;
         }
 
         .tc-card__top {
