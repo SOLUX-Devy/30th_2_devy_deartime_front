@@ -8,8 +8,9 @@ import profileImageFallback from "../assets/default_profile2.png";
  * - Step 2-2: 안내 모달 (pending/accepted/검색결과없음/에러/성공메시지)
  *
  * ✅ API
- * 1) GET  /api/friends/search?keyword={email}
- * 2) POST /api/friends   body: { friendId: number }
+ * 1) GET  /api/users/me
+ * 2) GET  /api/friends/search?keyword={email}
+ * 3) POST /api/friends   body: { friendId: number }
  */
 
 export default function FriendInvite({ onClose }) {
@@ -20,8 +21,18 @@ export default function FriendInvite({ onClose }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ✅ 내 정보
+  const [myInfo, setMyInfo] = useState(null); // { userId, email, nickname ... } 등
+
   // ✅ 팀 규칙: env base url 사용
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const openStatusModal = (message) => {
+    setStatusMessage(message);
+    setStep(3);
+  };
+
+  const getAccessToken = () => localStorage.getItem("accessToken");
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -32,12 +43,33 @@ export default function FriendInvite({ onClose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const openStatusModal = (message) => {
-    setStatusMessage(message);
-    setStep(3);
-  };
+  // =========================
+  // ✅ 0) 내 정보 로드 (/api/users/me)
+  // =========================
+  useEffect(() => {
+    const loadMe = async () => {
+      const accessToken = getAccessToken();
+      if (!accessToken) return;
 
-  const getAccessToken = () => localStorage.getItem("accessToken");
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/users/me`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!res.ok) return;
+        const json = await res.json().catch(() => null);
+
+        // 응답 예시: { success:true, data:{ userId, email, ... } }
+        const me = json?.data;
+        if (me?.email || me?.userId) setMyInfo(me);
+      } catch (_) {}
+    };
+
+    loadMe();
+  }, [apiBaseUrl]);
 
   // =========================
   // 1) 이메일 검색 (GET)
@@ -49,6 +81,13 @@ export default function FriendInvite({ onClose }) {
     const accessToken = getAccessToken();
     if (!accessToken) {
       openStatusModal("로그인이 필요합니다.");
+      return;
+    }
+
+    // ✅ 내가 나에게 친구신청 방지 (email 기준)
+    // myInfo 로드가 아직 안 됐을 수도 있으니, 있으면 우선 차단
+    if (myInfo?.email && keyword === String(myInfo.email).trim().toLowerCase()) {
+      openStatusModal("자기 자신에게는 친구 신청을 보낼 수 없습니다.");
       return;
     }
 
@@ -66,8 +105,12 @@ export default function FriendInvite({ onClose }) {
         },
       });
 
+      // ❗️백엔드가 404를 줄 수도 있으니 여기서 메시지 처리
       if (!res.ok) {
-        let msg = "요청에 실패했습니다.";
+        let msg =
+          res.status === 404
+            ? "존재하지 않는 사용자입니다."
+            : "요청에 실패했습니다.";
         try {
           const err = await res.json();
           msg = err?.message || msg;
@@ -76,17 +119,42 @@ export default function FriendInvite({ onClose }) {
         return;
       }
 
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
 
-      const count = json?.data?.count ?? 0;
-      const results = json?.data?.results ?? [];
+      // ✅ (중요) search 응답 포맷이 프로젝트마다 다를 수 있어서 둘 다 대응
+      // A안: { data: { count, results: [...] } }
+      const count = json?.data?.count;
+      const results = json?.data?.results;
 
-      if (count === 0 || results.length === 0) {
+      // B안: { data: { userId, email, nickname, ... } } (단건)
+      const singleUser = json?.data?.userId ? json.data : null;
+
+      let user = null;
+
+      if (Array.isArray(results)) {
+        if ((count ?? results.length) <= 0 || results.length === 0) {
+          openStatusModal("사용자를 찾지 못했습니다.");
+          return;
+        }
+        user = results[0];
+      } else if (singleUser) {
+        user = singleUser;
+      } else {
         openStatusModal("사용자를 찾지 못했습니다.");
         return;
       }
 
-      const user = results[0];
+      // ✅ userId 기준으로도 자기 자신 차단 (더 안전)
+      // (myInfo가 없더라도 localStorage userId가 있다면 보완 가능)
+      const myUserIdFromStorage = Number(localStorage.getItem("userId"));
+      const myUserId = myInfo?.userId ?? (Number.isFinite(myUserIdFromStorage) ? myUserIdFromStorage : null);
+
+      if (myUserId && Number(user?.userId) === Number(myUserId)) {
+        openStatusModal("자기 자신에게는 친구 신청을 보낼 수 없습니다.");
+        return;
+      }
+
+      // friendStatus는 search 응답에 있을 수도/없을 수도 있음
       const friendStatus = user?.friendStatus;
 
       if (friendStatus === "pending") {
@@ -98,14 +166,19 @@ export default function FriendInvite({ onClose }) {
         return;
       }
 
-      if (friendStatus === "none" || friendStatus === "received") {
+      // friendStatus가 아예 없으면 "none"처럼 취급해서 신청 가능 플로우로 보내기
+      if (
+        !friendStatus ||
+        friendStatus === "none" ||
+        friendStatus === "received"
+      ) {
         setFoundFriend({
           friendId: user.userId,
           friendNickname: user.nickname,
           profileImageUrl: user.profileImageUrl,
           friendBio: user.bio,
-          friendStatus: user.friendStatus,
-          email: keyword, // ✅ 입력한 이메일 보관
+          friendStatus: friendStatus ?? "none",
+          email: user.email || keyword, // ✅ 서버가 email 주면 그걸, 아니면 입력값
         });
         setStep(2);
         return;
@@ -279,6 +352,7 @@ export default function FriendInvite({ onClose }) {
         </div>
       </div>
 
+      {/* ✅ 기존 스타일 그대로 */}
       <style>{`
         .friend-invite-overlay {
           position: fixed;
@@ -307,7 +381,6 @@ export default function FriendInvite({ onClose }) {
           padding: 24px;
         }
 
-        /* ✅ 2단계는 내용 늘어나면 늘어나게 (겹침 방지) */
         .modal-step-2 {
           width: 420px;
           height: auto;
@@ -356,7 +429,6 @@ export default function FriendInvite({ onClose }) {
           justify-content: flex-start;
         }
 
-        /* ✅ placeholder 포함 '세로 중앙'은 line-height + padding 정리로 해결 */
         .friend-invite-input {
           width: 350px;
           height: 45px;
