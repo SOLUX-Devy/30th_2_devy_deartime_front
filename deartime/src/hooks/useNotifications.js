@@ -49,33 +49,48 @@ export function useNotifications({ navigate, userId }) {
     return dateString.slice(0, 10).replace(/-/g, ".");
   }, []);
 
-  /* =========================
-      알림 내용 분리
-  ========================= */
   const splitNotiContent = useCallback((noti) => {
-    if (!noti) return { title: "", body: "", sub: null };
+  if (!noti) return { title: "", body: "", sub: null };
 
-    const type = String(noti.type || "").toUpperCase();
-    const content = String(noti.content || "");
+  const type = String(noti.type || "").toUpperCase();
+  const content = String(noti.content || "");
+  const sender = noti.senderNickname || "누군가";
 
-    // ✉️ 편지
-    if (type === "LETTER_RECEIVED") {
-      const sender = noti.senderNickname || "누군가";
-      const m = content.match(/^(.+?님이)\s*(.*)$/);
-
-      return {
-        title: m ? m[1] : `${sender}님이`,
-        body: m ? m[2] : "편지를 보냈습니다.",
-        sub: noti.contentTitle || null,
-      };
-    }
-
-    // 👥 나머지
+  // ✉️ 편지
+  if (type === "LETTER_RECEIVED") {
     const m = content.match(/^(.+?님이)\s*(.*)$/);
-    if (!m) return { title: content, body: "", sub: null };
+    return {
+      title: m ? m[1] : `${sender}님이`,
+      body: m ? m[2] : "편지를 보냈습니다.",
+      sub: noti.contentTitle || null,
+    };
+  }
 
-    return { title: m[1], body: m[2] || "", sub: null };
-  }, []);
+  // ⏳ 타임캡슐 도착
+  if (type === "CAPSULE_RECEIVED") {
+    return {
+      title: `${sender}님이`,
+      body: "새로운 타임캡슐을 보냈습니다.",
+      sub: null,
+    };
+  }
+
+  // 🔓 타임캡슐 열림
+  if (type === "CAPSULE_OPENED") {
+    const capsuleTitle = noti.contentTitle || content || null;
+    return {
+      title: "타임캡슐이 열렸습니다!",
+      body: "",          // 필요하면 여기 문구 넣어도 됨
+      sub: capsuleTitle, // "어렸을 때의 추억" 같은 제목
+    };
+  }
+
+  // 👥 나머지(친구요청/수락 등): 기존 규칙
+  const m = content.match(/^(.+?님이)\s*(.*)$/);
+  if (!m) return { title: content, body: "", sub: null };
+
+  return { title: m[1], body: m[2] || "", sub: null };
+}, []);
 
   const getFriendIdFromNoti = (noti) => {
   return noti?.targetId ?? null; // ✅ 지금 로그에 존재
