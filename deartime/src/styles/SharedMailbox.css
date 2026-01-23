@@ -27,19 +27,10 @@
 }
 
 .chat-list {
-    margin-top: 2em;
+    margin-top: 2em; /* 5em에서 2em으로 조정 */
     flex-grow: 1;
     overflow-y: auto;
-    padding-bottom: 140px;
-    
-    /* ✅ 1. 부모 레벨에서 좌우 대칭 여백을 넉넉히 줍니다 (예: 25px) */
-    padding-left: 25px;
-    padding-right: 25px;
-    
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    box-sizing: border-box;
+    padding-bottom: 140px; /* 하단 그라데이션 공간 확보 */
 }
 
 /* 사용자 태그 및 닫기 버튼 */
@@ -81,22 +72,20 @@
 /* 말풍선 공통 스타일*/
 .chat-item {
     display: flex;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     max-width: 85%; /* 전체 가로 너비 제한 */
     align-items: flex-end; 
 }
 
 .message-bubble {
-    width: fit-content;
-    /* ✅ compounding max-width 방지: 65%에서 80% 정도로 여유를 줍니다. */
-    max-width: 100%; 
-    padding: 10px 14px;
+    padding: 15px 20px; 
+    position: relative;
+    width: fit-content; 
+    max-width: 65%;    
+    min-height: 1.2em;
     display: flex;
     align-items: center;
-
-    /* ✅ word-break: break-all 대신 아래 속성을 써야 글자가 안 깨집니다. */
-    word-wrap: break-word; 
-    word-break: normal; 
+    word-break: break-all;
 }
 
 .message-content {
@@ -156,7 +145,7 @@
 /* 기타 요소 */
 .date-separator {
     text-align: center;
-    margin: 10px 0;
+    margin: 20px 0;
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.4);
 }

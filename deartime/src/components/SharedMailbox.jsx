@@ -20,7 +20,7 @@ const SharedMailbox = ({ friend, onBack }) => {
             if (!targetId) return;
             try {
                 setIsLoading(true);
-                const response = await fetch(`${BASE_URL}/api/letters/conversation/${targetId}?sort=createdAt,asc&page=0&size=20`, {
+                const response = await fetch(`${BASE_URL}/api/letters/conversation/${targetId}?sort=createdAt,desc&page=0&size=20`, {
                     headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
                 });
                 const json = await response.json();
@@ -67,7 +67,7 @@ const SharedMailbox = ({ friend, onBack }) => {
             </header>
 
             {/* 채팅 리스트 영역 */}
-            <div className="chat-list" style={{ paddingBottom: '100px' }}>
+            <div className="chat-list" style={{ marginTop: '20px', paddingBottom: '140px' }}>
                 {messages.length === 0 ? (
                     <div className="date-separator">나눈 편지가 없습니다.</div>
                 ) : (
