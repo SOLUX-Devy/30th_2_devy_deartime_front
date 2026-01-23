@@ -247,10 +247,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;     
 }
 
 .nickname-row input {
-  flex: 1;
+  flex: 1;                  /* ✅ 남는 폭 전부 */
+  width: 100%;              /* ✅ 혹시 모를 shrink 방지 */
+  min-width: 0;             /* ✅ flex 안에서 overflow/줄바꿈 방지 */
 }
 
 /* Nickname inline messages (single line) */
@@ -268,6 +271,7 @@
 .nickname-row button {
   margin-bottom: 0 !important;
 }
+
 
 .field-msg.error {
   color: #ff5a5a;
