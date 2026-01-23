@@ -3,7 +3,7 @@ import DearTimeMini from "../assets/logo.svg?url";
 import { useState, useEffect, useRef, useContext } from "react";
 import NotiIcon from "../assets/noti_bell.svg?url";
 import ArrowDown from "../assets/arrow_down.svg?url";
-import DefaultProfile from "../assets/profile.jpg";
+import DefaultProfile from "../assets/default_profile2.png";
 import "../styles/header.css";
 
 import ProfileManageModal from "../components/ProfileManageModal";

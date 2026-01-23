@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import DefaultProfile from "../assets/profile.jpg";
+import DefaultProfile from "../assets/default_profile2.png";
 import "../styles/profileManage.css";
 import FriendSelect from "../components/FriendSelect";
 import { useUser } from "../context/UserContext";
