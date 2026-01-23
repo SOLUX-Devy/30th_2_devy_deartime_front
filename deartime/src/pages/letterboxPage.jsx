@@ -501,8 +501,10 @@ const handleConfirmDelete = async () => {
                 letterId={selectedLetter.letterId}
                 themeCode={selectedLetter.themeCode}
                 bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.theme1}
+
                 isReceived={activeIndex === 0}
-                onMarkAsRead={handleMarkAsRead}
+
+                onMarkAsRead={activeIndex === 0 ? handleMarkAsRead : () => {}}
               />
             )}
 
