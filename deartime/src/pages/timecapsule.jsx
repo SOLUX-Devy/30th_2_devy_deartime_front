@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_nostar.png";
 import "../styles/timecapsule.css";
 import TimeCapsuleCard from "../components/TimeCapsuleCard";
-import LockedCapsuleModal from "../components/LockedCapsuleModal";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
@@ -16,33 +15,19 @@ const TimeCapsule = () => {
 
   const myUserId = Number(localStorage.getItem("userId")) || 2;
 
-  // ✅ UI는 1부터
+  // ✅ UI는 1부터 (프론트에서 slice 페이지네이션)
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
   // ✅ 정렬
   const sortOrder = "desc";
 
-  // ✅ API 원본 데이터
+  // ✅ API 원본 데이터(전체를 넉넉히 받아온 뒤, 프론트에서 규칙 필터+페이지네이션)
   const [rawCapsules, setRawCapsules] = useState([]);
-  const [pageInfo, setPageInfo] = useState({
-    currentPage: 0,
-    totalPages: 1,
-    totalElements: 0,
-    pageSize: pageSize,
-    isFirst: true,
-    isLast: true,
-  });
   const [loading, setLoading] = useState(false);
 
-  // ✅ 잠김 모달
-  const [lockedModalOpen, setLockedModalOpen] = useState(false);
-  const [lockedMessage, setLockedMessage] = useState(
-    "아직 열 수 없는 타임캡슐이에요",
-  );
-
   // -------------------------
-  // 탭 → API type 매핑 (토글이 showOpenOnly여도 type은 바꾸지 않음!)
+  // 탭 → API type 매핑
   // -------------------------
   const apiType = useMemo(() => {
     if (activeIndex === 0) return "ALL";
@@ -51,7 +36,7 @@ const TimeCapsule = () => {
   }, [activeIndex]);
 
   // -------------------------
-  // API 호출
+  // API 호출 (✅ 서버 페이지네이션 사용 X: 크게 받아오기)
   // -------------------------
   useEffect(() => {
     const fetchCapsules = async () => {
@@ -61,22 +46,13 @@ const TimeCapsule = () => {
         const accessToken = localStorage.getItem("accessToken");
         if (!accessToken) {
           setRawCapsules([]);
-          setPageInfo((prev) => ({
-            ...prev,
-            totalElements: 0,
-            totalPages: 1,
-            currentPage: 0,
-          }));
           return;
         }
 
-        // UI(1부터) → API(0부터)
-        const apiPage = Math.max(0, page - 1);
-
         const params = new URLSearchParams();
         params.set("type", apiType);
-        params.set("page", String(apiPage));
-        params.set("size", String(pageSize));
+        params.set("page", "0");
+        params.set("size", "2000"); // ✅ 충분히 큰 값(필요하면 조절)
         params.set("sort", `createdAt,${sortOrder}`);
 
         const res = await fetch(
@@ -103,44 +79,31 @@ const TimeCapsule = () => {
           ...c,
           senderId: Number(c.senderId),
           receiverId: Number(c.receiverId),
+          canAccess: Boolean(c.canAccess),
+          opened: Boolean(c.opened),
         }));
 
         setRawCapsules(normalized);
-
-        setPageInfo({
-          currentPage: payload?.currentPage ?? apiPage,
-          totalPages: payload?.totalPages ?? 1,
-          totalElements: payload?.totalElements ?? list.length,
-          pageSize: payload?.pageSize ?? pageSize,
-          isFirst: payload?.isFirst ?? true,
-          isLast: payload?.isLast ?? true,
-        });
       } catch (e) {
         console.error(e);
         setRawCapsules([]);
-        setPageInfo((prev) => ({
-          ...prev,
-          totalElements: 0,
-          totalPages: 1,
-          currentPage: 0,
-        }));
       } finally {
         setLoading(false);
       }
     };
 
     fetchCapsules();
-  }, [apiType, page, pageSize, sortOrder, apiBaseUrl]);
+  }, [apiType, sortOrder, apiBaseUrl]);
 
   // -------------------------
-  // ✅ 탭/토글 최종 필터 (너가 확정한 규칙)
+  // ✅ 최종 필터(너가 확정한 규칙)
   // - 전체: receiverId === 나 (나->나 + 남->나)
   // - 받은: receiverId === 나 && senderId !== 나
   // - 나의: receiverId === 나 && senderId === 나
   // - 나->남( senderId===나 && receiverId!==나 )는 전부 제외 (receiverId 1차 필터로 제거)
   // - 토글 ON: canAccess === true만
   // -------------------------
-  const capsules = useMemo(() => {
+  const filteredCapsules = useMemo(() => {
     const myId = myUserId;
 
     // 1) "나에게 온 것만" (나->남 완전 제거)
@@ -156,7 +119,7 @@ const TimeCapsule = () => {
       base = onlyToMe.filter((c) => c.senderId === myId);
     }
 
-    // 3) 토글별 (ON일 때만 열린 것만)
+    // 3) 토글별
     if (showOpenOnly) {
       return base.filter((c) => c.canAccess === true);
     }
@@ -164,9 +127,10 @@ const TimeCapsule = () => {
   }, [rawCapsules, activeIndex, myUserId, showOpenOnly]);
 
   // -------------------------
-  // 페이지네이션 (UI용)
+  // ✅ 프론트 페이지네이션(slice)
   // -------------------------
-  const totalPages = Math.max(1, pageInfo.totalPages || 1);
+  const totalElements = filteredCapsules.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -178,17 +142,21 @@ const TimeCapsule = () => {
     [totalPages],
   );
 
+  const capsules = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredCapsules.slice(start, start + pageSize);
+  }, [filteredCapsules, page, pageSize]);
+
   const emptyCount = Math.max(0, pageSize - capsules.length);
 
-  // ✅ "11개 중 1-8" (서버 totalElements 기준)
+  // ✅ "몇개 중 몇개" (필터링된 totalElements 기준)
   const rangeText = useMemo(() => {
-    const total = pageInfo.totalElements ?? 0;
-    if (total === 0) return `0개 중 0-0`;
+    if (totalElements === 0) return `0개 중 0-0`;
 
     const start = (page - 1) * pageSize + 1;
-    const end = Math.min(page * pageSize, total);
-    return `${total}개 중 ${start}-${end}`;
-  }, [pageInfo.totalElements, page, pageSize]);
+    const end = Math.min(page * pageSize, totalElements);
+    return `${totalElements}개 중 ${start}-${end}`;
+  }, [totalElements, page, pageSize]);
 
   return (
     <div
@@ -302,14 +270,11 @@ const TimeCapsule = () => {
                 <TimeCapsuleCard
                   key={capsule.id}
                   capsule={capsule}
-                  onClick={() => {
-                    // ✅ canAccess=false면 detail nav 절대 없음
-                    if (!capsule.canAccess) {
-                      setLockedMessage("아직 열 수 없는 타임캡슐이에요");
-                      setLockedModalOpen(true);
-                      return;
-                    }
-                    navigate(`/timecapsule/${capsule.id}`);
+                  onClick={(clickedCapsule, meta) => {
+                    // ✅ TimeCapsuleCard에서 canAccess=false는 이미 클릭 자체가 막힘
+                    // meta?.markOpened === true : sparkle(열 수 있음 + 아직 안열림) 클릭
+                    // meta?.markOpened === false: 이미 열린 캡슐 클릭
+                    navigate(`/timecapsule/${clickedCapsule.id}`);
                   }}
                 />
               ))}
@@ -337,12 +302,6 @@ const TimeCapsule = () => {
           </div>
         )}
       </div>
-
-      <LockedCapsuleModal
-        open={lockedModalOpen}
-        message={lockedMessage}
-        onClose={() => setLockedModalOpen(false)}
-      />
     </div>
   );
 };
