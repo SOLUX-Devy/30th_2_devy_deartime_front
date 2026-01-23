@@ -4,7 +4,6 @@ import TimeCapsuleCard from "../components/TimeCapsuleCard";
 import RecordCard from "../components/RecordCard";
 import ConstellationCard from "../components/ConstellationCard";
 import "../styles/home.css";
-//import backgroundImg from "../assets/background_star.png";
 import { useUser } from "../context/UserContext";
 
 export default function Home() {

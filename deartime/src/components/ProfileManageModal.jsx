@@ -44,6 +44,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const [selectedDelegate, setSelectedDelegate] = useState(null);
   const [isDelegateSelectOpen, setIsDelegateSelectOpen] = useState(false);
 
+  // ✅ "서버에 저장된 초기 대리인" 기준 (비교/dirty 판단에 사용)
   const initialProxyUserIdRef = useRef(userProfile?.proxyUserId ?? null);
 
   const [delegateSuccessMsg, setDelegateSuccessMsg] = useState("");
@@ -104,6 +105,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     normalizedBirth !== (userProfile?.birthDate ?? "").trim();
   const isProfileImageChanged = !!profileImageFile;
 
+  // ✅ 대리인 변경 여부(저장 버튼 활성화/dirty 판단)
   const isDelegateChanged = useMemo(() => {
     const initialId = initialProxyUserIdRef.current ?? null;
     const currentId = selectedDelegate?.friendId ?? null;
@@ -123,6 +125,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     setSelectedDelegate(friend);
     setIsDelegateSelectOpen(false);
     setDelegateSuccessMsg("");
+  };
+
+  // ✅ 핵심: X는 "즉시 삭제 요청"이 아니라 "UI에서만 제거(저장 시 반영)"로 변경
+  const handleDelegateRemoveLocalOnly = (e) => {
+    e.stopPropagation();
+    setSelectedDelegate(null); // 화면에서만 제거
+    setDelegateSuccessMsg("대리인이 삭제되었습니다.");
   };
 
   const handleProfileImageChange = (e) => {
@@ -238,76 +247,69 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       return;
     }
 
-    // ✅ 대리인 저장/삭제 처리 (정상 리턴: true면 변경 발생)
-    // ✅ 대리인 저장/삭제 처리 (정상 리턴: true면 변경 발생)
-const applyProxyChange = async () => {
-  // 기존 proxyUserId (삭제 대상)
-  // ✅ ref가 가끔 null로 꼬일 수 있으니 userProfile.proxyUserId 우선
-    const initialId =
-      userProfile?.proxyUserId ?? initialProxyUserIdRef.current ?? null;
+    // ✅ 대리인 저장/삭제는 "저장 버튼"에서만 처리
+    const applyProxyChange = async () => {
+      // ✅ initial은 ref 우선 (props는 갱신 타이밍이 늦을 수 있음)
+      const initialId = initialProxyUserIdRef.current ?? null;
+      const currentId = selectedDelegate?.friendId ?? null;
 
-    // 현재 선택된 delegate의 id (설정 대상)
-    const currentId = selectedDelegate?.friendId ?? null;
+      const same =
+        initialId != null &&
+        currentId != null &&
+        String(initialId) === String(currentId);
 
-    console.log("[Proxy Debug]", {
-      initialId,
-      currentId,
-      ref: initialProxyUserIdRef.current,
-      fromProfile: userProfile?.proxyUserId,
-    });
+      // 1) 변경 없음
+      if ((initialId == null && currentId == null) || same) return false;
 
-    // ✅ 안전 비교(숫자/문자 섞여도 OK)
-    const same =
-      initialId != null &&
-      currentId != null &&
-      String(initialId) === String(currentId);
+      // 2) 삭제
+      if (initialId != null && currentId == null) {
+        await removeProxy(initialId);
 
-    // 1) 변경 없음: 둘 다 null(없음) 이거나, 둘 다 같은 값이면 끝
-    if ((initialId == null && currentId == null) || same) {
-      console.log("[Proxy] no change detected");
+        // 즉시 컨텍스트 반영
+        setUser((prev) => ({
+          ...(prev || {}),
+          proxyUserId: null,
+          proxyNickname: null,
+        }));
+
+        localStorage.removeItem("proxyUserId");
+        localStorage.removeItem("proxyNickname");
+
+        return true;
+      }
+
+      // 3) 설정/변경
+      if (currentId != null) {
+        const expiredAt = new Date();
+        expiredAt.setFullYear(expiredAt.getFullYear() + 1);
+        const expiredAtStr = formatLocalDateTime(expiredAt);
+
+        const proxyData = await setProxy(currentId, expiredAtStr);
+
+        setUser((prev) => ({
+          ...(prev || {}),
+          proxyUserId: proxyData?.proxyUserId ?? currentId,
+          proxyNickname:
+            proxyData?.proxyUserNickname ??
+            selectedDelegate?.friendNickname ??
+            null,
+        }));
+
+        localStorage.setItem("proxyUserId", String(proxyData?.proxyUserId ?? currentId));
+        if (proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname) {
+          localStorage.setItem(
+            "proxyNickname",
+            proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname,
+          );
+        } else {
+          localStorage.removeItem("proxyNickname");
+        }
+
+        return true;
+      }
+
       return false;
-    }
-
-    // 2) 삭제: 기존 있었는데 지금은 없음
-    if (initialId != null && currentId == null) {
-      await removeProxy(initialId);
-      console.log("[Proxy Remove] success");
-
-      // ✅ 즉시 UI/컨텍스트 반영
-      setUser((prev) => ({
-        ...(prev || {}),
-        proxyUserId: null,
-        proxyNickname: null,
-      }));
-
-      setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
-      return true;
-    }
-
-    // 3) 설정/변경: 현재가 있으면 setProxy
-    // 설정/변경
-    if (currentId != null) {
-      const expiredAt = new Date();
-      expiredAt.setFullYear(expiredAt.getFullYear() + 1);
-      const expiredAtStr = formatLocalDateTime(expiredAt);
-
-      const proxyData = await setProxy(currentId, expiredAtStr);
-      console.log("[Proxy Set] success", proxyData);
-
-      // ✅ 여기서 즉시 UI/컨텍스트 반영 (중요)
-      setUser((prev) => ({
-        ...(prev || {}),
-        proxyUserId: proxyData?.proxyUserId ?? currentId,
-        proxyNickname: proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname ?? null,
-      }));
-
-      setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
-      return true;
-    }
-
-    return false;
-  };
-
+    };
 
     try {
       const formData = new FormData();
@@ -350,23 +352,21 @@ const applyProxyChange = async () => {
         if (json?.data?.profileImageUrl)
           localStorage.setItem("profileImageUrl", json.data.profileImageUrl);
 
-        // ✅ 대리인 변경 적용
+        // ✅ 대리인 변경은 저장 시점에만 적용
         try {
-          await applyProxyChange();
+          const proxyChanged = await applyProxyChange();
+          if (proxyChanged) {
+            setDelegateSuccessMsg("대리인이 저장과 함께 업데이트 되었습니다!");
+          } else {
+            setDelegateSuccessMsg("프로필이 업데이트 되었습니다!");
+          }
         } catch (e) {
           console.error("대리인 처리 실패", e);
         }
 
-        // ✅ 최신 me로 확정 반영
+        // ✅ 최신 me로 확정 반영 (초기값 ref 갱신까지)
         const me = await refreshMe();
-        console.log("[ME AFTER PROXY SAVE]", me);
-        if (me) {
-          initialProxyUserIdRef.current = me?.proxyUserId ?? null;
-        }
-        
 
-
-        // ✅ 초기값 업데이트 + 현재 대리인 표시도 me 기준으로 정렬
         if (me) {
           initialProxyUserIdRef.current = me?.proxyUserId ?? null;
 
@@ -469,7 +469,9 @@ const applyProxyChange = async () => {
 
               {nicknameMsg && (
                 <div
-                  className={`field-msg ${nicknameMsgType} ${nicknameMsg ? "show" : ""}`}
+                  className={`field-msg ${nicknameMsgType} ${
+                    nicknameMsg ? "show" : ""
+                  }`}
                 >
                   {nicknameMsg}
                 </div>
@@ -511,11 +513,8 @@ const applyProxyChange = async () => {
                 {selectedDelegate ? (
                   <span
                     className="delegate-remove"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedDelegate(null);
-                      setDelegateSuccessMsg("");
-                    }}
+                    onClick={handleDelegateRemoveLocalOnly}
+                    title="대리인 제거(저장 시 반영)"
                   >
                     ✕
                   </span>
