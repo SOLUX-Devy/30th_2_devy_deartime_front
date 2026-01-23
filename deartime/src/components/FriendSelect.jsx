@@ -6,7 +6,7 @@ import FriendCard from "./FriendCard";
 
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
-  const [selectedId, setSelectedId] = useState(null); // ✅ 이제 userId를 담는다
+  const [selectedId, setSelectedId] = useState(null); 
 
   const [friends, setFriends] = useState([]);
   const [count, setCount] = useState(0);
@@ -71,9 +71,9 @@ const selectedFriend = useMemo(() => {
   const handleConfirm = () => {
     if (!selectedFriend) return;
 
-    // ✅ 외부로는 friendId 라는 이름으로 보내더라도, 값은 "상대 유저ID(userId)"를 보내기
+
     onSelect({
-      friendId: selectedFriend.userId,
+      friendId: selectedFriend.friendId, 
       friendNickname: selectedFriend.friendNickname,
     });
   };
