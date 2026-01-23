@@ -5,6 +5,24 @@ import bg from "../assets/background_nostar.png";
 import "../styles/timecapsule.css";
 import TimeCapsuleCard from "../components/TimeCapsuleCard";
 
+/**
+ * ✅ TimeCapsuleCard와 동일한 기준으로 "열 수 있는지" 판단
+ * - openAt 없으면 잠김 처리
+ * - now >= openAt => 열 수 있음
+ */
+function isOpenableByTime(openAtIso) {
+  if (!openAtIso) return false;
+  const now = Date.now();
+  const openAtMs = new Date(openAtIso).getTime();
+  if (Number.isNaN(openAtMs)) return false;
+  return now >= openAtMs;
+}
+
+/** opened 값 방어 (boolean/문자열/숫자 섞여도 안전) */
+function toBool(v) {
+  return v === true || v === "true" || v === 1 || v === "1";
+}
+
 const TimeCapsule = () => {
   const navigate = useNavigate();
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -22,7 +40,7 @@ const TimeCapsule = () => {
   // ✅ 정렬
   const sortOrder = "desc";
 
-  // ✅ API 원본 데이터(전체를 넉넉히 받아온 뒤, 프론트에서 규칙 필터+페이지네이션)
+  // ✅ API 원본 데이터
   const [rawCapsules, setRawCapsules] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +54,7 @@ const TimeCapsule = () => {
   }, [activeIndex]);
 
   // -------------------------
-  // API 호출 (✅ 서버 페이지네이션 사용 X: 크게 받아오기)
+  // API 호출
   // -------------------------
   useEffect(() => {
     const fetchCapsules = async () => {
@@ -52,7 +70,7 @@ const TimeCapsule = () => {
         const params = new URLSearchParams();
         params.set("type", apiType);
         params.set("page", "0");
-        params.set("size", "2000"); // ✅ 충분히 큰 값(필요하면 조절)
+        params.set("size", "2000");
         params.set("sort", `createdAt,${sortOrder}`);
 
         const res = await fetch(
@@ -62,7 +80,7 @@ const TimeCapsule = () => {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
-          },
+          }
         );
 
         const json = await res.json();
@@ -74,14 +92,14 @@ const TimeCapsule = () => {
         const payload = json?.data;
         const list = payload?.data ?? [];
 
-        // ✅ 숫자 타입 통일
+        // ✅ 숫자/불리언 타입 통일 (opened도 카드랑 동일하게 안전하게)
         const normalized = list.map((c) => ({
           ...c,
           senderId: Number(c.senderId),
           receiverId: Number(c.receiverId),
-          
+          opened: toBool(c?.opened),
+          // canAccess는 더 이상 개수/필터 기준으로 쓰지 않음 (카드와 통일)
           canAccess: c.canAccess,
-          opened: c.opened,
         }));
 
         setRawCapsules(normalized);
@@ -97,21 +115,22 @@ const TimeCapsule = () => {
   }, [apiType, sortOrder, apiBaseUrl]);
 
   // -------------------------
-  // ✅ 최종 필터(너가 확정한 규칙)
+  // ✅ 최종 필터(너가 확정한 규칙) + "열린 캡슐만"은 openAt 시간 기준으로 통일
   // - 전체: receiverId === 나 (나->나 + 남->나)
   // - 받은: receiverId === 나 && senderId !== 나
   // - 나의: receiverId === 나 && senderId === 나
-  // - 나->남( senderId===나 && receiverId!==나 )는 전부 제외 (receiverId 1차 필터로 제거)
-  // - 토글 ON: canAccess === true만
+  // - 나->남( senderId===나 && receiverId!==나 )는 전부 제외
+  // - 토글 ON: now >= openAt 인 것만 (카드와 동일)
   // -------------------------
   const filteredCapsules = useMemo(() => {
     const myId = myUserId;
 
-    // 1) "나에게 온 것만" (나->남 완전 제거)
+    // 1) 나에게 온 것만 (나->남 제거)
     const onlyToMe = rawCapsules.filter((c) => c.receiverId === myId);
 
     // 2) 탭별
     let base = onlyToMe;
+
     if (activeIndex === 1) {
       // 받은: 남->나
       base = onlyToMe.filter((c) => c.senderId !== myId);
@@ -120,10 +139,11 @@ const TimeCapsule = () => {
       base = onlyToMe.filter((c) => c.senderId === myId);
     }
 
-    // 3) 토글별
+    // 3) 토글별 (✅ 카드 로직 통일: openAt 시간으로 판단)
     if (showOpenOnly) {
-      return base.filter((c) => c.canAccess === true);
+      return base.filter((c) => isOpenableByTime(c.openAt));
     }
+
     return base;
   }, [rawCapsules, activeIndex, myUserId, showOpenOnly]);
 
@@ -140,7 +160,7 @@ const TimeCapsule = () => {
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
-    [totalPages],
+    [totalPages]
   );
 
   const capsules = useMemo(() => {
@@ -183,7 +203,7 @@ const TimeCapsule = () => {
                 key={tab}
                 onClick={() => {
                   setActiveIndex(index);
-                  setShowOpenOnly(false); // 탭 바꾸면 토글 끄기
+                  setShowOpenOnly(false);
                   setPage(1);
                 }}
                 style={{
@@ -271,10 +291,7 @@ const TimeCapsule = () => {
                 <TimeCapsuleCard
                   key={capsule.id}
                   capsule={capsule}
-                  onClick={(clickedCapsule, meta) => {
-                    // ✅ TimeCapsuleCard에서 canAccess=false는 이미 클릭 자체가 막힘
-                    // meta?.markOpened === true : sparkle(열 수 있음 + 아직 안열림) 클릭
-                    // meta?.markOpened === false: 이미 열린 캡슐 클릭
+                  onClick={(clickedCapsule) => {
                     navigate(`/timecapsule/${clickedCapsule.id}`);
                   }}
                 />
