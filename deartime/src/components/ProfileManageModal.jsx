@@ -225,7 +225,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
           <div className="profile-manage-form">
             <div className="input-group email-group">
               <label>이메일</label>
-              <input value={userProfile?.email || ""} disabled />
+              <input className="email-input" value={userProfile?.email || ""} disabled />
             </div>
 
             <div className="input-group">

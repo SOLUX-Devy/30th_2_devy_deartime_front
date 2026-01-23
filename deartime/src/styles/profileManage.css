@@ -32,6 +32,13 @@
 
   position: relative; /* ✅ close-btn 기준 */
 }
+/* 이메일 input만 비활성 회색 느낌 */
+.email-input:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(42, 66, 128, 0.35);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: not-allowed;
+}
 
 /* ✅ X 버튼: 모달 우상단 고정 */
 .profile-manage-modal .close-btn {
@@ -388,20 +395,3 @@
   cursor: pointer;
 }
 
-.email-group {
-  position: relative;
-}
-
-.email-group::after {
-  content: "수정 불가";
-  position: absolute;
-  right: 10px;
-  top: 26px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.65);
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(42,66,128,0.45);
-  padding: 4px 8px;
-  border-radius: 999px;
-  pointer-events: none;
-}
