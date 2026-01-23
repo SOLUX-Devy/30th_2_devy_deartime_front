@@ -383,16 +383,7 @@ const handleConfirmDelete = async () => {
                     <p>친구를 선택하면 우리의 추억이 펼쳐집니다.</p>
                   </div>
                 </div>
-
-                {isSelectorOpen && (
-                  <FriendSelect
-                    onClose={() => setIsSelectorOpen(false)}
-                    onSelect={(friend) => {
-                      setSelectedFriend(friend);
-                      setIsSelectorOpen(false);
-                    }}
-                  />
-                )}
+                
               </div>
             ) : (
               <SharedMailbox
