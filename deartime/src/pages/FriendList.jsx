@@ -15,7 +15,6 @@ import FriendDelete from "../components/FriendDelete.jsx";
 
 export default function FriendList() {
   const [showInviteModal, setShowInviteModal] = useState(false);
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
@@ -32,7 +31,6 @@ export default function FriendList() {
   const longPressTimerRef = useRef(null);
   const pressTargetElRef = useRef(null);
 
-  // ✅ 팀 규칙: env base url 사용
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   // =========================
@@ -55,12 +53,20 @@ export default function FriendList() {
 
       const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
-        alert(data?.message ?? "친구 목록 조회 실패");
-        return;
-      }
+      if (res.ok) {
+        const list = data?.data?.friends ?? [];
+        setFriendsData(list);
 
-      setFriendsData(data?.data?.friends ?? []);
+        // ✅ 1. 목록 로드 시 API 데이터 내부의 userId와 friendId 쌍을 모두 출력
+        console.log("================================");
+        console.log("[FriendList] 친구 목록 로드 성공");
+        list.forEach((f, idx) => {
+          console.log(`${idx + 1}번째 관계 👉 나(userId): ${f.userId}, 친구(friendId): ${f.friendId}`);
+        });
+        console.log("================================");
+      } else {
+        alert(data?.message ?? "친구 목록 조회 실패");
+      }
     } catch (e) {
       alert("네트워크 오류가 발생했습니다.");
     }
@@ -155,6 +161,18 @@ export default function FriendList() {
   // =========================
   const handleDeleteClick = () => {
     if (!menu.targetId) return;
+
+    // ✅ 2. 클릭한 targetId와 일치하는 객체를 friendsData에서 찾아서 로그 출력
+    const targetFriend = friendsData.find(f => f.friendId === menu.targetId);
+
+    console.log("--------------------------------");
+    console.log("[FriendList] 삭제 프로세스 시작");
+    if (targetFriend) {
+      console.log("👉 관계 주인 ID (userId):", targetFriend.userId);
+      console.log("👉 삭제 대상 ID (friendId):", targetFriend.friendId);
+      console.log("👉 대상 닉네임:", targetFriend.friendNickname);
+    }
+    console.log("--------------------------------");
 
     setDeleteTargetId(menu.targetId);
     setShowDeleteConfirm(true);
@@ -256,6 +274,8 @@ export default function FriendList() {
       {showDeleteConfirm && (
         <FriendDelete
           friendId={deleteTargetId}
+          // ✅ 3. FriendDelete 모달에 friendRow 정보를 넘겨주면 내부에서 더 자세히 찍기 좋음
+          friendRow={friendsData.find(f => f.friendId === deleteTargetId)}
           onCancel={() => {
             setShowDeleteConfirm(false);
             setDeleteTargetId(null);
