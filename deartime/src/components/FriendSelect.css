@@ -9,7 +9,13 @@
   align-items: center;
   justify-content: center;
 }
-
+.fs-state {
+  color: rgba(255, 255, 255, 0.9); /* 흰색 */
+  font-size: 15px;
+  font-weight: 300;
+  text-align: center;
+  margin-top: 40px;
+}
 /* ✅ 모달은 column flex */
 .fs-modal {
   width: 1000px;

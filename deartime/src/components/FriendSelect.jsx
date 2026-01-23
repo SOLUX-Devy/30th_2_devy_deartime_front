@@ -1,16 +1,53 @@
 // src/components/FriendSelect.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import finder from "../assets/finder.png";
 import "./FriendSelect.css";
 import FriendCard from "./FriendCard";
-import { mockFriendListResponse } from "../mocks/FriendList"; // ✅ 경로 너 프로젝트에 맞게!
 
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  const friends = useMemo(() => {
-    return mockFriendListResponse?.data?.friends ?? [];
+  const [friends, setFriends] = useState([]);
+  const [count, setCount] = useState(0);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    const loadFriends = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMsg("");
+
+        const token = localStorage.getItem("accessToken");
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+        const res = await fetch(`${apiBaseUrl}/api/friends`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          // 401: 인증 실패 메시지 그대로 사용 가능
+          throw new Error(json?.message || "친구 목록 조회 실패");
+        }
+
+        const list = json?.data?.friends ?? [];
+        setFriends(list);
+        setCount(json?.data?.count ?? list.length);
+      } catch (e) {
+        setFriends([]);
+        setCount(0);
+        setErrorMsg(e?.message || "친구 목록을 불러오지 못했어요.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFriends();
   }, []);
 
   const filteredFriends = useMemo(() => {
@@ -23,13 +60,24 @@ export default function FriendSelect({ onClose, onSelect }) {
 
   const selectedFriend = useMemo(() => {
     if (!selectedId) return null;
-    return (
-      friends.find((f) => String(f.friendId) === String(selectedId)) || null
-    );
+    return friends.find((f) => String(f.friendId) === String(selectedId)) || null;
   }, [friends, selectedId]);
 
   const canConfirm = !!selectedFriend;
-  const countText = `${mockFriendListResponse?.data?.count ?? friends.length}명의 친구`;
+  const countText = `${count || friends.length}명의 친구`;
+
+  const handleConfirm = () => {
+    if (!selectedFriend) return;
+
+    // ✅ 부모(다음 페이지)에서 쓰기 좋게 필요한 값만 내려주기
+    onSelect({
+      friendId: selectedFriend.friendId,
+      friendNickname: selectedFriend.friendNickname,
+      // 필요하면 프로필/바이오도 같이:
+      // friendProfileImageUrl: selectedFriend.friendProfileImageUrl,
+      // friendBio: selectedFriend.friendBio,
+    });
+  };
 
   return (
     <div className="fs-overlay" onClick={onClose}>
@@ -37,12 +85,7 @@ export default function FriendSelect({ onClose, onSelect }) {
         {/* 헤더 */}
         <div className="fs-header">
           <div className="fs-title">친구 선택</div>
-          <button
-            type="button"
-            className="fs-close"
-            onClick={onClose}
-            aria-label="close"
-          >
+          <button type="button" className="fs-close" onClick={onClose} aria-label="close">
             ×
           </button>
         </div>
@@ -69,14 +112,22 @@ export default function FriendSelect({ onClose, onSelect }) {
             type="button"
             className={`fs-confirm-btn ${canConfirm ? "active" : ""}`}
             disabled={!canConfirm}
-            onClick={() => canConfirm && onSelect(selectedFriend)}
+            onClick={handleConfirm}
           >
             친구 선택
           </button>
         </div>
 
+        {/* 상태 */}
+        {isLoading && <div className="fs-state">불러오는 중…</div>}
+        {!!errorMsg && !isLoading && <div className="fs-state error">{errorMsg}</div>}
+
         {/* 카드 그리드 */}
         <div className="fs-grid">
+          {!isLoading && !errorMsg && filteredFriends.length === 0 && (
+            <div className="fs-state">친구가 없어요.</div>
+          )}
+
           {filteredFriends.map((f) => {
             const isSelected = String(selectedId) === String(f.friendId);
 
@@ -88,7 +139,6 @@ export default function FriendSelect({ onClose, onSelect }) {
                 role="button"
                 tabIndex={0}
               >
-                {/* ✅ FriendCard는 그대로 두고, 슬롯에서 scale로 전체 크기만 줄임 */}
                 <div className="fs-cardInner">
                   <FriendCard friend={f} className={isSelected ? "fs-selectedCard" : ""} />
                 </div>
