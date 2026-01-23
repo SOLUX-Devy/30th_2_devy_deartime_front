@@ -1,5 +1,5 @@
 /* =========================
-   overlay
+   Overlay
 ========================= */
 .profile-manage-overlay {
   position: fixed;
@@ -13,11 +13,14 @@
 }
 
 /* =========================
-   modal
+   Modal
 ========================= */
 .profile-manage-modal {
+  position: relative;
+
   width: 450px;
   height: auto;
+  margin: auto;
 
   background: #000d32;
   border: 1px solid #2a4280;
@@ -28,23 +31,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: auto;
-
-  position: relative; /* ✅ close-btn 기준 */
-}
-/* 이메일 input만 비활성 회색 느낌 */
-.email-input:disabled {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(42, 66, 128, 0.35);
-  color: rgba(255, 255, 255, 0.55);
-  cursor: not-allowed;
 }
 
-/* ✅ X 버튼: 모달 우상단 고정 */
+/* Close button */
 .profile-manage-modal .close-btn {
   position: absolute;
   top: 30px;
   right: 30px;
+  z-index: 50;
 
   margin: 0;
   padding: 0;
@@ -55,14 +49,13 @@
   color: #fff;
   font-size: 18px;
   cursor: pointer;
-
-  z-index: 50;
 }
 
-/* header */
+/* Header */
 .profile-manage-header {
   width: 100%;
   text-align: center;
+
   color: #fff;
   font-family: "Josefin Slab";
   font-size: 20px;
@@ -71,123 +64,7 @@
 }
 
 /* =========================
-   form layout
-========================= */
-.profile-manage-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ✅ 라벨-입력은 붙이고, 세트끼리는 띄우기 */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0;
-}
-
-.input-group label {
-  display: block;
-  color: #fff;
-  font-size: 13px;
-  line-height: 1.2;
-  margin-bottom: 2px; /* ✅ 라벨-입력 간격(작게) */
-}
-
-/* 입력 요소 아래에 간격 주기 */
-.input-group input,
-.input-group textarea {
-  margin-bottom: 16px;
-}
-
-/* input / textarea 기본 */
-.input-group input,
-.input-group textarea {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid #2a4280;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-/* input 높이 */
-.input-group input {
-  height: 36px;
-  padding: 0 12px;
-}
-
-/* textarea 높이 */
-.input-group textarea {
-  min-height: 80px;
-  padding: 10px 12px;
-  resize: none;
-}
-
-/* =========================
-   nickname row
-========================= */
-.nickname-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-/* 닉네임 중복확인 버튼 정렬 수정 */
-.nickname-check-btn {
-  height: 36px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 닉네임 input은 버튼이랑 같이 있으니 폭 조절 */
-.nickname-row input {
-  flex: 1;
-}
-
-/* =========================
-   duplicate check button
-========================= */
-.input-group button {
-  height: 36px;
-  padding: 0 14px;
-  font-size: 13px;
-  border-radius: 8px;
-  border: 2px solid #2a4280;
-  background: rgba(255, 255, 255, 0);
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ✅ 활성일 때만 hover/active 먹게 */
-.input-group button:not(:disabled):hover {
-  background-color: #2a4280;
-  opacity: 0.8;
-}
-
-.input-group button:not(:disabled):active {
-  background-color: #0e77bc;
-}
-
-/* ✅ disabled: 저장버튼이랑 동일한 톤으로 어둡게 */
-.input-group button:disabled {
-  cursor: not-allowed;
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(42, 66, 128, 0.4);
-  color: rgba(255, 255, 255, 0.45);
-}
-
-/* =========================
-   profile image
+   Profile Image
 ========================= */
 .profile-manage-image {
   position: relative;
@@ -206,8 +83,8 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  transition: filter 0.25s ease;
   display: block;
+  transition: filter 0.25s ease;
 }
 
 .edit-icon {
@@ -244,7 +121,141 @@
 }
 
 /* =========================
-   delegate
+   Form Layout
+========================= */
+.profile-manage-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.input-group label {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+/* Inputs / Textarea base */
+.input-group input,
+.input-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border-radius: 12px;
+  border: 1px solid #2a4280;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 14px;
+
+  margin-bottom: 16px;
+}
+
+.input-group input {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.input-group textarea {
+  min-height: 20px;
+  padding: 10px 12px;
+  resize: none;
+}
+
+/* Email disabled style */
+.email-input:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(42, 66, 128, 0.35);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: not-allowed;
+}
+
+/* Date input tweaks */
+.input-group input[type="date"] {
+  color: #fff;
+  line-height: 36px;
+}
+
+.input-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+/* =========================
+   Buttons (default in input-group)
+========================= */
+.input-group button {
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid #2a4280;
+  background: transparent;
+
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.input-group button:not(:disabled):hover {
+  background-color: #2a4280;
+  opacity: 0.8;
+}
+
+.input-group button:not(:disabled):active {
+  background-color: #0e77bc;
+}
+
+.input-group button:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(42, 66, 128, 0.4);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================
+   Nickname row
+========================= */
+.nickname-row {
+  display: flex;
+  align-items: center;
+}
+
+.nickname-row input {
+  flex: 1;
+}
+
+/* Nickname inline messages */
+.field-msg {
+  margin-top: -15px;
+  margin-left: 5px;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.field-msg.error {
+  color: #ff5a5a;
+}
+
+.field-msg.success {
+  color: #7cffb2;
+}
+
+/* =========================
+   Delegate
 ========================= */
 .delegate-row {
   width: 100%;
@@ -261,18 +272,26 @@
 }
 
 .action-btn {
+  width: 150px;
   height: 40px;
   padding: 0 14px;
-  width: 150px;
+
   border-radius: 10px;
   border: none;
+
+  background: #d6dee6;
+  color: #000;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  background: #d6dee6;
+
   display: flex;
   justify-content: space-between;
-  align-items: center; /* ✅ 텍스트 중앙 */
+  align-items: center;
+}
+
+.action-btn.selected {
+  background-color: #c5e8ec;
 }
 
 .delegate-text {
@@ -281,15 +300,11 @@
 
 .delegate-remove {
   font-size: 14px;
-  color: black;
+  color: #000;
   cursor: pointer;
 }
 
-.action-btn.selected {
-  background-color: #c5e8ec;
-}
-
-/* 화살표 */
+/* Arrow */
 .delegate-arrow {
   font-size: 0;
   display: inline-flex;
@@ -317,22 +332,24 @@
 }
 
 /* =========================
-   save button
+   Save button
 ========================= */
 .save-row {
-  display: flex;
-  margin-top: 35px; /* ✅ 대리인과 더 떨어지게 */
-  justify-content: flex-end;
   width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 35px;
 }
 
 .save-btn {
   width: 100px;
   height: 40px;
+
   border-radius: 10px;
   border: 1.5px solid #2a4280;
   background: transparent;
-  color: white;
+
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -357,9 +374,8 @@
 /* =========================
    FriendSelect Scrollbar
 ========================= */
-/* ✅ fs-grid가 "스크롤 되는 요소"일 때만 적용됨 */
 .fs-grid {
-  overflow-y: auto; /* ✅ 이거 없으면 스크롤바 스타일이 안 먹을 수 있음 */
+  overflow-y: auto;
 }
 
 .fs-grid::-webkit-scrollbar {
@@ -395,31 +411,4 @@
 
 .fs-grid::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-.input-group input[type="date"] {
-  color: white;
-  line-height: 36px;
-}
-
-.input-group input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.85;
-  cursor: pointer;
-}
-
-/* 닉네임 중복확인 안내/결과 메시지 */
-.field-msg {
-  margin-top: -10px;   /* nickname-row 바로 아래 붙게 */
-  margin-bottom: 16px; /* 다음 input-group 간격 */
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.field-msg.error {
-  color: #ff5a5a;
-}
-
-.field-msg.success {
-  color: #7cffb2;
 }
