@@ -67,8 +67,6 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     } else {
       setSelectedDelegate(null);
     }
-
-    setDelegateSuccessMsg("");
   }, [
     userProfile?.nickname,
     userProfile?.bio,
@@ -274,18 +272,35 @@ const applyProxyChange = async () => {
     if (initialId != null && currentId == null) {
       await removeProxy(initialId);
       console.log("[Proxy Remove] success");
+
+      // ✅ 즉시 UI/컨텍스트 반영
+      setUser((prev) => ({
+        ...(prev || {}),
+        proxyUserId: null,
+        proxyNickname: null,
+      }));
+
       setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
       return true;
     }
 
     // 3) 설정/변경: 현재가 있으면 setProxy
+    // 설정/변경
     if (currentId != null) {
       const expiredAt = new Date();
       expiredAt.setFullYear(expiredAt.getFullYear() + 1);
       const expiredAtStr = formatLocalDateTime(expiredAt);
 
-      await setProxy(currentId, expiredAtStr);
-      console.log("[Proxy Set] success");
+      const proxyData = await setProxy(currentId, expiredAtStr);
+      console.log("[Proxy Set] success", proxyData);
+
+      // ✅ 여기서 즉시 UI/컨텍스트 반영 (중요)
+      setUser((prev) => ({
+        ...(prev || {}),
+        proxyUserId: proxyData?.proxyUserId ?? currentId,
+        proxyNickname: proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname ?? null,
+      }));
+
       setDelegateSuccessMsg("대리인 저장하고 프로필이 업데이트 되었습니다!");
       return true;
     }
@@ -344,9 +359,11 @@ const applyProxyChange = async () => {
 
         // ✅ 최신 me로 확정 반영
         const me = await refreshMe();
+        console.log("[ME AFTER PROXY SAVE]", me);
         if (me) {
           initialProxyUserIdRef.current = me?.proxyUserId ?? null;
         }
+        
 
 
         // ✅ 초기값 업데이트 + 현재 대리인 표시도 me 기준으로 정렬

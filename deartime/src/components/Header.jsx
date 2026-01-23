@@ -112,7 +112,30 @@ export default function Header() {
     joinDays: daysTogether,
     email: user?.email || "",
     birthDate: user?.birthDate || "",
+    proxyUserId: user?.proxyUserId ?? null,
+    proxyNickname: user?.proxyNickname ?? null,
   };
+
+  const fetchMe = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+      const res = await fetch(`${apiBaseUrl}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json?.data) {
+        setUser(json.data);
+      }
+    } catch (e) {
+      console.error("[Fetch Me Error]", e);
+    }
+  };
+
 
   return (
     <>
@@ -305,7 +328,10 @@ export default function Header() {
       {isProfileManageOpen && (
         <ProfileManageModal
           userProfile={userProfile}
-          onClose={() => setIsProfileManageOpen(false)}
+          onClose={async () => {
+          setIsProfileManageOpen(false);
+          await fetchMe(); // ✅ proxy까지 최신 user 갱신
+        }}
         />
       )}
     </>

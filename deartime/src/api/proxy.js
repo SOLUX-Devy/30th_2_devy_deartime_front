@@ -55,44 +55,45 @@ export async function setProxy(friendId, expiredAt) {
   throw new Error(json?.message || "대리인 설정 실패");
 }
 
-export async function removeProxy(proxyUserId) {
-  console.log("[removeProxy] called", { proxyUserId });
-
+export async function removeProxy(friendId) {
   const token = localStorage.getItem("accessToken");
-  if (!token) {
-    console.log("[removeProxy] no token");
-    throw new Error("로그인이 필요합니다.");
-  }
+  if (!token) throw new Error("로그인이 필요합니다.");
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  console.log("[removeProxy] apiBaseUrl:", apiBaseUrl);
 
-  console.log("[removeProxy] fetch start");
-
-  const res = await fetch(`${apiBaseUrl}/api/friends/proxy/${proxyUserId}`, {
+  const res = await fetch(`${apiBaseUrl}/api/friends/${friendId}/proxy`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   });
 
-  console.log("[removeProxy] fetch response status:", res.status);
+  // ✅ 응답 원문을 먼저 읽어서 에러 원인 보이게
+  const rawText = await res.text().catch(() => "");
+  let json = {};
+  try {
+    json = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    json = {};
+  }
 
-  const rawText = await res.text();
+  console.log("[removeProxy] status:", res.status);
   console.log("[removeProxy] rawText:", rawText);
 
-  let json = null;
-  try {
-    json = rawText ? JSON.parse(rawText) : null;
-  } catch (e) {
-    console.log("[removeProxy] JSON parse fail", e);
+  const success = json?.success === true;
+
+  if (!res.ok || !success) {
+    const msg = json?.message || "대리인 해제 실패";
+    const detail =
+      typeof json?.data === "string" && json.data.trim().length > 0
+        ? json.data
+        : null;
+
+    // ✅ 서버가 404 주면 여기서 바로 보임
+    throw new Error(detail ? `${msg} (${detail})` : msg);
   }
 
-  if (res.ok) {
-    console.log("[removeProxy] success");
-    return null;
-  }
-
-  console.log("[removeProxy] fail", json);
-  throw new Error(json?.message || "대리인 해제 실패");
+  return true;
 }
+
