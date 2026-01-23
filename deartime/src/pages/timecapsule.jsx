@@ -13,8 +13,7 @@ const TimeCapsule = () => {
   const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
-  const myUserId = Number(localStorage.getItem("userId")) || 2;
-
+  const myUserId = Number(localStorage.getItem("userId"));
   // ✅ UI는 1부터
   const [page, setPage] = useState(1);
   const pageSize = 8;
@@ -115,7 +114,18 @@ const TimeCapsule = () => {
 
         // ✅ 규칙 적용: receiver가 "나"인 캡슐만 보여주기
         // (나→나 포함, 남→나 포함, 나→남 제외)
-        const filtered = normalized.filter((c) => c.receiverId === myUserId);
+        // ✅ 규칙: (1) RECEIVED 타입이거나 (2) 나→나(보낸/받는 사람 둘 다 나)만 렌더
+        const filtered = normalized.filter((c) => {
+          const isSelfToSelf =
+            c.senderId === myUserId && c.receiverId === myUserId;
+
+          // 서버 응답에서 type 필드명이 다를 수 있어서 둘 다 대응
+          const capsuleType = c.type ?? c.capsuleType;
+
+          const isReceivedType = capsuleType === "RECEIVED";
+
+          return isReceivedType || isSelfToSelf;
+        });
 
         setCapsules(filtered);
 
