@@ -80,8 +80,8 @@ export function useNotifications({ navigate, userId }) {
     const capsuleTitle = noti.contentTitle || content || null;
     return {
       title: "타임캡슐이 열렸습니다!",
-      body: "",          // 필요하면 여기 문구 넣어도 됨
-      sub: capsuleTitle, // "어렸을 때의 추억" 같은 제목
+      body: "         ",          
+      sub: capsuleTitle, 
     };
   }
 
@@ -93,7 +93,7 @@ export function useNotifications({ navigate, userId }) {
 }, []);
 
   const getFriendIdFromNoti = (noti) => {
-  return noti?.targetId ?? null; // ✅ 지금 로그에 존재
+  return noti?.targetId ?? null; 
 };
 
 const acceptFriendRequest = async (noti) => {

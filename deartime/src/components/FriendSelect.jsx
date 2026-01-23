@@ -6,7 +6,7 @@ import FriendCard from "./FriendCard";
 
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null); // ✅ 이제 userId를 담는다
 
   const [friends, setFriends] = useState([]);
   const [count, setCount] = useState(0);
@@ -31,7 +31,6 @@ export default function FriendSelect({ onClose, onSelect }) {
         const json = await res.json();
 
         if (!res.ok) {
-          // 401: 인증 실패 메시지 그대로 사용 가능
           throw new Error(json?.message || "친구 목록 조회 실패");
         }
 
@@ -50,19 +49,19 @@ export default function FriendSelect({ onClose, onSelect }) {
     loadFriends();
   }, []);
 
+  // ✅ 검색: friendNickname 기준 유지
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return friends;
     return friends.filter((f) =>
-      (f.friendNickname || "").toLowerCase().includes(k),
+      (f.friendNickname || "").toLowerCase().includes(k)
     );
   }, [friends, keyword]);
 
+  // ✅ 선택된 친구 찾기: userId 기준
   const selectedFriend = useMemo(() => {
-    if (!selectedId) return null;
-    return (
-      friends.find((f) => String(f.friendId) === String(selectedId)) || null
-    );
+    if (selectedId == null) return null;
+    return friends.find((f) => String(f.userId) === String(selectedId)) || null;
   }, [friends, selectedId]);
 
   const canConfirm = !!selectedFriend;
@@ -71,13 +70,9 @@ export default function FriendSelect({ onClose, onSelect }) {
   const handleConfirm = () => {
     if (!selectedFriend) return;
 
-    console.log("확정된 친구:", {
-      id: selectedFriend.friendId,
-      nickname: selectedFriend.friendNickname,
-    });
-
+    // ✅ 외부로는 friendId 라는 이름으로 보내더라도, 값은 "상대 유저ID(userId)"를 보내기
     onSelect({
-      friendId: selectedFriend.friendId,
+      friendId: selectedFriend.userId,
       friendNickname: selectedFriend.friendNickname,
     });
   };
@@ -108,11 +103,7 @@ export default function FriendSelect({ onClose, onSelect }) {
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="친구들 검색하세요"
               />
-              <button
-                type="button"
-                className="fs-search-btn"
-                aria-label="search"
-              >
+              <button type="button" className="fs-search-btn" aria-label="search">
                 <img className="fs-search-icon" src={finder} alt="" />
               </button>
             </div>
@@ -143,13 +134,14 @@ export default function FriendSelect({ onClose, onSelect }) {
           )}
 
           {filteredFriends.map((f) => {
-            const isSelected = String(selectedId) === String(f.friendId);
+            // ✅ 선택 비교도 userId 기준
+            const isSelected = String(selectedId) === String(f.userId);
 
             return (
               <div
-                key={f.friendId}
+                key={f.userId} // ✅ 중복 key 문제 해결
                 className={`fs-cardSlot ${isSelected ? "selected" : ""}`}
-                onClick={() => setSelectedId(f.friendId)}
+                onClick={() => setSelectedId(f.userId)} // ✅ 선택값도 userId
                 role="button"
                 tabIndex={0}
               >
