@@ -41,9 +41,9 @@ const SendLetter = () => {
     !!selectedFriend && title.trim() !== "" && content.trim() !== "";
 
   const handleFriendSelect = (friend) => {
-    setSelectedFriend(friend); 
+    setSelectedFriend(friend); // 주소 이동 없이 상태만 바꿉니다.
     setIsFriendSelectOpen(false);
-  };
+};
 
   const handleSend = async () => {
     if (!selectedFriend) {

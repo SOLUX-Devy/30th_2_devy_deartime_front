@@ -55,8 +55,6 @@ export default function App() {
           <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
           <Route path="/letterbox" element={<Letterbox />} />
 
-          <Route path="/mailbox/:id" element={<SharedMailbox />} />
-
           <Route path="/timecapsule" element={<Timecapsule />} />
           <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
           <Route path="/timecapsule/:capsuleId" element={<TimeCapsuleDetail />} />
