@@ -29,6 +29,7 @@ export default function FriendSelect({ onClose, onSelect }) {
         });
 
         const json = await res.json();
+        console.log("서버가 준 진짜 데이터:", json.data.friends);
 
         if (!res.ok) {
           throw new Error(json?.message || "친구 목록 조회 실패");
