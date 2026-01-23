@@ -1,5 +1,5 @@
 // deartime/src/pages/timecapsuleCreate.jsx
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_star.png";
 import noPhoto from "../assets/nophoto.png";
@@ -26,6 +26,19 @@ export default function TimeCapsuleCreatePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  // ✅ 내 정보 (state로 들고가기: localStorage가 나중에 채워져도 즉시 반영되게)
+  const [myUserId, setMyUserId] = useState(
+    Number(localStorage.getItem("userId")) || null,
+  );
+  const [myNickname, setMyNickname] = useState(
+    localStorage.getItem("nickname") ||
+      localStorage.getItem("userNickname") ||
+      "나",
+  );
+
+  // ✅ 나에게로 체크 상태
+  const [sendToMe, setSendToMe] = useState(false);
+
   // (선택) 테마 - UI 없으면 기본 null로 전송
   const [theme, setTheme] = useState(null);
 
@@ -42,8 +55,54 @@ export default function TimeCapsuleCreatePage() {
 
   const imageSrc = previewUrl || noPhoto;
 
+  // ✅ 페이지 진입 시: userId 없으면 /api/users/me로 채우기
+  useEffect(() => {
+    const hydrateMe = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      // 이미 있으면 굳이 호출 X
+      const storedId = Number(localStorage.getItem("userId")) || null;
+      const storedNickname =
+        localStorage.getItem("nickname") ||
+        localStorage.getItem("userNickname") ||
+        null;
+
+      if (storedId) setMyUserId(storedId);
+      if (storedNickname) setMyNickname(storedNickname);
+
+      if (storedId) return;
+
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/users/me`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json().catch(() => null);
+        if (!res.ok || json?.success === false) return;
+
+        const me = json?.data;
+        if (!me?.userId) return;
+
+        // localStorage 저장
+        localStorage.setItem("userId", String(me.userId));
+        if (me.nickname) localStorage.setItem("nickname", me.nickname);
+        if (me.profileImageUrl)
+          localStorage.setItem("profileImageUrl", me.profileImageUrl);
+
+        // state 반영
+        setMyUserId(me.userId);
+        if (me.nickname) setMyNickname(me.nickname);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    hydrateMe();
+  }, [apiBaseUrl]);
+
   // ⚠️ 현재는 이미지 필수로 막아둔 상태(!!pickedFile)
-  // API 스펙상 imageFile은 선택이지만, 너 기존 UI 요구대로면 유지해도 됨.
   const isFormValid =
     !!receiver &&
     openDate?.trim() &&
@@ -70,9 +129,9 @@ export default function TimeCapsuleCreatePage() {
   const onRemoveReceiver = (e) => {
     e.stopPropagation();
     setReceiver(null);
+    setSendToMe(false);
   };
 
-  // ✅ openAt: date만 받으니까 임시로 00:00:00 붙여서 ISO 8601 만들기
   const buildOpenAtISO = (yyyyMMdd) => {
     if (!yyyyMMdd) return "";
     return `${yyyyMMdd}T00:00:00`;
@@ -90,30 +149,24 @@ export default function TimeCapsuleCreatePage() {
         return;
       }
 
-      // ✅ request(JSON) payload 구성
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        theme: theme || null, // 선택사항
-        receiverId: receiver.id, // ✅ FriendSelect에서 받은 id
+        theme: theme || null,
+        receiverId: receiver.id,
         openAt: buildOpenAtISO(openDate),
       };
 
-      // ✅ multipart/form-data 구성
       const formData = new FormData();
-
-      // request는 Text(JSON) + Content-Type: application/json 이어야 함
       formData.append(
         "request",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
+        new Blob([JSON.stringify(payload)], { type: "application/json" }),
       );
 
-      // imageFile은 선택사항 (너 UI에서는 필수로 막아두긴 함)
       if (pickedFile) {
         formData.append("imageFile", pickedFile);
       }
 
-      // ✅ 너가 말한 형식 그대로 (Authorization만 헤더에)
       const res = await fetch(`${apiBaseUrl}/api/timecapsules`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -123,18 +176,44 @@ export default function TimeCapsuleCreatePage() {
       const json = await res.json().catch(() => null);
 
       if (!res.ok) {
-        // 서버 message 그대로 보여주기 (400: self / not friend 등)
         alert(json?.message || "타임캡슐 생성 실패");
         return;
       }
 
-      // 성공
       navigate("/timecapsule");
     } catch (e) {
       alert(e?.message || "오류가 발생했습니다.");
       console.error(e);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // ✅ 다른 사람(receiver)이 선택돼 있으면 '나에게로' 토글 비활성화
+  const isOtherReceiverSelected = !!receiver && !!myUserId && receiver.id !== myUserId;
+
+  // ✅ 나에게로 토글
+  const toggleSendToMe = () => {
+    // myUserId 아직 없으면(불러오는 중) 막기
+    if (!myUserId) {
+      alert("내 정보를 불러오는 중이에요. 잠시 후 다시 눌러주세요!");
+      return;
+    }
+
+    // 다른 사람이 선택돼 있으면 토글 막기
+    if (isOtherReceiverSelected) return;
+
+    const next = !sendToMe;
+    setSendToMe(next);
+
+    if (next) {
+      setReceiver({
+        id: myUserId,
+        nickname: `${myNickname} (나)`,
+        raw: { friendId: myUserId, friendNickname: `${myNickname} (나)` },
+      });
+    } else {
+      setReceiver(null);
     }
   };
 
@@ -163,10 +242,41 @@ export default function TimeCapsuleCreatePage() {
               <div className="tc-create-field">
                 <div className="tc-create-label">받는 사람</div>
 
+                {/* ✅ 나에게로 체크박스: 다른 사람 선택 중이면 disabled */}
+                <div
+                  className={`tc-create-selfRow ${sendToMe ? "selected" : ""} ${
+                    isOtherReceiverSelected ? "disabled" : ""
+                  }`}
+                  onClick={() => {
+                    if (isOtherReceiverSelected) return;
+                    toggleSendToMe();
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-disabled={isOtherReceiverSelected}
+                >
+                  <input
+                    type="checkbox"
+                    checked={sendToMe}
+                    disabled={isOtherReceiverSelected}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      if (isOtherReceiverSelected) return;
+                      toggleSendToMe();
+                    }}
+                    aria-label="나에게로"
+                  />
+                  <span>나에게로</span>
+                </div>
+
                 <button
                   type="button"
                   className="tc-create-receiver"
-                  onClick={() => setShowFriendSelect(true)}
+                  onClick={() => {
+                    // ✅ 친구 고를 땐 '나에게로' 해제
+                    setSendToMe(false);
+                    setShowFriendSelect(true);
+                  }}
                   aria-label="select receiver"
                 >
                   {receiver ? (
@@ -266,12 +376,15 @@ export default function TimeCapsuleCreatePage() {
         <FriendSelect
           onClose={() => setShowFriendSelect(false)}
           onSelect={(friend) => {
-            // FriendSelect에서 내려준 friendId / friendNickname 사용
+            // ✅ 친구 선택하면 '나에게로' 해제 + receiver 세팅
+            setSendToMe(false);
+
             setReceiver({
               id: friend.friendId,
               nickname: friend.friendNickname,
               raw: friend,
             });
+
             setShowFriendSelect(false);
           }}
         />
