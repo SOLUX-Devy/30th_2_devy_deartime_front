@@ -7,6 +7,7 @@ import FriendCard from "./FriendCard";
 export default function FriendSelect({ onClose, onSelect }) {
   const [keyword, setKeyword] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+  
 
   const [friends, setFriends] = useState([]);
   const [count, setCount] = useState(0);
