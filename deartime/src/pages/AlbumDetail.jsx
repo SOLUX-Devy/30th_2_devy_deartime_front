@@ -1,170 +1,124 @@
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Pen, Trash2, ArrowLeft, MoreVertical } from "lucide-react";
-import '../styles/AlbumDetail.css';
+import React, { useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Plus, X, Camera } from "lucide-react"; 
+import "../styles/AlbumDetail.css";
 import bg from "../assets/background_nostar.png";
+import Album_addphoto from "../components/Album_addphoto.jsx"; 
 
 const AlbumDetail = () => {
-  const { albumId } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   
-  /* 상태 관리: 더미 데이터 삭제 */
-  const [photos, setPhotos] = useState([]);
-  const [albumTitle, setAlbumTitle] = useState(location.state?.album?.title || "");
-  const [loading, setLoading] = useState(true);
+  const coverInputRef = useRef(null); 
+
+  // [연결] 갤러리(목록)에서 넘어온 앨범 데이터
+  const albumData = location.state?.album;
   
-  const [menu, setMenu] = useState({ show: false, x: 0, y: 0, targetId: null, isCentered: false });
-  const [editingId, setEditingId] = useState(null);
-  const [isEditingAlbumTitle, setIsEditingAlbumTitle] = useState(false);
+  // [연결] 갤러리의 'coverImageUrl'을 상세 페이지 커버의 초기값으로 사용
+  const [currentCover, setCurrentCover] = useState(albumData?.coverImageUrl || albumData?.coverUrl); 
+  const [albumPhotos, setAlbumPhotos] = useState([]);
+  
+  // [추가] Album_addphoto 모달 열림 상태 관리
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAlbumPhotos();
-  }, [albumId]);
+  if (!albumData) {
+    return <div className="error-msg">앨범 정보를 찾을 수 없습니다.</div>;
+  }
 
-  /* 1. 앨범 내 사진 목록 조회: GET /api/albums/{albumId}/photos */
-  const fetchAlbumPhotos = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/api/albums/${albumId}/photos`, {
-        params: { sort: "takenAt,desc", page: 0, size: 20 }
-      });
-      // 페이징 객체일 경우 response.data.content 사용
-      setPhotos(response.data.content || response.data);
-    } catch (error) {
-      console.error("앨범 사진 로드 실패:", error);
-    } finally {
-      setLoading(false);
+  // 1. 커버 사진 수정 (갤러리와 연결된 부분)
+  const handleCoverEdit = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const newCoverUrl = URL.createObjectURL(file);
+      setCurrentCover(newCoverUrl);
     }
   };
 
-  /* 2. 앨범 이름 수정: POST /api/albums/{albumId}/title */
-  const handleAlbumTitleEdit = async (e) => {
-    if (e.key === 'Enter') {
-      const newTitle = e.target.value;
-      try {
-        await api.post(`/api/albums/${albumId}/title`, { title: newTitle });
-        setAlbumTitle(newTitle);
-        setIsEditingAlbumTitle(false);
-      } catch (error) {
-        alert("앨범 제목 수정 실패");
-      }
-    } else if (e.key === 'Escape') setIsEditingAlbumTitle(false);
+  // 2. [변경] Album_addphoto 모달에서 선택한 사진들을 앨범에 추가
+  const handlePhotoSelect = (selectedPhotos) => {
+    // 모달(ap-grid)에서 선택된 사진 객체들을 현재 UI 리스트 형식(id, url)으로 변환
+    const newPhotos = selectedPhotos.map(p => ({
+      id: p.photoId,
+      url: p.imageUrl
+    }));
+
+    // 기존 리스트에 추가 (앞으로 추가)
+    setAlbumPhotos(prev => [...newPhotos, ...prev]);
   };
 
-  /* 3. 앨범에서 사진 제거: DELETE /api/albums/{albumId}/photos/{photoId} */
-  const handleDeletePhoto = async () => {
-    try {
-      await api.delete(`/api/albums/${albumId}/photos/${menu.targetId}`);
-      setPhotos(prev => prev.filter(p => p.id !== menu.targetId));
-    } catch (error) {
-      alert("사진 제거 실패");
+  const handleDeletePhoto = (photoId) => {
+    if (window.confirm("이 사진을 앨범에서 삭제하시겠습니까?")) {
+      setAlbumPhotos(prev => prev.filter(photo => photo.id !== photoId));
     }
-    setMenu({ ...menu, show: false });
   };
 
-  /* 4. 사진 캡션 수정: POST /api/photos/{photoId}/caption */
-  const handleCaptionEditComplete = async (e, photoId) => {
-    if (e.key === 'Enter') {
-      const newCaption = e.target.value;
-      try {
-        await api.post(`/api/photos/${photoId}/caption`, { caption: newCaption });
-        setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, caption: newCaption } : p));
-      } catch (error) {
-        alert("캡션 수정 실패");
-      }
-      setEditingId(null);
-    } else if (e.key === 'Escape') setEditingId(null);
+  // 3. 뒤로 가기 (변경된 커버 정보를 갤러리에 전달하여 동기화)
+  const handleBack = () => {
+    navigate("/gallery", { 
+      state: { 
+        activeTab: 1, 
+        updatedAlbum: { ...albumData, coverImageUrl: currentCover } 
+      } 
+    });
   };
-
-  /* 날짜별 그룹화 로직 */
-  const groupedPhotos = useMemo(() => {
-    return photos.reduce((acc, photo) => {
-      const date = photo.takenAt?.split('T')[0] || photo.date || "Unknown";
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(photo);
-      return acc;
-    }, {});
-  }, [photos]);
-
-  if (loading) return <div className="loading">앨범을 불러오는 중...</div>;
 
   return (
-    <div className="album-detail-container" style={{ backgroundImage: `url(${bg})` }}>
-      <div className="ad-header">
-        <button onClick={() => navigate(-1)} className="back-btn">
-          <ArrowLeft size={24} color="white" />
-        </button>
-        
-        {isEditingAlbumTitle ? (
-          <input 
-            className="edit-album-title-input"
-            defaultValue={albumTitle}
-            autoFocus
-            onKeyDown={handleAlbumTitleEdit}
-            onBlur={() => setIsEditingAlbumTitle(false)}
-          />
-        ) : (
-          <h1 onClick={() => setIsEditingAlbumTitle(true)}>{albumTitle}</h1>
-        )}
-        <div className="header-right-empty" />
-      </div>
+    <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
+      <div className="album-detail-container">
+        {/* 상단 네비바 */}
+        <div className="detail-top-nav">
+          <button className="back-btn" onClick={handleBack}>
+            &lt; ALBUM
+          </button>
+          <span className="album-nav-title">{albumData.title}</span>
+        </div>
 
-      <div className="gallery-content-wrapper">
-        {Object.keys(groupedPhotos).length > 0 ? (
-          Object.keys(groupedPhotos).map((date) => (
-            <section key={date} className="date-group">
-              <h2 className="date-title">{date}</h2>
-              <div className="photo-grid">
-                {groupedPhotos[date].map((photo) => (
-                  <div 
-                    key={photo.id} 
-                    className="photo-item"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setMenu({ show: true, x: e.clientX, y: e.clientY, targetId: photo.id });
-                    }}
-                  >
-                    <div className="img-box">
-                      <img src={photo.imagePath || photo.url} alt={photo.caption} />
-                    </div>
-                    {editingId === photo.id ? (
-                      <input 
-                        className="edit-title-input" 
-                        defaultValue={photo.caption || photo.title} 
-                        autoFocus 
-                        onKeyDown={(e) => handleCaptionEditComplete(e, photo.id)}
-                        onBlur={() => setEditingId(null)}
-                      />
-                    ) : (
-                      <p className="photo-title">{photo.caption || photo.title}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))
-        ) : (
-          <div className="empty-message">앨범에 사진이 없습니다.</div>
-        )}
-      </div>
-
-      {/* 우클릭/롱프레스 컨텍스트 메뉴 */}
-      {menu.show && (
-        <>
-          <div className="context-menu-overlay" onClick={() => setMenu({ ...menu, show: false })} />
-          <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }}>
-            <div className="menu-item" onClick={() => { setEditingId(menu.targetId); setMenu({ ...menu, show: false }); }}>
-              <Pen size={15} color="white" />
-              <span>캡션 수정</span>
-            </div>
-            <div className="menu-divider" />
-            <div className="menu-item delete" onClick={handleDeletePhoto}>
-              <Trash2 size={15} color="#FF4D4D" />
-              <span>앨범에서 제거</span>
-            </div>
+        {/* 앨범 커버 영역 */}
+        <div className="album-banner" onClick={() => coverInputRef.current.click()}>
+          <img src={currentCover} alt="Album Cover" className="banner-img" />
+          <div className="banner-overlay">
+            <Camera size={32} color="white" />
+            <span>커버 사진 변경</span>
           </div>
-        </>
+          <input 
+            type="file" 
+            ref={coverInputRef} 
+            style={{ display: "none" }} 
+            accept="image/*" 
+            onChange={handleCoverEdit} 
+          />
+        </div>
+
+        {/* 앨범 내부 사진 영역 */}
+        <div className="album-content-area">
+          <div className="photo-grid1">
+            {/* [변경] + 버튼 클릭 시 Album_addphoto 모달을 엽니다. */}
+            <div className="grid-item add-btn-item" onClick={() => setIsAddModalOpen(true)}>
+              <Plus size={40} color="#ffffff" strokeWidth={1} />
+            </div>
+
+            {/* 사진 리스트 출력 */}
+            {albumPhotos.map((photo) => (
+              <div key={photo.id} className="grid-item photo-item1">
+                <img src={photo.url} alt="album-content" />
+                <button className="delete-photo-btn" onClick={(e) => {
+                  e.stopPropagation(); 
+                  handleDeletePhoto(photo.id);
+                }}>
+                  <X size={16} color="white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* [연결] 사진 추가 모달 컴포넌트 */}
+      {isAddModalOpen && (
+        <Album_addphoto 
+          onClose={() => setIsAddModalOpen(false)} 
+          onSelect={handlePhotoSelect} 
+        />
       )}
     </div>
   );
