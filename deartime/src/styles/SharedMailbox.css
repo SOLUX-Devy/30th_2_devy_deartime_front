@@ -18,10 +18,20 @@
     gap: 10px;
 }
 
+.letter-count{
+    margin-top:1em;
+}
+
+.chat-list{
+    margin-top:5em;
+    flex-grow:1;
+    overflow-y:auto;
+}
+
 .user-tag {
     background-color: #D1E9E9;
     color: #333;
-    padding: 7px 14px 7px 17px; /* 오른쪽 패딩을 살짝 조정 */
+    padding: 7px 15px 7px 17px; /* 오른쪽 패딩을 살짝 조정 */
     border-radius: 8px;
     font-weight: bold;
     font-size:1em;
@@ -31,6 +41,7 @@
     width:12em;
     height:3em;
     margin-left: calc(-1 * (50vw - 50%) + 60px);
+    margin-right: 1em;
 }
 
 /* X 버튼 스타일 리셋 및 커스텀 */
