@@ -292,3 +292,72 @@
 .tc-create-send:disabled:hover {
   background: rgba(0, 0, 0, 0.35);
 }
+
+.tc-create-selfRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 8px 0 10px;
+  cursor: pointer;
+
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+
+  user-select: none;
+}
+.tc-create-selfRow input{
+  width:16px;
+  height:16px;
+  cursor:pointer;
+}
+.tc-create-selfRow input[type="checkbox"]:checked {
+  background: #0e77bc;            /* 메인 블루 */
+  border-color: #0e77bc;
+}
+.tc-create-selfRow input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 16px;
+  height: 16px;
+
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+}
+
+.tc-create-selfRow input[type="checkbox"]:checked::after {
+  content: "✓";
+  font-size: 12px;
+  color: white;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tc-create-selfRow.selected{
+  opacity:1;
+}
+.tc-create-selfRow.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tc-create-selfRow.disabled input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.tc-create-selfRow.disabled:hover input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.25); /* hover로 파래지지 않게 */
+}
+
+.tc-create-receiver:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
