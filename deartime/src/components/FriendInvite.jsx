@@ -20,6 +20,9 @@ export default function FriendInvite({ onClose }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ✅ 팀 규칙: env base url 사용
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
   // ESC 키로 닫기
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -52,7 +55,9 @@ export default function FriendInvite({ onClose }) {
     setIsLoading(true);
 
     try {
-      const url = `/api/friends/search?keyword=${encodeURIComponent(keyword)}`;
+      const url = `${apiBaseUrl}/api/friends/search?keyword=${encodeURIComponent(
+        keyword
+      )}`;
 
       const res = await fetch(url, {
         method: "GET",
@@ -129,7 +134,7 @@ export default function FriendInvite({ onClose }) {
     setIsLoading(true);
 
     try {
-      const url = `/api/friends`;
+      const url = `${apiBaseUrl}/api/friends`;
 
       const res = await fetch(url, {
         method: "POST",
@@ -156,8 +161,8 @@ export default function FriendInvite({ onClose }) {
         (res.status === 400
           ? "요청을 처리할 수 없습니다."
           : res.status === 404
-            ? "친구를 찾을 수 없습니다."
-            : "요청에 실패했습니다.");
+          ? "친구를 찾을 수 없습니다."
+          : "요청에 실패했습니다.");
 
       openStatusModal(msg);
     } catch (e) {
@@ -172,11 +177,7 @@ export default function FriendInvite({ onClose }) {
       <div className="friend-invite-overlay" onClick={onClose}>
         <div
           className={`friend-invite-modal ${
-            step === 1
-              ? "modal-step-1"
-              : step === 2
-                ? "modal-step-2"
-                : "modal-step-1"
+            step === 1 ? "modal-step-1" : step === 2 ? "modal-step-2" : "modal-step-1"
           }`}
           onClick={(e) => e.stopPropagation()}
         >
@@ -229,14 +230,10 @@ export default function FriendInvite({ onClose }) {
 
                 <div className="friend-info-container">
                   <label className="friend-label">이메일</label>
-                  <div className="friend-id">
-                    {foundFriend.email || inputEmail}
-                  </div>
+                  <div className="friend-id">{foundFriend.email || inputEmail}</div>
 
                   <label className="friend-label">닉네임</label>
-                  <div className="friend-nickname">
-                    {foundFriend.friendNickname}
-                  </div>
+                  <div className="friend-nickname">{foundFriend.friendNickname}</div>
                 </div>
               </div>
 
@@ -368,8 +365,8 @@ export default function FriendInvite({ onClose }) {
           background: #000D32;
           color: #FFF;
 
-          padding: 0 15px;         /* ✅ 위아래 padding 제거 */
-          line-height: 45px;       /* ✅ 글자(placeholder) 세로 중앙 */
+          padding: 0 15px;
+          line-height: 45px;
           font-family: "Josefin Slab";
           font-size: 16px;
           box-sizing: border-box;
@@ -436,7 +433,6 @@ export default function FriendInvite({ onClose }) {
           border: 1px solid #2A4280;
         }
 
-        /* ✅ 여기 height:40px 같은 거 절대 넣지마 (내용 다 짤림/겹침) */
         .friend-info-container {
           display: flex;
           flex-direction: column;
@@ -488,7 +484,7 @@ export default function FriendInvite({ onClose }) {
           padding: 8px 20px;
           font-size: 14px;
           cursor: pointer;
-          margin-bottom: 0; /* ✅ -20 삭제 (겹침 원인) */
+          margin-bottom: 0;
         }
 
         .friend-invite-submit:hover {
