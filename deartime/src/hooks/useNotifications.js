@@ -5,7 +5,7 @@ import {
   disconnectNotificationSocket,
   readNotification,
 } from "../api/notification";
-import { requestFriend } from "../api/friend"; 
+import { updateFriendStatus } from "../api/friend"; 
 import friendIcon from "../assets/default_profile2.png?url";
 import letterIcon from "../assets/letter.png?url";
 import capsuleIcon from "../assets/timecapsule.png?url";
@@ -77,46 +77,33 @@ export function useNotifications({ navigate, userId }) {
     return { title: m[1], body: m[2] || "", sub: null };
   }, []);
 
-  /* =========================
-      친구 요청 수락
-  ========================= */
-  const acceptFriendRequest = async (noti) => {
-    try {
-      await requestFriend({ friendId: noti.senderId });
-      await readNotification(noti.id);
+  const getFriendIdFromNoti = (noti) => {
+  return noti?.targetId ?? null; // ✅ 지금 로그에 존재
+};
 
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === noti.id
-            ? { ...n, isRead: true, handled: true }
-            : n
-        )
-      );
-    } catch (e) {
-      console.error("[Noti] accept failed", e);
-      alert(e.message || "친구 요청 수락에 실패했습니다.");
-    }
-  };
+const acceptFriendRequest = async (noti) => {
+  try {
+    const friendId = getFriendIdFromNoti(noti);
+    if (!friendId) throw new Error("friendId를 알림에서 찾을 수 없습니다 (targetId 없음)");
 
-  /* =========================
-      친구 요청 거절
-      (서버 거절 API 없으므로 읽음 처리만)
-  ========================= */
-  const rejectFriendRequest = async (noti) => {
-    try {
-      await readNotification(noti.id);
+    await updateFriendStatus(friendId, "accepted");
+    setNotifications((prev) => prev.filter((n) => n.id !== noti.id));
+  } catch (e) {
+    console.error("[Noti] accept failed", e);
+  }
+};
 
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === noti.id
-            ? { ...n, isRead: true, handled: true }
-            : n
-        )
-      );
-    } catch (e) {
-      console.error("[Noti] reject failed", e);
-    }
-  };
+const rejectFriendRequest = async (noti) => {
+  try {
+    const friendId = getFriendIdFromNoti(noti);
+    if (!friendId) throw new Error("friendId를 알림에서 찾을 수 없습니다 (targetId 없음)");
+
+    await updateFriendStatus(friendId, "rejected");
+    setNotifications((prev) => prev.filter((n) => n.id !== noti.id));
+  } catch (e) {
+    console.error("[Noti] reject failed", e);
+  }
+};
 
   /* =========================
       알림 조회 + 소켓
@@ -199,8 +186,6 @@ export function useNotifications({ navigate, userId }) {
     formatTime,
     getNotiIcon,
     splitNotiContent,
-
-    // ⭐ 친구 요청 관련
     isFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,

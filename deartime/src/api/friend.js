@@ -1,31 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-/**
- * 친구 요청 / 친구 요청 수락
- * - 상대방이 먼저 요청한 경우 자동으로 accepted 처리됨
- * POST /api/friends
- */
-export async function requestFriend({ friendId }) {
+export async function updateFriendStatus(friendId, status) {
   const token = localStorage.getItem("accessToken");
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  if (!token) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  const res = await fetch(`${API_BASE_URL}/api/friends`, {
-    method: "POST",
+  const res = await fetch(`${apiBaseUrl}/api/friends/${friendId}`, {
+    method: "PUT",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ friendId }),
+    body: JSON.stringify({ status }),
   });
 
   const json = await res.json();
-
-  if (!res.ok || !json.success) {
-    throw new Error(json.message || "친구 요청에 실패했습니다.");
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || "친구 상태 변경 실패");
   }
-
-  return json.data;
+  return json;
 }

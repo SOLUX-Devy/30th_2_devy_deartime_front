@@ -35,7 +35,7 @@ export default function Header() {
     getNotiIcon,
     splitNotiContent,
 
-    // ✅ 친구 요청 관련 (중요)
+    // ✅ 친구 요청 관련
     isFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
@@ -100,8 +100,7 @@ export default function Header() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setIsNotiOpen]);
 
   /* =========================
@@ -135,10 +134,18 @@ export default function Header() {
             </NavLink>
 
             <nav className="nav">
-              <NavLink to="/gallery" className={itemClass}>갤러리</NavLink>
-              <NavLink to="/letterbox" className={itemClass}>우체통</NavLink>
-              <NavLink to="/timecapsule" className={itemClass}>타임캡슐</NavLink>
-              <NavLink to="/friend" className={itemClass}>친구목록</NavLink>
+              <NavLink to="/gallery" className={itemClass}>
+                갤러리
+              </NavLink>
+              <NavLink to="/letterbox" className={itemClass}>
+                우체통
+              </NavLink>
+              <NavLink to="/timecapsule" className={itemClass}>
+                타임캡슐
+              </NavLink>
+              <NavLink to="/friend" className={itemClass}>
+                친구목록
+              </NavLink>
             </nav>
           </div>
 
@@ -160,13 +167,26 @@ export default function Header() {
 
               {isNotiOpen && (
                 <div className="noti-dropdown">
+                  <p className="noti-title">알림</p>
+
                   {notifications.length === 0 ? (
                     <p className="noti-empty">아직 알림이 없습니다.</p>
                   ) : (
-                    <ul className="noti-list">
+                    <ul
+                      className="noti-list"
+                      style={{ listStyle: "none", padding: 0, margin: 0 }}
+                    >
                       {notifications.map((noti) => {
-                        const { title, body, sub } =
-                          splitNotiContent(noti);
+                        const type = String(noti.type || "").toUpperCase();
+                        if (type === "FRIEND_REQUEST") {
+                          console.log("[FRIEND_REQUEST NOTI RAW]", noti);
+                        }
+                        const { title, body, sub } = splitNotiContent(noti);
+                        const friendReq =
+                          typeof isFriendRequest === "function"
+                            ? isFriendRequest(noti)
+                            : String(noti.type || "").toUpperCase() ===
+                              "FRIEND_REQUEST";
 
                         return (
                           <li
@@ -177,53 +197,51 @@ export default function Header() {
                             onClick={() => onClickNotification(noti)}
                           >
                             <div className="noti-icon">
-                              <img
-                                src={getNotiIcon(noti.type)}
-                                alt="icon"
-                                onError={(e) => {
-                                  console.log(
-                                    "[ICON LOAD FAIL]",
-                                    noti.type,
-                                    e.currentTarget.src
-                                  );
-                                }}
-                              />
+                              <img src={getNotiIcon(noti.type)} alt="icon" />
                             </div>
 
                             <div className="noti-content">
                               <p className="noti-text">{title}</p>
-                              {body && (
-                                <span className="noti-text">{body}</span>
-                              )}
-                              {sub && (
-                                <span className="noti-sub">{sub}</span>
+                              {body && <span className="noti-text">{body}</span>}
+                              {sub && <span className="noti-sub">{sub}</span>}
+
+                              {/* ✅ 친구요청이면: 버튼 + 시간 같은 줄 */}
+                              {friendReq ? (
+                                <div className="noti-footer">
+                                  <div className="noti-actions">
+                                    <button
+                                      type="button"
+                                      className="noti-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        acceptFriendRequest?.(noti);
+                                      }}
+                                    >
+                                      수락
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="noti-btn reject"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        rejectFriendRequest?.(noti);
+                                      }}
+                                    >
+                                      거절
+                                    </button>
+                                  </div>
+
+                                  <span className="noti-time">
+                                    {formatTime(noti.createdAt)}
+                                  </span>
+                                </div>
+                              ) : (
+                                /* ✅ 친구요청 아니면: 시간만 */
+                                <span className="noti-time">
+                                  {formatTime(noti.createdAt)}
+                                </span>
                               )}
                             </div>
-
-                            {isFriendRequest(noti) && !noti.handled && (
-                              <div className="noti-actions">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    acceptFriendRequest(noti);
-                                  }}
-                                >
-                                  수락
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    rejectFriendRequest(noti);
-                                  }}
-                                >
-                                  거절
-                                </button>
-                              </div>
-                            )}
-
-                            <span className="noti-time">
-                              {formatTime(noti.createdAt)}
-                            </span>
                           </li>
                         );
                       })}
@@ -236,9 +254,7 @@ export default function Header() {
             {/* 👤 PROFILE */}
             <div ref={profileRef} style={{ position: "relative" }}>
               <div
-                className={`profile-trigger ${
-                  isProfileOpen ? "is-open" : ""
-                }`}
+                className={`profile-trigger ${isProfileOpen ? "is-open" : ""}`}
                 onClick={() => {
                   setIsProfileOpen((v) => !v);
                   setIsNotiOpen(false);
