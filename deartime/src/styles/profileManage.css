@@ -169,12 +169,25 @@
   resize: none;
 }
 
+/* placeholder tone */
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: #2a4280; /* 원래 테두리 색으로 */
+}
+
+
 /* Email disabled style */
 .email-input:disabled {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(42, 66, 128, 0.35);
   color: rgba(255, 255, 255, 0.55);
-  cursor: not-allowed;
+  cursor: default;;
 }
 
 /* Date input tweaks */
@@ -219,7 +232,7 @@
 }
 
 .input-group button:disabled {
-  cursor: not-allowed;
+  cursor: default;
   opacity: 1;
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(42, 66, 128, 0.4);
@@ -232,28 +245,34 @@
 .nickname-row {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .nickname-row input {
   flex: 1;
 }
 
-/* Nickname inline messages */
+/* Nickname inline messages (single line) */
+/* 메시지 영역: 항상 자리 차지 */
 .field-msg {
+  min-height: 12px;          /* 한 줄 높이 확보 */
   margin-top: -15px;
   margin-left: 5px;
   font-size: 9px;
   line-height: 1.2;
+
+  visibility: hidden;        /* 기본은 안 보이게 */
 }
 
 .field-msg.error {
   color: #ff5a5a;
+  visibility: visible;       /* 보이게 */
 }
 
 .field-msg.success {
   color: #7cffb2;
+  visibility: visible;       /* 보이게 */
 }
-
 /* =========================
    Delegate
 ========================= */
@@ -364,7 +383,7 @@
 }
 
 .save-btn.disabled {
-  cursor: not-allowed;
+  cursor: default;
   opacity: 1;
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(42, 66, 128, 0.4);
