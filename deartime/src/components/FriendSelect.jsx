@@ -29,6 +29,7 @@ export default function FriendSelect({ onClose, onSelect }) {
         });
 
         const json = await res.json();
+        console.log("서버가 준 진짜 데이터:", json.data.friends);
 
         if (!res.ok) {
           // 401: 인증 실패 메시지 그대로 사용 가능
