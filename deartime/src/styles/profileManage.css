@@ -256,13 +256,17 @@
 /* Nickname inline messages (single line) */
 /* 메시지 영역: 항상 자리 차지 */
 .field-msg {
-  min-height: 12px;          /* 한 줄 높이 확보 */
-  margin-top: -15px;
-  margin-left: 5px;
+  min-height: 12px;
+  margin: 0;          /* ✅ margin 아예 없음 */
+  padding: 0;         /* ✅ padding도 없음 */
+  margin-left: 5px;   /* ✅ 이건 왼쪽 정렬용이면 유지 */
   font-size: 9px;
   line-height: 1.2;
-
-  visibility: hidden;        /* 기본은 안 보이게 */
+  visibility: hidden;
+}
+.nickname-row input,
+.nickname-row button {
+  margin-bottom: 0 !important;
 }
 
 .field-msg.error {
