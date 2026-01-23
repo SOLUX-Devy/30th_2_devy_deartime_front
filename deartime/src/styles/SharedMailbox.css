@@ -105,7 +105,7 @@
 /* 상대방 메시지 (theirs) */
 .chat-item.theirs {
     align-self: flex-start;
-    gap: 10px; 
+    gap: 1em; 
     margin-left: 20px;
 }
 
