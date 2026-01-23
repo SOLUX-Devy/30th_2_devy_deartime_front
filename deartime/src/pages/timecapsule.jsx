@@ -4,12 +4,8 @@ import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_nostar.png";
 import "../styles/timecapsule.css";
 import TimeCapsuleCard from "../components/TimeCapsuleCard";
+import { fetchMe } from "../api/user"; // ✅ 추가
 
-/**
- * ✅ TimeCapsuleCard와 동일한 기준으로 "열 수 있는지" 판단
- * - openAt 없으면 잠김 처리
- * - now >= openAt => 열 수 있음
- */
 function isOpenableByTime(openAtIso) {
   if (!openAtIso) return false;
   const now = Date.now();
@@ -18,7 +14,6 @@ function isOpenableByTime(openAtIso) {
   return now >= openAtMs;
 }
 
-/** opened 값 방어 (boolean/문자열/숫자 섞여도 안전) */
 function toBool(v) {
   return v === true || v === "true" || v === 1 || v === "1";
 }
@@ -31,41 +26,64 @@ const TimeCapsule = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
 
-  const myUserId = Number(localStorage.getItem("userId")) || 2;
+  // ✅ myUserId를 localStorage가 아니라 /users/me로 가져와 상태로 유지
+  const [myUserId, setMyUserId] = useState(null);
 
-  // ✅ UI는 1부터 (프론트에서 slice 페이지네이션)
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
-  // ✅ 정렬
   const sortOrder = "desc";
-
-  // ✅ API 원본 데이터
   const [rawCapsules, setRawCapsules] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // -------------------------
-  // 탭 → API type 매핑
-  // -------------------------
+  // ✅ 1) 진입 시 내 정보 먼저 확보 (토큰 기반)
+  useEffect(() => {
+    const loadMe = async () => {
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+          setMyUserId(null);
+          return;
+        }
+
+        const me = await fetchMe();
+        const uid = Number(me?.userId);
+
+        if (!uid) throw new Error("me.userId 없음");
+
+        setMyUserId(uid);
+
+        // ✅ 선택: 다른 페이지에서도 쓰려면 저장해두기 (권장)
+        localStorage.setItem("userId", String(uid));
+      } catch (e) {
+        console.error("[TC] fetchMe failed:", e);
+        setMyUserId(null);
+      }
+    };
+
+    loadMe();
+  }, []);
+
   const apiType = useMemo(() => {
     if (activeIndex === 0) return "ALL";
     if (activeIndex === 1) return "RECEIVED";
     return "SENT";
   }, [activeIndex]);
 
-  // -------------------------
-  // API 호출
-  // -------------------------
+  // ✅ 2) myUserId 준비된 뒤에 캡슐 목록 호출
   useEffect(() => {
     const fetchCapsules = async () => {
       try {
-        setLoading(true);
-
         const accessToken = localStorage.getItem("accessToken");
         if (!accessToken) {
           setRawCapsules([]);
           return;
         }
+
+        // ✅ myUserId 없으면 필터가 깨지니까 호출/렌더 보류
+        if (!myUserId) return;
+
+        setLoading(true);
 
         const params = new URLSearchParams();
         params.set("type", apiType);
@@ -92,19 +110,17 @@ const TimeCapsule = () => {
         const payload = json?.data;
         const list = payload?.data ?? [];
 
-        // ✅ 숫자/불리언 타입 통일 (opened도 카드랑 동일하게 안전하게)
         const normalized = list.map((c) => ({
           ...c,
           senderId: Number(c.senderId),
           receiverId: Number(c.receiverId),
           opened: toBool(c?.opened),
-          // canAccess는 더 이상 개수/필터 기준으로 쓰지 않음 (카드와 통일)
           canAccess: c.canAccess,
         }));
 
         setRawCapsules(normalized);
       } catch (e) {
-        console.error(e);
+        console.error("[TC] fetchCapsules failed:", e);
         setRawCapsules([]);
       } finally {
         setLoading(false);
@@ -112,34 +128,23 @@ const TimeCapsule = () => {
     };
 
     fetchCapsules();
-  }, [apiType, sortOrder, apiBaseUrl]);
+  }, [apiType, sortOrder, apiBaseUrl, myUserId]); // ✅ myUserId 의존 추가
 
-  // -------------------------
-  // ✅ 최종 필터(너가 확정한 규칙) + "열린 캡슐만"은 openAt 시간 기준으로 통일
-  // - 전체: receiverId === 나 (나->나 + 남->나)
-  // - 받은: receiverId === 나 && senderId !== 나
-  // - 나의: receiverId === 나 && senderId === 나
-  // - 나->남( senderId===나 && receiverId!==나 )는 전부 제외
-  // - 토글 ON: now >= openAt 인 것만 (카드와 동일)
-  // -------------------------
+  // ✅ 3) 필터도 myUserId 없으면 안전하게 빈 배열
   const filteredCapsules = useMemo(() => {
-    const myId = myUserId;
+    if (!myUserId) return [];
 
-    // 1) 나에게 온 것만 (나->남 제거)
+    const myId = myUserId;
     const onlyToMe = rawCapsules.filter((c) => c.receiverId === myId);
 
-    // 2) 탭별
     let base = onlyToMe;
 
     if (activeIndex === 1) {
-      // 받은: 남->나
       base = onlyToMe.filter((c) => c.senderId !== myId);
     } else if (activeIndex === 2) {
-      // 나의: 나->나
       base = onlyToMe.filter((c) => c.senderId === myId);
     }
 
-    // 3) 토글별 (✅ 카드 로직 통일: openAt 시간으로 판단)
     if (showOpenOnly) {
       return base.filter((c) => isOpenableByTime(c.openAt));
     }
@@ -147,9 +152,6 @@ const TimeCapsule = () => {
     return base;
   }, [rawCapsules, activeIndex, myUserId, showOpenOnly]);
 
-  // -------------------------
-  // ✅ 프론트 페이지네이션(slice)
-  // -------------------------
   const totalElements = filteredCapsules.length;
   const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
 
@@ -170,34 +172,20 @@ const TimeCapsule = () => {
 
   const emptyCount = Math.max(0, pageSize - capsules.length);
 
-  // ✅ "몇개 중 몇개" (필터링된 totalElements 기준)
   const rangeText = useMemo(() => {
     if (totalElements === 0) return `0개 중 0-0`;
-
     const start = (page - 1) * pageSize + 1;
     const end = Math.min(page * pageSize, totalElements);
     return `${totalElements}개 중 ${start}-${end}`;
   }, [totalElements, page, pageSize]);
 
   return (
-    <div
-      className="timecapsule-container"
-      style={{ backgroundImage: `url(${bg})` }}
-    >
+    <div className="timecapsule-container" style={{ backgroundImage: `url(${bg})` }}>
       {/* 상단 영역 */}
       <div className="tc-topbar">
-        <div
-          style={{
-            display: "flex",
-            gap: "50px",
-            marginBottom: "0px",
-            marginLeft: "60px",
-            marginTop: "10px",
-          }}
-        >
+        <div style={{ display: "flex", gap: "50px", marginBottom: "0px", marginLeft: "60px", marginTop: "10px" }}>
           {tabs.map((tab, index) => {
             const isActive = index === activeIndex;
-
             return (
               <span
                 key={tab}
@@ -237,11 +225,7 @@ const TimeCapsule = () => {
         </div>
 
         <div className="tc-topbar-right">
-          <button
-            type="button"
-            className="tc-create-btn"
-            onClick={() => navigate("/timecapsule/create")}
-          >
+          <button type="button" className="tc-create-btn" onClick={() => navigate("/timecapsule/create")}>
             캡슐 생성
           </button>
         </div>
@@ -251,7 +235,6 @@ const TimeCapsule = () => {
       <div className="tc-toggle-row">
         <div className="open-only-toggle">
           <span className="toggle-label">열린 캡슐만 보기</span>
-
           <button
             type="button"
             className={`toggle-button ${showOpenOnly ? "on" : ""}`}
@@ -268,58 +251,62 @@ const TimeCapsule = () => {
         <div className="tc-range">{rangeText}</div>
       </div>
 
-      {/* 카드 목록 + 페이지네이션 */}
-      <div className="tc-layout">
-        <div className="tc-grid">
-          {loading ? (
-            <>
-              <div className="tc-empty">불러오는 중...</div>
-              {Array.from({ length: pageSize }).map((_, idx) => (
-                <div key={`empty-${idx}`} className="tc-card--empty" />
-              ))}
-            </>
-          ) : capsules.length === 0 ? (
-            <>
-              <div className="tc-empty">캡슐이 없습니다.</div>
-              {Array.from({ length: pageSize }).map((_, idx) => (
-                <div key={`empty-${idx}`} className="tc-card--empty" />
-              ))}
-            </>
-          ) : (
-            <>
-              {capsules.map((capsule) => (
-                <TimeCapsuleCard
-                  key={capsule.id}
-                  capsule={capsule}
-                  onClick={(clickedCapsule) => {
-                    navigate(`/timecapsule/${clickedCapsule.id}`);
-                  }}
-                />
-              ))}
+      {/* ✅ myUserId 로딩 중이면 안내 */}
+      {!myUserId ? (
+        <div className="tc-empty" style={{ padding: "40px 0" }}>
+          사용자 정보를 불러오는 중...
+        </div>
+      ) : (
+        <div className="tc-layout">
+          <div className="tc-grid">
+            {loading ? (
+              <>
+                <div className="tc-empty">불러오는 중...</div>
+                {Array.from({ length: pageSize }).map((_, idx) => (
+                  <div key={`empty-${idx}`} className="tc-card--empty" />
+                ))}
+              </>
+            ) : capsules.length === 0 ? (
+              <>
+                <div className="tc-empty">캡슐이 없습니다.</div>
+                {Array.from({ length: pageSize }).map((_, idx) => (
+                  <div key={`empty-${idx}`} className="tc-card--empty" />
+                ))}
+              </>
+            ) : (
+              <>
+                {capsules.map((capsule) => (
+                  <TimeCapsuleCard
+                    key={capsule.id}
+                    capsule={capsule}
+                    onClick={(clickedCapsule) => {
+                      navigate(`/timecapsule/${clickedCapsule.id}`);
+                    }}
+                  />
+                ))}
+                {Array.from({ length: emptyCount }).map((_, idx) => (
+                  <div key={`empty-${idx}`} className="tc-card--empty" />
+                ))}
+              </>
+            )}
+          </div>
 
-              {Array.from({ length: emptyCount }).map((_, idx) => (
-                <div key={`empty-${idx}`} className="tc-card--empty" />
+          {totalPages > 1 && (
+            <div className="tc-pagination">
+              {pageNumbers.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={`tc-page ${p === page ? "active" : ""}`}
+                >
+                  {p}
+                </button>
               ))}
-            </>
+            </div>
           )}
         </div>
-
-        {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className="tc-pagination">
-            {pageNumbers.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPage(p)}
-                className={`tc-page ${p === page ? "active" : ""}`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
