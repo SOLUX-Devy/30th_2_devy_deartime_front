@@ -52,15 +52,13 @@ const SharedMailbox = ({ friend, onBack }) => {
     if (isLoading) return <div className="loading">대화 기록을 불러오는 중...</div>;
 
     return (
-        /* ✅ 이미 부모(LetterboxPage)가 container와 content 스타일을 가지고 있으므로
-           여기서는 내부 레이아웃만 잡아줍니다. */
         <div className="mail-shared-content-wrapper">
             
-            {/* 3. 헤더 레이아웃 */}
+            {/* 헤더 레이아웃 */}
             <header className="mail-letterbox-header">
                 <div className="user-tag">
                     {friendNickname}
-                    {/* ✅ navigate(-1) 대신 부모가 준 onBack 함수를 실행합니다. */}
+                    {/* navigate(-1) 대신 부모가 준 onBack 함수를 실행합니다. */}
                     <button type="button" className="tag-close-btn" onClick={onBack}>×</button>
                 </div>
                 <span className="letter-count" style={{ color: '#aaa', fontSize: '0.9rem' }}>
@@ -68,7 +66,7 @@ const SharedMailbox = ({ friend, onBack }) => {
                 </span>
             </header>
 
-            {/* 4. 채팅 리스트 영역 */}
+            {/* 채팅 리스트 영역 */}
             <div className="chat-list" style={{ marginTop: '20px', paddingBottom: '140px' }}>
                 {messages.length === 0 ? (
                     <div className="date-separator">나눈 편지가 없습니다.</div>

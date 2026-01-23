@@ -15,6 +15,7 @@
 .mail-letterbox-header{
     display: flex;
     flex-direction: row; /* 기본값이 가로 정렬입니다 */
+    padding: 3px 0;
     gap: 10px;
 }
 
