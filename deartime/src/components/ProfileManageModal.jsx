@@ -186,13 +186,13 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     <>
       <div className="profile-manage-overlay">
         <div className="profile-manage-modal">
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
+
           <div className="profile-manage-header">
             <span>프로필 관리</span>
-            <button className="close-btn" onClick={onClose}>
-              ✕
-            </button>
           </div>
-
           {/* ⭐ 프로필 이미지 영역 */}
           <div
             className="profile-manage-image"
@@ -223,7 +223,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
             <div className="input-group">
               <label>닉네임</label>
-              <div style={{ display: "flex", gap: "8px" }}>
+              <div className="nickname-row">
                 <input
                   value={nickname}
                   onChange={(e) => {
