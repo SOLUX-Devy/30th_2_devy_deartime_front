@@ -43,8 +43,8 @@
 /* ✅ X 버튼: 모달 우상단 고정 */
 .profile-manage-modal .close-btn {
   position: absolute;
-  top: 22px;
-  right: 22px;
+  top: 25px;
+  right: 25px;
 
   margin: 0;
   padding: 0;
@@ -135,6 +135,15 @@
   align-items: center;
 }
 
+/* 닉네임 중복확인 버튼 정렬 수정 */
+.nickname-row button {
+  height: 36px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 닉네임 input은 버튼이랑 같이 있으니 폭 조절 */
 .nickname-row input {
   flex: 1;
@@ -144,7 +153,8 @@
    duplicate check button
 ========================= */
 .input-group button {
-  padding: 10px 14px;
+  height: 36px;
+  padding: 0 14px;
   font-size: 13px;
   border-radius: 8px;
   border: 2px solid #2a4280;
@@ -152,6 +162,9 @@
   color: #fff;
   cursor: pointer;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ✅ 활성일 때만 hover/active 먹게 */
