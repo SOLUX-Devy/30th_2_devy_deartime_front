@@ -1,5 +1,5 @@
 // src/pages/timecapsule.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "../assets/background_nostar.png";
 import "../styles/timecapsule.css";
@@ -8,277 +8,177 @@ import LockedCapsuleModal from "../components/LockedCapsuleModal";
 
 const TimeCapsule = () => {
   const navigate = useNavigate();
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   const tabs = ["전체 캡슐", "받은 캡슐", "나의 캡슐"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const myUserId = Number(localStorage.getItem("userId")) || 2;
 
-  // ✅ 페이지네이션 (UI 편하게 1부터)
+  // ✅ UI는 1부터
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
-  // ✅ 정렬: 'desc' = 최신순(추천), 'asc' = 오래된순
-  const sortOrder = "desc";
+  // ✅ 정렬
+  const sortOrder = "desc"; // 필요하면 state로
 
-  // ✅ 임시 로그인 유저(나중에 auth에서 가져오면 됨)
-  const myUserId = 2;
+  // ✅ API 데이터
+  const [capsules, setCapsules] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    currentPage: 0,
+    totalPages: 1,
+    totalElements: 0,
+    pageSize: pageSize,
+    isFirst: true,
+    isLast: true,
+  });
+  const [loading, setLoading] = useState(false);
 
   // ✅ 잠김 모달
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
-  const [lockedMessage, setLockedMessage] = useState(
-    "아직 열 수 없는 타임캡슐이에요"
-  );
+  const [lockedMessage, setLockedMessage] =
+    useState("아직 열 수 없는 타임캡슐이에요");
 
-  // ✅ 목데이터: API 연동 전 테스트용
-  const mockCapsules = useMemo(
-    () => [
-      // canAccess=false (투명 박스)
-      {
-        id: 1,
-        title: "2년 뒤의 나에게",
-        content: null,
-        theme: "graduation",
-        imageUrl: null,
-        openAt: "2027-01-20T15:30:00",
-        isNotified: false,
-        senderId: 1,
-        senderNickname: "user1",
-        senderProfileImageUrl: null,
-        receiverId: 2,
-        receiverNickname: "me",
-        receiverProfileImageUrl: null,
-        createdAt: "2025-09-30T10:00:00.000000",
-        opened: false,
-        canAccess: false,
-      },
+  // -------------------------
+  // 탭 + 토글 → API type 매핑
+  // -------------------------
+  const apiType = useMemo(() => {
+    // ⚠️ 토글 문구가 "열린 캡슐만 보기"인데
+    // API 타입이 OPENED(열어본 캡슐)인지,
+    // canAccess(열 수 있는 캡슐)인지 팀 정의 맞춰야 함.
+    // 지금은 스펙에 맞춰 OPENED로 매핑함.
+    if (showOpenOnly) return "OPENED";
 
-      // canAccess=true & opened=false (파란 박스)
-      {
-        id: 2,
-        title: "내일의 나에게",
-        content: null,
-        theme: "daily",
-        imageUrl: null,
-        openAt: "2026-01-01T15:30:00",
-        isNotified: false,
-        senderId: 2,
-        senderNickname: "me",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-10-01T12:00:00.000000",
-        opened: false,
-        canAccess: true,
-      },
+    if (activeIndex === 0) return "ALL";
+    if (activeIndex === 1) return "RECEIVED";
+    return "SENT"; // "나의 캡슐"을 SENT로 쓸지(내가 보낸 캡슐), 팀 정의에 맞춰 조정
+  }, [activeIndex, showOpenOnly]);
 
-      // canAccess=true & opened=true (검정20% + 파랑테두리)
-      {
-        id: 3,
-        title: "열린 캡슐 예시",
-        content: "열렸으니까 내용이 보입니다!",
-        theme: "happy",
-        imageUrl: null,
-        openAt: "2025-09-01T09:00:00",
-        isNotified: true,
-        senderId: 2,
-        senderNickname: "me",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-08-20T14:00:00.000000",
-        opened: true,
-        canAccess: true,
-      },
+  // -------------------------
+  // API 호출
+  // -------------------------
+  useEffect(() => {
+    const fetchCapsules = async () => {
+      try {
+        setLoading(true);
 
-      // 받은 캡슐 예시
-      {
-        id: 4,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-03-03T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: false,
-      },
-      {
-        id: 5,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-      {
-        id: 6,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-      {
-        id: 7,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-      {
-        id: 8,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-      {
-        id: 9,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-      {
-        id: 10,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: true,
-        canAccess: true,
-      },
-      {
-        id: 11,
-        title: "받은 캡슐",
-        content: null,
-        theme: "letter",
-        imageUrl: null,
-        openAt: "2026-01-02T00:00:00",
-        senderId: 9,
-        senderNickname: "user9",
-        receiverId: 2,
-        receiverNickname: "me",
-        createdAt: "2025-11-11T09:30:00.000000",
-        opened: false,
-        canAccess: true,
-      },
-    ],
-    []
-  );
+        const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+          // 로그인 전이면 빈 화면 처리 or 로그인 유도
+          setCapsules([]);
+          setPageInfo((prev) => ({
+            ...prev,
+            totalElements: 0,
+            totalPages: 1,
+            currentPage: 0,
+          }));
+          return;
+        }
 
-  // ✅ 탭 필터
-  const filteredByTab = useMemo(() => {
-    if (activeIndex === 0) return mockCapsules;
+        // UI(1부터) → API(0부터)
+        const apiPage = Math.max(0, page - 1);
 
-    if (activeIndex === 1) {
-      return mockCapsules.filter(
-        (c) => c.receiverId === myUserId && c.senderId !== myUserId
-      );
-    }
+        const params = new URLSearchParams();
+        params.set("type", apiType);
+        params.set("page", String(apiPage));
+        params.set("size", String(pageSize));
+        params.set("sort", `createdAt,${sortOrder}`);
 
-    // activeIndex === 2 (나의 캡슐: senderId === receiverId === me)
-    return mockCapsules.filter(
-      (c) => c.senderId === c.receiverId && c.senderId === myUserId
-    );
-  }, [activeIndex, mockCapsules, myUserId]);
+        // ✅ 엔드포인트: 너가 말한 /api/timecapsules 기준
+        const res = await fetch(
+          `${apiBaseUrl}/api/timecapsules?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
 
-  // ✅ 열린 캡슐만 보기 (canAccess 기준)
-  const finalList = useMemo(() => {
-    if (!showOpenOnly) return filteredByTab;
-    return filteredByTab.filter((c) => c.canAccess === true);
-  }, [filteredByTab, showOpenOnly]);
+        const json = await res.json();
 
-  // ✅ createdAt 정렬
-  const sortedList = useMemo(() => {
-    const arr = [...finalList];
-    arr.sort((a, b) => {
-      const ta = new Date(a.createdAt).getTime();
-      const tb = new Date(b.createdAt).getTime();
-      return sortOrder === "desc" ? tb - ta : ta - tb;
-    });
-    return arr;
-  }, [finalList, sortOrder]);
+        if (!res.ok || json?.success === false) {
+          // 예: INVALID_CAPSULE_TYPE (400)
+          throw new Error(json?.message || "타임캡슐 목록 조회 실패");
+        }
 
-  // ✅ 페이지 계산
-  const totalElements = sortedList.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
-  const safePage = Math.min(page, totalPages);
+        // ✅ 응답 구조: json.data.data = 리스트, 나머지 페이지 정보
+        const payload = json?.data;
+        const list = payload?.data ?? [];
 
-  const pagedList = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return sortedList.slice(start, start + pageSize);
-  }, [sortedList, safePage, pageSize]);
+        // ✅ id 타입(문자/숫자) 섞여도 안전하게 숫자로 맞춤
+        const normalized = list.map((c) => ({
+          ...c,
+          senderId: Number(c.senderId),
+          receiverId: Number(c.receiverId),
+        }));
+
+        // ✅ 규칙 적용: receiver가 "나"인 캡슐만 보여주기
+        // (나→나 포함, 남→나 포함, 나→남 제외)
+        const filtered = normalized.filter((c) => c.receiverId === myUserId);
+
+        setCapsules(filtered);
+
+        setPageInfo({
+          currentPage: payload?.currentPage ?? apiPage,
+          totalPages: payload?.totalPages ?? 1,
+          totalElements: payload?.totalElements ?? list.length,
+          pageSize: payload?.pageSize ?? pageSize,
+          isFirst: payload?.isFirst ?? true,
+          isLast: payload?.isLast ?? true,
+        });
+      } catch (e) {
+        console.error(e);
+        setCapsules([]);
+        setPageInfo((prev) => ({
+          ...prev,
+          totalElements: 0,
+          totalPages: 1,
+          currentPage: 0,
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCapsules();
+  }, [apiType, page, pageSize, sortOrder, activeIndex, myUserId]);
+
+  // -------------------------
+  // 페이지네이션 (UI용)
+  // -------------------------
+  const totalPages = Math.max(1, pageInfo.totalPages || 1);
+
+  // page state가 totalPages보다 커질 때 자동 보정 (버그 방지)
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+    if (page < 1) setPage(1);
+  }, [page, totalPages]);
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
-    [totalPages]
+    [totalPages],
   );
 
-  const emptyCount = Math.max(0, pageSize - pagedList.length);
+  const emptyCount = Math.max(0, pageSize - capsules.length);
 
-  // ✅ "11개 중 1-8" 표시
+  // ✅ "11개 중 1-8" 표시 (API totalElements 기반)
   const rangeText = useMemo(() => {
-    if (totalElements === 0) return `0개 중 0-0`;
-    const start = (safePage - 1) * pageSize + 1;
-    const end = Math.min(safePage * pageSize, totalElements);
-    return `${totalElements}개 중 ${start}-${end}`;
-  }, [totalElements, safePage, pageSize]);
+    const total = pageInfo.totalElements ?? 0;
+    if (total === 0) return `0개 중 0-0`;
+
+    const start = (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, total);
+    return `${total}개 중 ${start}-${end}`;
+  }, [pageInfo.totalElements, page, pageSize]);
 
   return (
     <div
       className="timecapsule-container"
       style={{ backgroundImage: `url(${bg})` }}
     >
-      {/* 상단 영역 (왼쪽: 탭 / 오른쪽: 캡슐 생성 버튼) */}
+      {/* 상단 영역 */}
       <div className="tc-topbar">
-        {/* 상단 세부 네비 */}
         <div
           style={{
             display: "flex",
@@ -296,13 +196,8 @@ const TimeCapsule = () => {
                 key={tab}
                 onClick={() => {
                   setActiveIndex(index);
+                  setShowOpenOnly(false); // 탭 바꾸면 열린필터 끄고 싶으면 유지
                   setPage(1);
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.opacity = 1;
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.opacity = 0.7;
                 }}
                 style={{
                   position: "relative",
@@ -316,8 +211,6 @@ const TimeCapsule = () => {
                 }}
               >
                 {tab}
-
-                {/* 클릭 시 밑줄 */}
                 <span
                   style={{
                     position: "absolute",
@@ -336,7 +229,6 @@ const TimeCapsule = () => {
           })}
         </div>
 
-        {/* 오른쪽: 캡슐 생성 */}
         <div className="tc-topbar-right">
           <button
             type="button"
@@ -372,17 +264,23 @@ const TimeCapsule = () => {
       {/* 카드 목록 + 페이지네이션 */}
       <div className="tc-layout">
         <div className="tc-grid">
-          {pagedList.length === 0 ? (
+          {loading ? (
+            <>
+              <div className="tc-empty">불러오는 중...</div>
+              {Array.from({ length: pageSize }).map((_, idx) => (
+                <div key={`empty-${idx}`} className="tc-card--empty" />
+              ))}
+            </>
+          ) : capsules.length === 0 ? (
             <>
               <div className="tc-empty">캡슐이 없습니다.</div>
-
               {Array.from({ length: pageSize }).map((_, idx) => (
                 <div key={`empty-${idx}`} className="tc-card--empty" />
               ))}
             </>
           ) : (
             <>
-              {pagedList.map((capsule) => (
+              {capsules.map((capsule) => (
                 <TimeCapsuleCard
                   key={capsule.id}
                   capsule={capsule}
@@ -412,7 +310,7 @@ const TimeCapsule = () => {
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                className={`tc-page ${p === safePage ? "active" : ""}`}
+                className={`tc-page ${p === page ? "active" : ""}`}
               >
                 {p}
               </button>
@@ -421,7 +319,6 @@ const TimeCapsule = () => {
         )}
       </div>
 
-      {/* ✅ 모달은 tc-layout 밖 + container 끝나기 직전에 */}
       <LockedCapsuleModal
         open={lockedModalOpen}
         message={lockedMessage}

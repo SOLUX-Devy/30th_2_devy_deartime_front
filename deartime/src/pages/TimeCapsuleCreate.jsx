@@ -18,12 +18,16 @@ function formatTodayYYYYMMDD() {
 
 export default function TimeCapsuleCreatePage() {
   const navigate = useNavigate();
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   // ✅ 상태
   const [receiver, setReceiver] = useState(null);
   const [openDate, setOpenDate] = useState(formatTodayYYYYMMDD());
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  // (선택) 테마 - UI 없으면 기본 null로 전송
+  const [theme, setTheme] = useState(null);
 
   // ✅ FriendSelect 모달 열림 여부
   const [showFriendSelect, setShowFriendSelect] = useState(false);
@@ -33,14 +37,20 @@ export default function TimeCapsuleCreatePage() {
   const [pickedFile, setPickedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
+  // ✅ 전송 상태
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const imageSrc = previewUrl || noPhoto;
 
+  // ⚠️ 현재는 이미지 필수로 막아둔 상태(!!pickedFile)
+  // API 스펙상 imageFile은 선택이지만, 너 기존 UI 요구대로면 유지해도 됨.
   const isFormValid =
     !!receiver &&
     openDate?.trim() &&
     title.trim().length > 0 &&
     content.trim().length > 0 &&
-    !!pickedFile;
+    !!pickedFile &&
+    !isSubmitting;
 
   const onClickImageBox = () => {
     fileRef.current?.click();
@@ -62,18 +72,70 @@ export default function TimeCapsuleCreatePage() {
     setReceiver(null);
   };
 
-  const onSubmit = () => {
+  // ✅ openAt: date만 받으니까 임시로 00:00:00 붙여서 ISO 8601 만들기
+  const buildOpenAtISO = (yyyyMMdd) => {
+    if (!yyyyMMdd) return "";
+    return `${yyyyMMdd}T00:00:00`;
+  };
+
+  const onSubmit = async () => {
     if (!isFormValid) return;
 
-    console.log({
-      receiver,
-      openDate,
-      title,
-      content,
-      pickedFile,
-    });
+    try {
+      setIsSubmitting(true);
 
-    navigate("/timecapsule");
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      // ✅ request(JSON) payload 구성
+      const payload = {
+        title: title.trim(),
+        content: content.trim(),
+        theme: theme || null, // 선택사항
+        receiverId: receiver.id, // ✅ FriendSelect에서 받은 id
+        openAt: buildOpenAtISO(openDate),
+      };
+
+      // ✅ multipart/form-data 구성
+      const formData = new FormData();
+
+      // request는 Text(JSON) + Content-Type: application/json 이어야 함
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(payload)], { type: "application/json" })
+      );
+
+      // imageFile은 선택사항 (너 UI에서는 필수로 막아두긴 함)
+      if (pickedFile) {
+        formData.append("imageFile", pickedFile);
+      }
+
+      // ✅ 너가 말한 형식 그대로 (Authorization만 헤더에)
+      const res = await fetch(`${apiBaseUrl}/api/timecapsules`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        // 서버 message 그대로 보여주기 (400: self / not friend 등)
+        alert(json?.message || "타임캡슐 생성 실패");
+        return;
+      }
+
+      // 성공
+      navigate("/timecapsule");
+    } catch (e) {
+      alert(e?.message || "오류가 발생했습니다.");
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -192,7 +254,7 @@ export default function TimeCapsuleCreatePage() {
                 onClick={onSubmit}
                 disabled={!isFormValid}
               >
-                보내기
+                {isSubmitting ? "보내는 중..." : "보내기"}
               </button>
             </div>
           </div>
@@ -204,13 +266,10 @@ export default function TimeCapsuleCreatePage() {
         <FriendSelect
           onClose={() => setShowFriendSelect(false)}
           onSelect={(friend) => {
-            // ✅ 여기서 receiver 구조를 "nickname"으로 통일
+            // FriendSelect에서 내려준 friendId / friendNickname 사용
             setReceiver({
               id: friend.friendId,
               nickname: friend.friendNickname,
-              profileImageUrl: friend.friendProfileImageUrl,
-              bio: friend.friendBio,
-              requestedAt: friend.requestedAt,
               raw: friend,
             });
             setShowFriendSelect(false);

@@ -20,6 +20,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  margin-top: 7px;
   width: 100%;
 }
 
@@ -194,6 +195,7 @@
   pointer-events: auto;
 }
 
+
 /* overlay 뜨면 spotlight 아닌 애들 클릭 막기 */
 .letterbox-container:has(.context-menu-overlay) .letter-item:not(.spotlight) {
   pointer-events: none;
@@ -206,6 +208,11 @@
   transition: all 0.3s ease;
   pointer-events: none;
   cursor: default;
+}
+
+/* LetterboxPage 안에 있는 SendButton만 아래로 */
+.letterbox-header .tc-topbar-right {
+  margin-top: 20px; /* 원하는 만큼 조절 */
 }
 
 .letterbox-container.is-focusing .letter-card.focused {
