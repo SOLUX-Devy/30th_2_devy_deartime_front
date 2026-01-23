@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserContext } from "./UserContext"; 
+import { UserContext } from "./UserContext";
 
 export default function UserProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -17,12 +17,15 @@ export default function UserProvider({ children }) {
       token = token.replace(/"/g, "");
 
       try {
-        const res = await fetch("/api/users/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/users/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const json = await res.json();
 
@@ -35,7 +38,7 @@ export default function UserProvider({ children }) {
           setUser(null);
         }
       } catch (err) {
-        console.error(err);
+        console.error("유저 조회 실패", err);
         setUser(null);
       } finally {
         setLoading(false);
