@@ -43,8 +43,8 @@
 /* ✅ X 버튼: 모달 우상단 고정 */
 .profile-manage-modal .close-btn {
   position: absolute;
-  top: 25px;
-  right: 25px;
+  top: 30px;
+  right: 30px;
 
   margin: 0;
   padding: 0;
@@ -96,8 +96,7 @@
 
 /* 입력 요소 아래에 간격 주기 */
 .input-group input,
-.input-group textarea,
-.nickname-row {
+.input-group textarea {
   margin-bottom: 16px;
 }
 
@@ -133,6 +132,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  margin-bottom: 0;
 }
 
 /* 닉네임 중복확인 버튼 정렬 수정 */
@@ -408,3 +408,18 @@
   cursor: pointer;
 }
 
+/* 닉네임 중복확인 안내/결과 메시지 */
+.field-msg {
+  margin-top: -10px;   /* nickname-row 바로 아래 붙게 */
+  margin-bottom: 16px; /* 다음 input-group 간격 */
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.field-msg.error {
+  color: #ff5a5a;
+}
+
+.field-msg.success {
+  color: #7cffb2;
+}
