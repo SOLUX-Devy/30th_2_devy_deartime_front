@@ -46,6 +46,8 @@ const SendLetter = () => {
 };
 
   const handleSend = async () => {
+    console.log("현재 선택된 친구 상태:", selectedFriend);
+    
     if (!selectedFriend) {
       alert("받는 사람을 선택해주세요!");
       return;
