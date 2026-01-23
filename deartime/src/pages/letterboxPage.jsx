@@ -1,6 +1,7 @@
 // src/pages/letterboxPage.jsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import "../styles/LetterboxPage.css";
+import { useNavigate } from "react-router-dom";
 
 import LetterDetail from "../components/LetterDetail";
 import LetterCard from "../components/LetterCard";
@@ -28,6 +29,7 @@ const THEME_IMAGES = {
 
 export default function Letterbox() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+  const navigate = useNavigate();
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -383,7 +385,7 @@ const handleConfirmDelete = async () => {
                     <p>친구를 선택하면 우리의 추억이 펼쳐집니다.</p>
                   </div>
                 </div>
-                
+
               </div>
             ) : (
               <SharedMailbox
@@ -396,8 +398,17 @@ const handleConfirmDelete = async () => {
               <FriendSelect
                 onClose={() => setIsSelectorOpen(false)}
                 onSelect={(friend) => {
-                  setSelectedFriend(friend);
+                  // 선택 시 상태 저장 대신 페이지 이동
                   setIsSelectorOpen(false);
+                  
+                  // navigate를 사용하여 /mailbox/123 주소로 이동합니다.
+                  // state를 통해 닉네임 정보를 넘겨주면 다음 페이지에서 바로 쓸 수 있습니다.
+                  navigate(`/mailbox/${friend.friendId}`, {
+                    state: { 
+                      friendId: friend.friendId, 
+                      friendNickname: friend.friendNickname 
+                    },
+                  });
                 }}
               />
             )}

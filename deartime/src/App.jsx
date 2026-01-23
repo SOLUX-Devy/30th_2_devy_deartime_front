@@ -17,6 +17,7 @@ import FriendList from "./pages/FriendList";
 import FriendInvite from "./components/FriendInvite";
 import AlbumDetail from "./pages/AlbumDetail";
 import OAuthCallback from "./pages/oauthCallback.jsx";
+import SharedMailbox from "./components/SharedMailbox.jsx";
 
 /* ✅ 여기 추가: FriendSelectPage import */
 import FriendSelectPage from "./components/FriendSelect"; 
@@ -53,6 +54,8 @@ export default function App() {
 
           <Route path="/letterbox/sendLetter" element={<SendLetterPage />} />
           <Route path="/letterbox" element={<Letterbox />} />
+
+          <Route path="/mailbox/:id" element={<SharedMailbox />} />
 
           <Route path="/timecapsule" element={<Timecapsule />} />
           <Route path="/timecapsule/create" element={<TimeCapsuleCreate />} />
