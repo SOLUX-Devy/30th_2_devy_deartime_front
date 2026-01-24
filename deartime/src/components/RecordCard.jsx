@@ -1,4 +1,4 @@
-export default function RecordCard({ imageUrl }) {
+export default function RecordCard({ imageUrl, title = "즐겨찾기" }) {
   return (
     <div className="card card-record">
       <div className="card-title">RECORD</div>
@@ -7,7 +7,8 @@ export default function RecordCard({ imageUrl }) {
         <img src={imageUrl} alt="record" />
       </div>
 
-      <div className="card-text">즐겨찾기</div>
+      {/* ✅ 하단 고정 */}
+      <div className="card-footer">{title}</div>
     </div>
   );
 }

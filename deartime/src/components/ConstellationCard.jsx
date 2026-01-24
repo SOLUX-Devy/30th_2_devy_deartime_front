@@ -27,18 +27,22 @@ const constellationImages = {
 };
 
 export default function ConstellationCard({ birthday }) {
-  const month = new Date(birthday).getMonth() + 1;
+  const date = birthday ? new Date(birthday) : null;
+  const month = date && !isNaN(date) ? date.getMonth() + 1 : 1;
   const imageSrc = constellationImages[month];
 
   return (
-    <div className="card constellation">
+    <div className="card-wrapper" style={{ cursor: "pointer" }}>
       <div className="card-title">CONSTELLATION</div>
 
-      <div className="card-image">
-        <img src={imageSrc} alt={`${month}월 별자리`} />
-      </div>
+      <div className="card constellation">
+        <div className="card-image">
+          <img src={imageSrc} alt={`${month}월 별자리`} />
+        </div>
 
-      <div className="card-text">{birthday}</div>
+        <div className="card-footer">{birthday}</div>
+      </div>
     </div>
   );
 }
+

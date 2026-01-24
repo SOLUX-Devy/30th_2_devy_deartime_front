@@ -28,7 +28,7 @@
     font-style: normal;
     font-weight: 300;
     line-height: normal;
-    margin-bottom: 120px;
+    margin-bottom: 60px;
 }
 
 .cards {
@@ -66,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .card-image img {
@@ -75,13 +75,14 @@
   object-fit: contain;
 }
 
-.card-record .card-image img {
-    border-radius: 20px;
-}
+.card-footer {
+  margin-top: 60px;
+  padding-bottom: 20px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-/* 하단 텍스트 */
-.card-text {
-  margin-top: 35px;             
   font-size: 16px;
   font-weight: 400;
   color: #fff;
