@@ -4,7 +4,7 @@ import React, { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { Pen, Trash2, ChevronLeft, ChevronRight, Videotape } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
-import ReallyDelete from "../components/ReallyDelete"; // ✅ 삭제 확인 모달 임포트
+import ReallyDelete from "../components/ReallyDelete"; 
 import axios from "axios";
 
 const Gallery = () => {
@@ -43,7 +43,7 @@ const Gallery = () => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ✅ 삭제 모달 상태 관리
+  // 삭제 모달 상태 관리
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     type: null, // 'photo' 또는 'album'
@@ -62,6 +62,10 @@ const Gallery = () => {
     return filename.replace(/\.[^/.]+$/, "");
   };
 
+  /**
+   * ⭐ 모든 앨범 커버를 동일하게 체크하는 함수
+   * 플레이스홀더 주소인 경우에도 비어있는 것으로 간주하여 아이콘을 띄웁니다.
+   */
   const ensureHttps = (url) => {
     if (!url) return "";
     const cleaned = url.replace(/[<>]/g, "");
@@ -69,8 +73,7 @@ const Gallery = () => {
     return cleaned;
   };
 
-  // --- API 데이터 호출 로직 ---
-
+  /* [1] 사진 목록 조회 (Infinite Scroll) */
   const fetchPhotos = useCallback(
     async (page, isInitial = false) => {
       if (isFetchingRef.current) return;
@@ -102,6 +105,11 @@ const Gallery = () => {
     [BASE_PATH, getAuthHeader],
   );
 
+  /**
+   * [2] 앨범 목록 조회 및 정렬 로직
+   * 1순위: '즐겨찾기' 제목 앨범 고정
+   * 2순위: 최근 수정일(updatedAt) 내림차순 정렬
+   */
   const fetchAlbums = useCallback(async () => {
     setLoading(true);
     try {
@@ -114,6 +122,7 @@ const Gallery = () => {
       const sortedAlbums = [...validAlbums].sort((a, b) => {
         if (a.title === "즐겨찾기") return -1;
         if (b.title === "즐겨찾기") return 1;
+
         const dateA = new Date(a.updatedAt || a.createdAt || 0);
         const dateB = new Date(b.updatedAt || b.createdAt || 0);
         return dateB - dateA;
@@ -130,9 +139,7 @@ const Gallery = () => {
     }
   }, [BASE_PATH, getAuthHeader]);
 
-  // --- 삭제 및 수정 로직 ---
-
-  // ✅ 삭제 모달 확정 시 실행되는 함수
+  /* 삭제 확인 및 실행 */
   const handleConfirmDelete = async () => {
     const { type, targetId } = deleteModal;
     try {
@@ -141,7 +148,7 @@ const Gallery = () => {
           headers: getAuthHeader(),
         });
         setPhotos((prev) => prev.filter((p) => p.photoId !== targetId));
-        fetchAlbums(); // 앨범 커버나 카운트 갱신을 위해 호출
+        fetchAlbums(); // 삭제 시 앨범 정보(카운트, 업데이트 시간) 갱신
       } else if (type === "album") {
         const res = await axios.delete(`${BASE_PATH}/albums/${targetId}`, {
           headers: getAuthHeader(),
@@ -151,13 +158,13 @@ const Gallery = () => {
         }
       }
     } catch (err) {
-      alert(err.response?.data?.data || "삭제 실패");
+      alert("삭제 실패");
     } finally {
-      // 모달 닫기 및 상태 초기화
       setDeleteModal({ isOpen: false, type: null, targetId: null });
     }
   };
 
+  /* 즐겨찾기 즉시 토글 (RECORD 탭) */
   const handleToggleFavorite = async (e, photoId, currentStatus) => {
     e.stopPropagation();
     if (!favAlbumId) {
@@ -171,17 +178,13 @@ const Gallery = () => {
           headers: getAuthHeader()
         });
       } else {
-        await axios.post(`${BASE_PATH}/albums/${favAlbumId}/photos`, 
-          { photoIds: [Number(photoId)] }, 
-          { headers: getAuthHeader() }
-        );
       }
       
       setPhotos(prev => prev.map(p => 
         p.photoId === photoId ? { ...p, isFavorite: !currentStatus } : p
       ));
       
-      fetchAlbums();
+      fetchAlbums(); // 즐겨찾기 추가/제거 시 앨범 순서 갱신
     } catch (err) {
       console.error("즐겨찾기 토글 실패:", err);
     }
@@ -217,7 +220,7 @@ const Gallery = () => {
         setIsModalOpen(false);
       }
     } catch (err) {
-      alert("앨범 생성 실패: " + (err.response?.data?.data || "서버 에러"));
+      alert("앨범 생성 실패");
     } finally {
       setLoading(false);
     }
@@ -283,16 +286,28 @@ const Gallery = () => {
           fetchAlbums();
         }
       } catch (err) {
-        alert(err.response?.data?.data || "수정 실패");
+        alert("수정 실패");
       }
       setEditingId(null);
     } else if (e.key === "Escape") setEditingId(null);
   };
 
-  // --- 이펙트 및 스크롤 핸들러 ---
-
+  /**
+   * ⭐ 데이터 동기화 및 앨범 커버 반영
+   * location.key 감시로 페이지 이동 시(뒤로가기 포함) 데이터 새로고침
+   */
   useEffect(() => {
     const syncData = async () => {
+      // AlbumDetail에서 수정된 정보가 넘어왔다면 목록 상태에 먼저 선반영
+      if (location.state?.updatedAlbum) {
+        const updated = location.state.updatedAlbum;
+        setAlbums((prev) =>
+          prev.map((a) =>
+            a.albumId === updated.albumId ? { ...a, ...updated } : a
+          )
+        );
+      }
+
       if (activeIndex === 0) {
         setPhotos([]);
         setPhotoPage(0);
@@ -304,8 +319,9 @@ const Gallery = () => {
       }
     };
     syncData();
-  }, [activeIndex, fetchPhotos, fetchAlbums]);
+  }, [activeIndex, location.key]); 
 
+  /* 무한 스크롤 Observer */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
 
@@ -359,16 +375,11 @@ const Gallery = () => {
       style={{ backgroundImage: `url(${bg})` }}
       onClick={() => setContextMenu({ ...contextMenu, show: false })}
     >
-      {/* 1. 조건부 렌더링: deleteModal.isOpen이 true일 때만 컴포넌트를 그립니다. */}
+      {/* 1. 삭제 확인 전용 모달 */}
       {deleteModal.isOpen && (
         <ReallyDelete
-          // 2. 프롭 매칭: ReallyDelete는 onClose 대신 onCancel을 사용합니다.
           onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
-          
-          // 3. 실행 함수 연결
           onConfirm={handleConfirmDelete}
-          
-          // 4. 로딩 상태 연결: Gallery의 loading 상태를 그대로 전달
           isLoading={loading}
         />
       )}
@@ -407,8 +418,6 @@ const Gallery = () => {
             className="menu-item delete"
             onClick={() => {
               const type = activeIndex === 0 ? "photo" : "album";
-              
-              // 즐겨찾기 앨범 삭제 방지 로직 유지
               if (type === "album") {
                 const target = albums.find(a => a.albumId === contextMenu.targetId);
                 if (target?.title === "즐겨찾기") {
@@ -417,8 +426,6 @@ const Gallery = () => {
                   return;
                 }
               }
-
-              // ✅ 모달 오픈 상태로 변경
               setDeleteModal({
                 isOpen: true,
                 type: type,
@@ -479,11 +486,7 @@ const Gallery = () => {
                             photo.isFavorite ? "active" : ""
                           }`}
                           onClick={(e) =>
-                            handleToggleFavorite(
-                              e,
-                              photo.photoId,
-                              photo.isFavorite,
-                            )
+                            handleToggleFavorite(e, photo.photoId, photo.isFavorite)
                           }
                           style={{
                             position: "absolute",
@@ -504,13 +507,8 @@ const Gallery = () => {
                           onBlur={() => setEditingId(null)}
                         />
                       ) : (
-                        <p
-                          className="photo-title"
-                          onClick={() => setEditingId(photo.photoId)}
-                        >
-                          {photo.caption
-                            ? stripExtension(photo.caption)
-                            : "설명 추가"}
+                        <p className="photo-title" onClick={() => setEditingId(photo.photoId)}>
+                          {photo.caption ? stripExtension(photo.caption) : "설명 추가"}
                         </p>
                       )}
                     </div>
@@ -522,9 +520,7 @@ const Gallery = () => {
               <div ref={scrollObserverRef} style={{ height: "50px" }} />
             )}
             {loading && (
-              <div style={{ textAlign: "center", padding: "20px", color: "white" }}>
-                로딩 중...
-              </div>
+              <div style={{ textAlign: "center", padding: "20px", color: "white" }}>로딩 중...</div>
             )}
           </>
         ) : (
@@ -543,10 +539,12 @@ const Gallery = () => {
                     }
                     style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
                   >
+                    {/* ⭐ [수정됨] 모든 앨범에 대해 '공통된' 규칙 적용 */}
+                    {/* 백엔드가 커버 이미지를 안 보내주면(null), 자동으로 아이콘이 뜹니다. */}
                     {ensureHttps(album.coverImageUrl) ? (
                       <img src={ensureHttps(album.coverImageUrl)} alt="" />
                     ) : (
-                      <div className="empty-cover-placeholder" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <div className="empty-cover-placeholder">
                         <Videotape size={81} color="#0E77BC" strokeWidth={0.7} opacity={0.6} />
                       </div>
                     )}
@@ -572,29 +570,11 @@ const Gallery = () => {
             </div>
             {totalAlbumPages > 1 && (
               <div className="album-pagination">
-                <button
-                  onClick={() => setAlbumPage((p) => Math.max(1, p - 1))}
-                  disabled={albumPage === 1}
-                >
-                  <ChevronLeft size={20} />
-                </button>
+                <button onClick={() => setAlbumPage((p) => Math.max(1, p - 1))} disabled={albumPage === 1}><ChevronLeft size={20} /></button>
                 {[...Array(totalAlbumPages)].map((_, i) => (
-                  <span
-                    key={i}
-                    className={`page-num ${albumPage === i + 1 ? "active" : ""}`}
-                    onClick={() => setAlbumPage(i + 1)}
-                  >
-                    {i + 1}p
-                  </span>
+                  <span key={i} className={`page-num ${albumPage === i + 1 ? "active" : ""}`} onClick={() => setAlbumPage(i + 1)}>{i + 1}p</span>
                 ))}
-                <button
-                  onClick={() =>
-                    setAlbumPage((p) => Math.min(totalAlbumPages, p + 1))
-                  }
-                  disabled={albumPage === totalAlbumPages}
-                >
-                  <ChevronRight size={20} />
-                </button>
+                <button onClick={() => setAlbumPage((p) => Math.min(totalAlbumPages, p + 1))} disabled={albumPage === totalAlbumPages}><ChevronRight size={20} /></button>
               </div>
             )}
           </div>
