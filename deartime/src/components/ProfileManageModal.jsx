@@ -49,7 +49,11 @@ export default function ProfileManageModal({ userProfile, onClose }) {
 
   const [delegateSuccessMsg, setDelegateSuccessMsg] = useState("");
 
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
+    if (isSaving) return;
+
     setNickname(userProfile?.nickname || "");
     setBio(userProfile?.bio || "");
     setBirthDate(userProfile?.birthDate || "");
@@ -69,15 +73,9 @@ export default function ProfileManageModal({ userProfile, onClose }) {
       setSelectedDelegate(null);
     }
   }, [
-    userProfile?.nickname,
-    userProfile?.bio,
-    userProfile?.birthDate,
-    userProfile?.profileImageUrl,
-    userProfile?.proxyUserId,
-    userProfile?.proxyNickname,
+    userProfile, // 의존성을 객체 하나로 묶거나 필요한 필드만 정밀하게 체크
+    isSaving     // 저장 상태가 끝난 후 최신 정보를 반영하기 위해 추가
   ]);
-
-  const [isSaving, setIsSaving] = useState(false);
 
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [nicknameAvailable, setNicknameAvailable] = useState(null);
@@ -226,6 +224,7 @@ export default function ProfileManageModal({ userProfile, onClose }) {
   const handleSave = async () => {
     if (isSaveDisabled) return;
 
+    // 1. 닉네임 유효성 검사
     if (isNicknameChanged) {
       if (!nicknameChecked) {
         setNicknameMsg("닉네임 중복 확인을 해주세요");
@@ -240,159 +239,77 @@ export default function ProfileManageModal({ userProfile, onClose }) {
     }
 
     setIsSaving(true);
-
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setIsSaving(false);
-      return;
-    }
-
-    // ✅ 대리인 저장/삭제는 "저장 버튼"에서만 처리
-    const applyProxyChange = async () => {
-      // ✅ initial은 ref 우선 (props는 갱신 타이밍이 늦을 수 있음)
-      const initialId = initialProxyUserIdRef.current ?? null;
-      const currentId = selectedDelegate?.friendId ?? null;
-
-      const same =
-        initialId != null &&
-        currentId != null &&
-        String(initialId) === String(currentId);
-
-      // 1) 변경 없음
-      if ((initialId == null && currentId == null) || same) return false;
-
-      // 2) 삭제
-      if (initialId != null && currentId == null) {
-        await removeProxy(initialId);
-
-        // 즉시 컨텍스트 반영
-        setUser((prev) => ({
-          ...(prev || {}),
-          proxyUserId: null,
-          proxyNickname: null,
-        }));
-
-        localStorage.removeItem("proxyUserId");
-        localStorage.removeItem("proxyNickname");
-
-        return true;
-      }
-
-      // 3) 설정/변경
-      if (currentId != null) {
-        const expiredAt = new Date();
-        expiredAt.setFullYear(expiredAt.getFullYear() + 1);
-        const expiredAtStr = formatLocalDateTime(expiredAt);
-
-        const proxyData = await setProxy(currentId, expiredAtStr);
-
-        setUser((prev) => ({
-          ...(prev || {}),
-          proxyUserId: proxyData?.proxyUserId ?? currentId,
-          proxyNickname:
-            proxyData?.proxyUserNickname ??
-            selectedDelegate?.friendNickname ??
-            null,
-        }));
-
-        localStorage.setItem("proxyUserId", String(proxyData?.proxyUserId ?? currentId));
-        if (proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname) {
-          localStorage.setItem(
-            "proxyNickname",
-            proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname,
-          );
-        } else {
-          localStorage.removeItem("proxyNickname");
-        }
-
-        return true;
-      }
-
-      return false;
-    };
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
     try {
+      // --- [Step 1] 기본 프로필 정보 업데이트 (닉네임, 생일, 자기소개) ---
       const formData = new FormData();
-
       formData.append(
         "request",
         new Blob(
-          [
-            JSON.stringify({
-              nickname: normalizedNickname,
-              bio,
-              birthDate,
-            }),
-          ],
-          { type: "application/json" },
-        ),
+          [JSON.stringify({ nickname: normalizedNickname, bio, birthDate })],
+          { type: "application/json" }
+        )
       );
-
       if (profileImageFile) {
         formData.append("profileImage", profileImageFile);
       }
 
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
-      const res = await fetch(`${apiBaseUrl}/api/users/me`, {
+      const profileRes = await fetch(`${apiBaseUrl}/api/users/me`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      const json = await res.json();
+      if (!profileRes.ok) throw new Error("프로필 정보 업데이트 실패");
 
-      if (res.ok && json.success) {
-        setUser(json.data);
+      // --- [Step 2] 대리인(Proxy) 변경 사항 처리 ---
+      const initialId = initialProxyUserIdRef.current ?? null;
+      const currentId = selectedDelegate?.friendId ?? null;
+      let proxyStatusMsg = "";
 
-        if (json?.data?.userId)
-          localStorage.setItem("userId", String(json.data.userId));
-        if (json?.data?.nickname)
-          localStorage.setItem("nickname", json.data.nickname);
-        if (json?.data?.profileImageUrl)
-          localStorage.setItem("profileImageUrl", json.data.profileImageUrl);
-
-        // ✅ 대리인 변경은 저장 시점에만 적용
-        try {
-          const proxyChanged = await applyProxyChange();
-          if (proxyChanged) {
-            setDelegateSuccessMsg("대리인이 저장과 함께 업데이트 되었습니다!");
-          } else {
-            setDelegateSuccessMsg("프로필이 업데이트 되었습니다!");
-          }
-        } catch (e) {
-          console.error("대리인 처리 실패", e);
+      // ✅ 변경이 있을 때만 실행 (문자열 비교로 정확도 높임)
+      if (String(initialId ?? "") !== String(currentId ?? "")) {
+        
+        // A. 기존 대리인 삭제 (삭제만 하거나 다른 사람으로 변경할 때)
+        if (initialId !== null) {
+          await removeProxy(initialId);
+          localStorage.removeItem("proxyUserId");
+          localStorage.removeItem("proxyNickname");
         }
 
-        // ✅ 최신 me로 확정 반영 (초기값 ref 갱신까지)
-        const me = await refreshMe();
+        // B. 새로운 대리인 설정
+        if (currentId !== null) {
+          const expiredAt = new Date();
+          expiredAt.setFullYear(expiredAt.getFullYear() + 1);
+          const expiredAtStr = formatLocalDateTime(expiredAt);
 
-        if (me) {
-          initialProxyUserIdRef.current = me?.proxyUserId ?? null;
-
-          if (me?.proxyUserId && me?.proxyNickname) {
-            setSelectedDelegate({
-              friendId: me.proxyUserId,
-              friendNickname: me.proxyNickname,
-              friendProfileImageUrl: null,
-            });
-          } else {
-            setSelectedDelegate(null);
-          }
-        }
-      } else {
-        const msg = json.message || "프로필 업데이트에 실패했습니다.";
-
-        if (
-          msg.toLowerCase().includes("닉네임") ||
-          msg.toLowerCase().includes("nickname")
-        ) {
-          setNicknameMsg(msg);
-          setNicknameMsgType("error");
+          const proxyData = await setProxy(currentId, expiredAtStr);
+          
+          // localStorage 즉시 반영
+          localStorage.setItem("proxyUserId", String(proxyData?.proxyUserId ?? currentId));
+          localStorage.setItem("proxyNickname", proxyData?.proxyUserNickname ?? selectedDelegate?.friendNickname);
+          proxyStatusMsg = "대리인 설정이 완료되었습니다.";
+        } else {
+          proxyStatusMsg = "대리인이 해제되었습니다.";
         }
       }
+
+      // --- [Step 3] 최종 데이터 동기화 및 상태 업데이트 ---
+      // ✅ 모든 API 호출이 끝난 후 refreshMe를 호출해야 DB의 최신값이 반영됩니다.
+      const me = await refreshMe();
+
+      if (me) {
+        setDelegateSuccessMsg(proxyStatusMsg || "프로필이 업데이트 되었습니다!");
+        // 다음 변경 판단을 위해 초기값 Ref 갱신
+        initialProxyUserIdRef.current = me.proxyUserId ?? null;
+      }
+
     } catch (err) {
-      console.error("[Profile Update] Error:", err);
+      console.error("[Profile Update Error]:", err);
+      setNicknameMsg("저장 중 오류가 발생했습니다.");
+      setNicknameMsgType("error");
     } finally {
       setIsSaving(false);
     }
