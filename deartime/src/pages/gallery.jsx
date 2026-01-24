@@ -166,29 +166,42 @@ const Gallery = () => {
 
   /* 즐겨찾기 즉시 토글 (RECORD 탭) */
   const handleToggleFavorite = async (e, photoId, currentStatus) => {
-    e.stopPropagation();
-    if (!favAlbumId) {
-      alert("즐겨찾기 앨범 정보를 불러오는 중입니다.");
-      return;
-    }
+  e.stopPropagation();
+  
+  if (!favAlbumId) {
+    alert("즐겨찾기 앨범 정보를 불러오는 중입니다.");
+    return;
+  }
 
-    try {
-      if (currentStatus) {
-        await axios.delete(`${BASE_PATH}/albums/${favAlbumId}/photos/${photoId}`, {
-          headers: getAuthHeader()
-        });
-      } else {
-      }
-      
-      setPhotos(prev => prev.map(p => 
-        p.photoId === photoId ? { ...p, isFavorite: !currentStatus } : p
-      ));
-      
-      fetchAlbums(); // 즐겨찾기 추가/제거 시 앨범 순서 갱신
-    } catch (err) {
-      console.error("즐겨찾기 토글 실패:", err);
+  try {
+    // 1. 서버 상태 업데이트
+    if (currentStatus) {
+      // ✅ 현재 즐겨찾기 상태라면 -> 삭제(DELETE) 요청
+      await axios.delete(`${BASE_PATH}/albums/${favAlbumId}/photos/${photoId}`, {
+        headers: getAuthHeader()
+      });
+    } else {
+      // ✅ 현재 즐겨찾기가 아니라면 -> 추가(POST) 요청
+      // 이 부분이 비어있어서 괄호가 어색하게 느껴졌을 거예요!
+      await axios.post(`${BASE_PATH}/albums/${favAlbumId}/photos`, 
+        { photoIds: [Number(photoId)] }, 
+        { headers: getAuthHeader() }
+      );
     }
-  };
+    
+    // 2. 서버 요청 성공 시에만 로컬 상태(UI) 업데이트
+    setPhotos(prev => prev.map(p => 
+      p.photoId === photoId ? { ...p, isFavorite: !currentStatus } : p
+    ));
+    
+    // 3. 앨범 리스트 정보(사진 수 등) 동기화
+    fetchAlbums();
+
+  } catch (err) {
+    console.error("즐겨찾기 토글 실패:", err);
+    alert("즐겨찾기 처리에 실패했습니다. 명세서를 다시 확인해 주세요!");
+  }
+};
 
   const handleCreateAlbum = async (albumData) => {
     setLoading(true);
