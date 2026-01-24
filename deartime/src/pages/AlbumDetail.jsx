@@ -77,6 +77,7 @@ const AlbumDetail = () => {
       setLoading(true);
 
       if (isChangingCover) {
+        // 커버 변경 모드일 때는 선택된 첫 번째 사진만 사용 (단일 선택)
         const targetPhoto = selectedPhotos[0];
         const requestBody = {
           title: albumData.title,
@@ -90,9 +91,11 @@ const AlbumDetail = () => {
         );
 
         if (res.data.success) {
+          alert("앨범 커버가 성공적으로 수정되었습니다.");
           setImgSrc(res.data.data.coverImageUrl);
         }
       } else {
+        // 일반 사진 추가 모드
         const requestBody = {
           photoIds: selectedPhotos.map(p => Number(p.photoId))
         };
@@ -103,6 +106,7 @@ const AlbumDetail = () => {
         );
 
         if (res.data.success) {
+          alert("앨범에 사진이 추가되었습니다.");
           fetchAlbumPhotos();
         }
       }
@@ -157,12 +161,11 @@ const AlbumDetail = () => {
           <span className="album-nav-title">{albumData.title}</span>
         </div>
 
-        {/* 앨범 커버 클릭 시 모달 오픈 */}
+        {/* 앨범 커버 클릭 시 수정 가능 (즐겨찾기 포함 모든 앨범 동일 적용) */}
         <div className="album-banner" onClick={() => {
           setIsChangingCover(true);
           setIsAddModalOpen(true);
         }}>
-          {/* 커버 이미지가 없거나 기본 홀더 URL인 경우 아이콘 표시 */}
           {imgSrc && imgSrc !== "" && !imgSrc.includes("via.placeholder.com") ? (
             <img 
               src={imgSrc} 
@@ -217,6 +220,8 @@ const AlbumDetail = () => {
             setIsChangingCover(false);
           }} 
           onSelect={handlePhotoSelect} 
+    // 커버를 바꿀 때만 true가 되도록 설정
+          singleSelect={isChangingCover} 
         />
       )}
     </div>
