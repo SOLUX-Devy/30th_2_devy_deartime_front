@@ -16,14 +16,18 @@ import FriendDelete from "../components/FriendDelete.jsx";
 import { useUser } from "../context/UserContext"; 
 
 export default function FriendList() {
-  const { user } = useUser();
+  /* 1. 상태 관리 (States) */
+  const { user } = useUser(); 
+  const [friendsData, setFriendsData] = useState([]); // 보정된 전체 친구 데이터
+  const [keyword, setKeyword] = useState("");         // 검색어
+  const [isLoading, setIsLoading] = useState(true);   // 로딩 상태
+
+  // 모달 제어
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  const [keyword, setKeyword] = useState("");
-  const [friendsData, setFriendsData] = useState([]);
-
+  // 컨텍스트 메뉴 상태
   const [menu, setMenu] = useState({
     show: false,
     x: 0,
@@ -31,32 +35,27 @@ export default function FriendList() {
     targetId: null,
   });
 
-  const longPressTimerRef = useRef(null);
-  const pressTargetElRef = useRef(null);
+  /* 2. 참조 변수 (Refs) - 롱프레스 로직의 핵심 */
+  const longPressTimerRef = useRef(null);   // 타이머 핸들
+  const pressTargetElRef = useRef(null);    // 누르고 있는 엘리먼트
+  const justLongPressedRef = useRef(false); // 롱프레스 직후 클릭 무시용 플래그
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  // ✅ 1. 내 ID 정보를 localStorage의 'userId' 키로 저장
-  useEffect(() => {
-    if (user?.id !== undefined) {
-      localStorage.setItem("userId", String(user.id));
-    }
-  }, [user]);
+  const myId = user?.userId;
 
-  // =========================
-  // 친구 목록 조회 및 보정 (useEffect 내부 처리)
-  // =========================
+  /* 3. API 호출 및 데이터 보정 (Effect) */
   useEffect(() => {
-    let isMounted = true; // 메모리 누수 및 세테이트 에러 방지용 플래그
+    let isMounted = true;
+    if (!myId) return;
 
     const fetchFriendsData = async () => {
       try {
+        setIsLoading(true);
         const accessToken = localStorage.getItem("accessToken");
-        // ✅ 2. 사용자님이 명시한 'userId' 키 사용
-        const storedId = localStorage.getItem("userId");
-        const myId = (storedId !== null) ? Number(storedId) : null;
-
-        if (!accessToken || !isMounted) return;
+        
+        // ✅ 3. [수정] user.userId 대신 밖에서 가져온 myId를 사용하세요!
+        const numericMyId = Number(myId); 
 
         const res = await fetch(`${apiBaseUrl}/api/friends`, {
           method: "GET",
@@ -68,49 +67,106 @@ export default function FriendList() {
         if (res.ok && isMounted) {
           const rawList = data?.data?.friends ?? [];
           
-          // ✅ 3. 데이터 뒤집힘 보정 (내 ID가 0인 경우도 Number 타입으로 정확히 체크)
           const normalizedList = rawList.map(f => {
-            if (myId !== null && Number(f.friendId) === myId) {
-              return {
-                ...f,
-                userId: f.friendId,
-                friendId: f.userId,
-              };
+            // ✅ 4. 여기서도 numericMyId를 사용
+            if (Number(f.friendId) === numericMyId) {
+              return { ...f, userId: f.friendId, friendId: f.userId };
             }
             return f;
           });
 
-          // ✅ 4. 중복 제거: 보정 후 동일한 friendId가 생기는 경우 하나만 남김
+          // ✅ [중복 제거] 동일한 친구가 두 번 들어오는 경우 방지
           const uniqueList = normalizedList.reduce((acc, current) => {
             const isDuplicate = acc.find(item => item.friendId === current.friendId);
             if (!isDuplicate) acc.push(current);
             return acc;
           }, []);
 
-          setFriendsData(uniqueList);
-
-          // 디버깅 로그 유지
+          // 디버깅용 상세 로그 (유지)
           console.log("================================");
-          console.log("[FriendList] 데이터 보정 및 중복 제거 완료");
-          console.log("나의 기준 ID (myId):", myId);
+          console.log("[FriendList] 보정 완료 / 내 ID:", myId);
           uniqueList.forEach((f, idx) => {
-            console.log(`${idx + 1}번 👉 나: ${f.userId}, 친구: ${f.friendId}`);
+            console.log(`${idx + 1} 👉 나:${f.userId}, 친구:${f.friendId} (${f.friendNickname})`);
           });
           console.log("================================");
+
+          setFriendsData(uniqueList);
         }
       } catch (e) {
-        console.error("친구 목록 로드 중 오류 발생:", e);
+        console.error("[FriendList] 에러 발생:", e);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchFriendsData();
+    return () => { isMounted = false; };
+  }, [myId, apiBaseUrl]);
 
-    return () => { isMounted = false; }; // 클린업 함수
-  }, [user, apiBaseUrl]);
+  /* 4. 유틸리티 함수 (Handlers) */
 
-  // =========================
-  // 검색 필터
-  // =========================
+  // 메뉴를 카드 중앙에 띄우는 계산 함수
+  const openMenuAtCardCenter = (el, id) => {
+    const rect = el.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+  };
+
+  // 롱프레스 시작 (모바일/데스크톱 공용)
+  const startPress = (e, id) => {
+    if (e.type === "mousedown" && e.button !== 0) return; // 우클릭 제외
+
+    pressTargetElRef.current = e.currentTarget;
+    justLongPressedRef.current = false;
+
+    longPressTimerRef.current = setTimeout(() => {
+      const el = pressTargetElRef.current;
+      if (!el) return;
+      openMenuAtCardCenter(el, id);
+      justLongPressedRef.current = true; // 롱프레스 성공 표시
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500); // 0.5초 대기
+  };
+
+  // 롱프레스 취소 (손을 뗐을 때)
+  const cancelPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    pressTargetElRef.current = null;
+  };
+
+  // 우클릭 핸들러
+  const handleContextMenu = (e, id) => {
+    e.preventDefault();
+    openMenuAtCardCenter(e.currentTarget, id);
+  };
+
+  // 카드 클릭 핸들러 (롱프레스 후의 잔여 클릭 방어)
+  const handleCardClick = (e) => {
+    if (justLongPressedRef.current) {
+      e.stopPropagation();
+      justLongPressedRef.current = false;
+      return;
+    }
+    // 메뉴가 열려있을 때 클릭하면 닫기
+    if (menu.show) {
+      setMenu(prev => ({ ...prev, show: false }));
+    }
+  };
+
+  // 삭제 버튼 클릭 시 모달 열기
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    if (!menu.targetId) return;
+    setDeleteTargetId(menu.targetId);
+    setShowDeleteConfirm(true);
+    setMenu(prev => ({ ...prev, show: false }));
+  };
+
+  /* 5. 검색 필터링 (Memoization) */
   const filteredFriends = useMemo(() => {
     const k = keyword.trim().toLowerCase();
     if (!k) return friendsData;
@@ -119,83 +175,69 @@ export default function FriendList() {
     );
   }, [friendsData, keyword]);
 
-  const countText = `${friendsData.length}명의 친구`;
-
-  // =========================
-  // 컨텍스트 메뉴 처리
-  // =========================
-  useEffect(() => {
-    if (!menu.show) return;
-    const close = () => setMenu((prev) => ({ ...prev, show: false }));
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, [menu.show]);
-
-  const startPress = (e, id) => {
-    if (e.type === "mousedown" && e.button !== 0) return;
-    pressTargetElRef.current = e.currentTarget;
-    longPressTimerRef.current = setTimeout(() => {
-      const el = pressTargetElRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setMenu({ show: true, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, targetId: id });
-    }, 500);
-  };
-
-  const cancelPress = () => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); };
-
-  const handleContextMenu = (e, id) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenu({ show: true, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, targetId: id });
-  };
-
-  const handleDeleteClick = () => {
-    if (!menu.targetId) return;
-    setDeleteTargetId(menu.targetId);
-    setShowDeleteConfirm(true);
-    setMenu((prev) => ({ ...prev, show: false }));
-  };
-
   return (
     <div className="friendlist-container" style={{ backgroundImage: `url(${bg})` }}>
+      {/* 상단바 */}
       <div className="friend-topbar">
         <div className="friend-topnav"><span className="friend-tab active">친구 목록</span></div>
         <div className="friend-topbar-right">
-          <button type="button" className="friend-invite-btn" onClick={() => setShowInviteModal(true)}>친구 신청</button>
+          <button className="friend-invite-btn" onClick={() => setShowInviteModal(true)}>친구 신청</button>
         </div>
       </div>
 
+      {/* 검색창 */}
       <div className="friend-search-row">
         <div className="friend-search">
-          <input className="friend-search-input" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="친구를 검색하세요" />
-          <button type="button" className="friend-search-btn"><img className="friend-search-icon" src={finder} alt="" /></button>
+          <input 
+            className="friend-search-input" 
+            value={keyword} 
+            onChange={(e) => setKeyword(e.target.value)} 
+            placeholder="친구를 검색하세요" 
+          />
+          <button className="friend-search-btn"><img className="friend-search-icon" src={finder} alt="" /></button>
         </div>
-        <div className="friend-count">{countText}</div>
+        <div className="friend-count">{friendsData.length}명의 친구</div>
       </div>
 
-      {menu.show && (
-        <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
-          <div className="menu-item delete" onClick={handleDeleteClick}><Trash2 size={20} color="#FF4D4D" /><span>삭제</span></div>
+      {/* 리스트 본문 */}
+      {isLoading ? (
+        <div className="friend-state">목록을 불러오는 중...</div>
+      ) : filteredFriends.length === 0 ? (
+        <div className="friend-state">친구가 없습니다.</div>
+      ) : (
+        <div className="friend-grid">
+          {filteredFriends.map((f, index) => (
+            <div
+              key={`${f.friendId}-${index}`}
+              className={`friend-item ${menu.show && menu.targetId === f.friendId ? "spotlight" : ""}`}
+              onContextMenu={(e) => handleContextMenu(e, f.friendId)}
+              onMouseDown={(e) => startPress(e, f.friendId)}
+              onMouseUp={cancelPress}
+              onMouseLeave={cancelPress}
+              onTouchStart={(e) => startPress(e, f.friendId)}
+              onTouchEnd={cancelPress}
+              onClickCapture={(e) => handleCardClick(e, f.friendId)}
+            >
+              <FriendCard friend={f} />
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="friend-grid">
-        {filteredFriends.map((f, index) => (
-          // ✅ 5. Key 충돌 방지: 보정된 friendId와 index를 조합하여 고유성 확보
-          <div
-            key={`${f.friendId}-${index}`}
-            className={`friend-item ${menu.show && menu.targetId === f.friendId ? "spotlight" : ""}`}
-            onContextMenu={(e) => handleContextMenu(e, f.friendId)}
-            onMouseDown={(e) => startPress(e, f.friendId)}
-            onMouseUp={cancelPress} onMouseLeave={cancelPress}
-            onTouchStart={(e) => startPress(e, f.friendId)} onTouchEnd={cancelPress}
-          >
-            <FriendCard friend={f} />
+      {/* 컨텍스트 메뉴 및 오버레이 */}
+      {menu.show && (
+        <>
+          <div className="context-menu-overlay" onClick={() => setMenu(p => ({...p, show: false}))} />
+          <div className="custom-context-menu" style={{ top: menu.y, left: menu.x }} onClick={(e) => e.stopPropagation()}>
+            <div className="menu-item delete" onClick={handleDeleteClick}>
+              <Trash2 size={20} color="#FF4D4D" />
+              <span>삭제</span>
+            </div>
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
+      {/* 모달창들 */}
       {showInviteModal && <FriendInvite onClose={() => setShowInviteModal(false)} />}
       {showDeleteConfirm && (
         <FriendDelete

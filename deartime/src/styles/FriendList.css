@@ -297,3 +297,13 @@
   pointer-events: none;
   opacity: 1; /* 시각적으로는 그대로 보이게 */
 }
+
+.friend-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px; 
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5); 
+}
