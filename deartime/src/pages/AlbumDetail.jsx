@@ -5,6 +5,7 @@ import axios from "axios";
 import "../styles/AlbumDetail.css";
 import bg from "../assets/background_nostar.png";
 import Album_addphoto from "../components/Album_addphoto.jsx"; 
+import ReallyDelete from "../components/ReallyDelete";
 
 const AlbumDetail = () => {
   const params = useParams();
@@ -22,6 +23,9 @@ const AlbumDetail = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isChangingCover, setIsChangingCover] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [photoIdToDelete, setPhotoIdToDelete] = useState(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -120,21 +124,33 @@ const AlbumDetail = () => {
     }
   };
 
-  const handleDeletePhoto = async (photoId) => {
-    if (!window.confirm("이 사진을 앨범에서 삭제하시겠습니까?")) return;
+  // 삭제 버튼 클릭 시 실행 (모달만 띄움)
+  const handleDeleteClick = (photoId) => {
+    setPhotoIdToDelete(photoId);
+    setIsDeleteModalOpen(true);
+  };
 
+  // 모달에서 '삭제' 버튼을 눌렀을 때 실행될 실제 로직
+  const handleConfirmDelete = async () => {
+    if (!photoIdToDelete) return;
+
+    setLoading(true); // 버튼 비활성화를 위해 로딩 상태 사용
     try {
       const res = await axios.delete(
-        `${apiBaseUrl}/api/albums/${albumId}/photos/${photoId}`,
+        `${apiBaseUrl}/api/albums/${albumId}/photos/${photoIdToDelete}`,
         { headers: getAuthHeader() }
       );
 
       if (res.data.success) {
-        setAlbumPhotos(prev => prev.filter(photo => photo.photoId !== photoId));
+        setAlbumPhotos(prev => prev.filter(photo => photo.photoId !== photoIdToDelete));
       }
     } catch (err) {
       console.error("삭제 실패:", err);
       alert("삭제 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+      setIsDeleteModalOpen(false); // 모달 닫기
+      setPhotoIdToDelete(null);    // ID 초기화
     }
   };
 
@@ -153,6 +169,14 @@ const AlbumDetail = () => {
 
   return (
     <div className="gallery-container" style={{ backgroundImage: `url(${bg})` }}>
+      {isDeleteModalOpen && (
+        <ReallyDelete
+          onCancel={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          isLoading={loading}
+        />
+      )}
+
       <div className="album-detail-container">
         <div className="detail-top-nav">
           <button className="back-btn" onClick={handleBack}>
@@ -202,7 +226,7 @@ const AlbumDetail = () => {
                 <img src={photo.imageUrl} alt="" />
                 <button className="delete-photo-btn" onClick={(e) => {
                   e.stopPropagation(); 
-                  handleDeletePhoto(photo.photoId);
+                  handleDeleteClick(photo.photoId); // 커스텀 모달 오픈
                 }}>
                   <X size={16} color="white" />
                 </button>
