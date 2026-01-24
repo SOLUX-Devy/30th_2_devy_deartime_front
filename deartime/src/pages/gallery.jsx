@@ -271,38 +271,50 @@ const Gallery = () => {
     }
   };
 
-  const handleEditComplete = async (e, id) => {
+  const handleEditComplete = async (e, albumId) => { // 매개변수 이름을 albumId로 변경
     const newText = e.target.value;
+    
     if (e.key === "Enter") {
       try {
         if (activeIndex === 0) {
+          // [RECORD] 사진 캡션 수정
           await axios.post(
-            `${BASE_PATH}/photos/${id}/caption`,
+            `${BASE_PATH}/photos/${albumId}/caption`,
             { caption: newText },
-            { headers: getAuthHeader() },
+            { headers: getAuthHeader() }
           );
           setPhotos((prev) =>
-            prev.map((p) => (p.photoId === id ? { ...p, caption: newText } : p)),
+            prev.map((p) => (p.photoId === albumId ? { ...p, caption: newText } : p))
           );
         } else {
-          const target = albums.find((a) => a.albumId === id);
+          // [ALBUM] 앨범 이름 수정
+          // ✅ 1. 명세서에 따른 경로 변수 처리: /api/albums/{albumId}/title
+          // ✅ 2. 메서드: POST
+          
+          const target = albums.find((a) => a.albumId === albumId);
           if (target?.title === "즐겨찾기") {
             alert("즐겨찾기 앨범의 이름은 수정할 수 없습니다.");
             setEditingId(null);
             return;
           }
-          await axios.patch(
-            `${BASE_PATH}/albums/${id}/title`,
-            { title: newText },
-            { headers: getAuthHeader() },
+
+          await axios.post(
+            `${BASE_PATH}/albums/${albumId}/title`, // {albumId} 자리에 변수 대입
+            { title: newText }, 
+            { headers: getAuthHeader() }
           );
-          fetchAlbums();
+          
+          console.log(`앨범 ${albumId} 이름 수정 성공: ${newText}`);
+          fetchAlbums(); // 목록 새로고침
         }
       } catch (err) {
-        alert("수정 실패");
+        console.error("수정 실패 상세:", err.response?.data || err);
+        alert("명세서의 메서드(POST)와 주소, 바디 형식을 다시 확인해 주세요.");
       }
       setEditingId(null);
-    } else if (e.key === "Escape") setEditingId(null);
+    } else if (e.key === "Escape") {
+      setEditingId(null);
+    }
   };
 
   /**
