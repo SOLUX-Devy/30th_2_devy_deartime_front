@@ -80,6 +80,10 @@ export default function Home() {
 
   if (!user) return null;
 
+  const handleCapsuleClick = () => {
+    navigate("/timecapsule"); 
+  };
+
   return (
     <div className="home-container">
       <div className="description">
@@ -89,8 +93,8 @@ export default function Home() {
       <section className="cards">
         <div 
           className="card-wrapper"
-          /* 클릭 방지를 위해 pointer-events를 none으로 설정하거나 onClick을 비워둡니다. */
-          style={{ cursor: 'default', pointerEvents: 'none' }}
+          onClick={handleCapsuleClick} // ✅ 클릭 핸들러 추가
+          style={{ cursor: 'pointer' }} // ✅ pointer-events: 'none' 삭제, 커서 변경
         >
           <div className="card-title">TIME CAPSULE</div>
           {/* 결정된 finalCapsule 데이터를 전달 */}
