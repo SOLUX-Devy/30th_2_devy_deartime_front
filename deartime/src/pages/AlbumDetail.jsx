@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { Plus, X, Camera } from "lucide-react"; 
+import { Plus, X, Camera, Videotape } from "lucide-react"; 
 import axios from "axios";
 import "../styles/AlbumDetail.css";
 import bg from "../assets/background_nostar.png";
@@ -15,7 +15,7 @@ const AlbumDetail = () => {
 
   const albumData = location.state?.album;
   
-  const initialCover = albumData?.coverImageUrl || albumData?.coverUrl || "https://via.placeholder.com/1200x400";
+  const initialCover = albumData?.coverImageUrl || albumData?.coverUrl || "";
   const [imgSrc, setImgSrc] = useState(initialCover);
   
   const [albumPhotos, setAlbumPhotos] = useState([]);
@@ -70,10 +70,6 @@ const AlbumDetail = () => {
     );
   }
 
-  /**
-   * 사진 선택 완료 핸들러
-   * 알려주신 새로운 엔드포인트 /api/albums/{albumId}/title 에 POST를 사용합니다.
-   */
   const handlePhotoSelect = async (selectedPhotos) => {
     if (selectedPhotos.length === 0) return;
     
@@ -81,11 +77,10 @@ const AlbumDetail = () => {
       setLoading(true);
 
       if (isChangingCover) {
-        // [최종 수정] 새로운 엔드포인트와 POST 메서드 반영
         const targetPhoto = selectedPhotos[0];
         const requestBody = {
-          title: albumData.title, // 기존 제목 유지
-          photoId: Number(targetPhoto.photoId) // 선택한 사진 ID
+          title: albumData.title,
+          photoId: Number(targetPhoto.photoId)
         };
 
         const res = await axios.post(
@@ -95,12 +90,9 @@ const AlbumDetail = () => {
         );
 
         if (res.data.success) {
-          alert("앨범 커버가 성공적으로 수정되었습니다.");
-          // 서버에서 응답받은 새로운 커버 이미지 URL로 상태 업데이트
           setImgSrc(res.data.data.coverImageUrl);
         }
       } else {
-        // 기존: 앨범에 사진 추가 로직
         const requestBody = {
           photoIds: selectedPhotos.map(p => Number(p.photoId))
         };
@@ -111,7 +103,6 @@ const AlbumDetail = () => {
         );
 
         if (res.data.success) {
-          alert("앨범에 사진이 추가되었습니다.");
           fetchAlbumPhotos();
         }
       }
@@ -166,21 +157,28 @@ const AlbumDetail = () => {
           <span className="album-nav-title">{albumData.title}</span>
         </div>
 
-        {/* 커버 클릭 시 모달 오픈 */}
+        {/* 앨범 커버 클릭 시 모달 오픈 */}
         <div className="album-banner" onClick={() => {
           setIsChangingCover(true);
           setIsAddModalOpen(true);
         }}>
-          <img 
-            src={imgSrc} 
-            alt="Cover" 
-            className="banner-img" 
-            onError={() => {
-              if (imgSrc !== "https://via.placeholder.com/1200x400") {
-                setImgSrc("https://via.placeholder.com/1200x400");
-              }
-            }}
-          />
+          {/* 커버 이미지가 없거나 기본 홀더 URL인 경우 아이콘 표시 */}
+          {imgSrc && imgSrc !== "" && !imgSrc.includes("via.placeholder.com") ? (
+            <img 
+              src={imgSrc} 
+              alt="Cover" 
+              className="banner-img" 
+              onError={() => {
+                setImgSrc("");
+              }}
+            />
+          ) : (
+            <div className="empty-cover-placeholder">
+               <Videotape size={60} color="#ffffff" strokeWidth={1.2} opacity={0.6} />
+               <p style={{ marginTop: '10px', color: 'white', opacity: 0.6 }}>앨범 커버를 설정해보세요</p>
+            </div>
+          )}
+          
           <div className="banner-overlay">
             <Camera size={32} color="white" />
             <span>커버 사진 변경</span>

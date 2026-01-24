@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/gallery.css";
 import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { Pen, Trash2, ChevronLeft, ChevronRight } from "lucide-react"; 
+import { Pen, Trash2, ChevronLeft, ChevronRight, Videotape } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 import axios from "axios";
@@ -34,7 +34,7 @@ const Gallery = () => {
 
   const [albums, setAlbums] = useState([]);
   const [albumPage, setAlbumPage] = useState(1);
-  const ALBUMS_PER_PAGE = 6;
+  const ALBUMS_PER_PAGE = 8;
 
   const [favAlbumId, setFavAlbumId] = useState(null);
 
@@ -48,20 +48,19 @@ const Gallery = () => {
     targetId: null,
   });
 
-  /**
-   * 파일 확장자 제거 헬퍼 함수
-   */
   const stripExtension = (filename) => {
     if (!filename) return "";
     return filename.replace(/\.[^/.]+$/, "");
   };
 
   const ensureHttps = (url) => {
-    if (!url) return "https://via.placeholder.com/300";
-    return url.replace(/[<>]/g, "");
+    if (!url) return "";
+    const cleaned = url.replace(/[<>]/g, "");
+    // 플레이스홀더 URL인 경우 빈 문자열 반환하여 아이콘이 뜨게 함
+    if (cleaned.includes("via.placeholder.com")) return "";
+    return cleaned;
   };
 
-  /* [1] 사진 목록 조회 (Infinite Scroll) */
   const fetchPhotos = useCallback(
     async (page, isInitial = false) => {
       if (isFetchingRef.current) return;
@@ -93,11 +92,6 @@ const Gallery = () => {
     [BASE_PATH, getAuthHeader],
   );
 
-  /**
-   * [2] 앨범 목록 조회 및 정렬 로직
-   * ⭐ 1순위: '즐겨찾기' 제목 앨범 상단 고정
-   * ⭐ 2순위: 나머지 앨범은 최근 수정일(updatedAt) 내림차순 정렬
-   */
   const fetchAlbums = useCallback(async () => {
     setLoading(true);
     try {
@@ -108,15 +102,10 @@ const Gallery = () => {
       const validAlbums = Array.isArray(albumList) ? albumList : [];
 
       const sortedAlbums = [...validAlbums].sort((a, b) => {
-        // 1. 즐겨찾기 앨범 고정 (무조건 맨 위)
         if (a.title === "즐겨찾기") return -1;
         if (b.title === "즐겨찾기") return 1;
-
-        // 2. 나머지 앨범은 updatedAt 기준 내림차순 (최신순)
-        // updatedAt이 null인 경우 createdAt을 사용하거나 아주 오래된 날짜로 처리
         const dateA = new Date(a.updatedAt || a.createdAt || 0);
         const dateB = new Date(b.updatedAt || b.createdAt || 0);
-        
         return dateB - dateA;
       });
 
@@ -131,7 +120,6 @@ const Gallery = () => {
     }
   }, [BASE_PATH, getAuthHeader]);
 
-  /* 즐겨찾기 즉시 토글 함수 */
   const handleToggleFavorite = async (e, photoId, currentStatus) => {
     e.stopPropagation();
     if (!favAlbumId) {
@@ -154,12 +142,13 @@ const Gallery = () => {
       setPhotos(prev => prev.map(p => 
         p.photoId === photoId ? { ...p, isFavorite: !currentStatus } : p
       ));
+      
+      fetchAlbums();
     } catch (err) {
       console.error("즐겨찾기 토글 실패:", err);
     }
   };
 
-  /* [3] 앨범 생성 로직 */
   const handleCreateAlbum = async (albumData) => {
     setLoading(true);
     try {
@@ -181,15 +170,11 @@ const Gallery = () => {
 
       const res = await axios.post(
         `${BASE_PATH}/albums`,
-        {
-          title: albumData.title,
-          coverPhotoId: coverPhotoId,
-        },
+        { title: albumData.title, coverPhotoId: coverPhotoId },
         { headers: getAuthHeader() },
       );
 
       if (res.data.success) {
-        alert("앨범이 생성되었습니다.");
         fetchAlbums();
         setIsModalOpen(false);
       }
@@ -200,7 +185,6 @@ const Gallery = () => {
     }
   };
 
-  /* 단일 사진 업로드 - 확장자 제거 반영 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -219,12 +203,10 @@ const Gallery = () => {
         headers: getAuthHeader(),
       });
       if (res.status === 201 || res.data.success) {
-        alert("사진이 업로드되었습니다.");
         setPhotos([]);
         setPhotoPage(0);
         setHasMorePhotos(true);
         fetchPhotos(0, true);
-        // 사진이 추가되면 '즐겨찾기' 혹은 관련 앨범의 순서가 바뀔 수 있으므로 앨범도 갱신
         fetchAlbums();
       }
     } catch (err) {
@@ -235,7 +217,6 @@ const Gallery = () => {
     }
   };
 
-  /* 삭제 로직 */
   const handleDeletePhoto = async (photoId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
@@ -243,7 +224,7 @@ const Gallery = () => {
         headers: getAuthHeader(),
       });
       setPhotos((prev) => prev.filter((p) => p.photoId !== photoId));
-      fetchAlbums(); // 삭제 시 앨범 정보(photoCount, updatedAt) 갱신
+      fetchAlbums();
     } catch (err) {
       alert(err.response?.data?.data || "삭제 권한이 없습니다.");
     }
@@ -271,7 +252,6 @@ const Gallery = () => {
     setContextMenu({ ...contextMenu, show: false });
   };
 
-  /* 수정 완료 로직 */
   const handleEditComplete = async (e, id) => {
     const newText = e.target.value;
     if (e.key === "Enter") {
@@ -283,12 +263,10 @@ const Gallery = () => {
             { headers: getAuthHeader() },
           );
           setPhotos((prev) =>
-            prev.map((p) =>
-              p.photoId === id ? { ...p, caption: newText } : p,
-            ),
+            prev.map((p) => (p.photoId === id ? { ...p, caption: newText } : p)),
           );
         } else {
-          const target = albums.find(a => a.albumId === id);
+          const target = albums.find((a) => a.albumId === id);
           if (target?.title === "즐겨찾기") {
             alert("즐겨찾기 앨범의 이름은 수정할 수 없습니다.");
             setEditingId(null);
@@ -299,7 +277,6 @@ const Gallery = () => {
             { title: newText },
             { headers: getAuthHeader() },
           );
-          // 제목 수정 후 정렬 순서가 바뀔 수 있으므로 전체 재조회
           fetchAlbums();
         }
       } catch (err) {
@@ -309,7 +286,6 @@ const Gallery = () => {
     } else if (e.key === "Escape") setEditingId(null);
   };
 
-  /* 데이터 동기화 Effect */
   useEffect(() => {
     const syncData = async () => {
       if (activeIndex === 0) {
@@ -325,7 +301,6 @@ const Gallery = () => {
     syncData();
   }, [activeIndex, fetchPhotos, fetchAlbums]);
 
-  /* 무한 스크롤 Observer */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
 
@@ -462,28 +437,34 @@ const Gallery = () => {
                       onContextMenu={(e) => onContextMenu(e, photo.photoId)}
                     >
                       <div className="img-box">
-                        <img src={ensureHttps(photo.imageUrl)} alt="" />
-                        <span 
-                          className={`bookmark-icon ${photo.isFavorite ? "active" : ""}`} 
-                          onClick={(e) => handleToggleFavorite(e, photo.photoId, photo.isFavorite)}
+                        <img src={ensureHttps(photo.imageUrl) || "https://via.placeholder.com/300"} alt="" />
+                        <span
+                          className={`bookmark-icon ${
+                            photo.isFavorite ? "active" : ""
+                          }`}
+                          onClick={(e) =>
+                            handleToggleFavorite(
+                              e,
+                              photo.photoId,
+                              photo.isFavorite,
+                            )
+                          }
                           style={{
                             position: "absolute",
                             top: "10px",
                             right: "10px",
                             zIndex: 10,
-                            filter: "drop-shadow(0px 0px 3px rgba(0,0,0,0.5))"
+                            filter: "drop-shadow(0px 0px 3px rgba(0,0,0,0.5))",
                           }}
                         ></span>
                       </div>
-                      
+
                       {editingId === photo.photoId ? (
                         <input
                           className="edit-title-input"
                           defaultValue={stripExtension(photo.caption)}
                           autoFocus
-                          onKeyDown={(e) =>
-                            handleEditComplete(e, photo.photoId)
-                          }
+                          onKeyDown={(e) => handleEditComplete(e, photo.photoId)}
                           onBlur={() => setEditingId(null)}
                         />
                       ) : (
@@ -491,7 +472,9 @@ const Gallery = () => {
                           className="photo-title"
                           onClick={() => setEditingId(photo.photoId)}
                         >
-                          {photo.caption ? stripExtension(photo.caption) : "설명 추가"}
+                          {photo.caption
+                            ? stripExtension(photo.caption)
+                            : "설명 추가"}
                         </p>
                       )}
                     </div>
@@ -522,8 +505,15 @@ const Gallery = () => {
                     onClick={() =>
                       navigate(`/album/${album.albumId}`, { state: { album } })
                     }
+                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
                   >
-                    <img src={ensureHttps(album.coverImageUrl)} alt="" />
+                    {ensureHttps(album.coverImageUrl) ? (
+                      <img src={ensureHttps(album.coverImageUrl)} alt="" />
+                    ) : (
+                      <div className="empty-cover-placeholder" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <Videotape size={81} color="#0E77BC" strokeWidth={0.7} opacity={0.6} />
+                      </div>
+                    )}
                   </div>
                   <div className="album-info">
                     {editingId === album.albumId ? (
