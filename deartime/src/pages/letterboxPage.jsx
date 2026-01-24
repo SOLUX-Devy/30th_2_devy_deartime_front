@@ -247,15 +247,18 @@ const handleConfirmDelete = async () => {
     };
   }, [menu.show]);
 
+  const lastMenuOpenTimeRef = useRef(0); // 메뉴가 열린 시간을 기록
+
   // 카드 중앙 좌표로 메뉴 띄우기
   const openMenuAtCardCenter = (el, id) => {
-    const rect = el.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+  const rect = el.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
 
-    setFocusedId(id);
-    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-  };
+  setFocusedId(id);
+  setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+  lastMenuOpenTimeRef.current = Date.now(); // ✅ 메뉴가 열린 시점 기록
+};
 
   // 우클릭
   const handleContextMenu = (e, id) => {
@@ -266,6 +269,7 @@ const handleConfirmDelete = async () => {
 
   // 롱프레스 시작
   const startPress = (e, id) => {
+    // 우클릭 제외
     if (e.type === "mousedown" && e.button !== 0) return;
 
     pressTargetElRef.current = e.currentTarget;
@@ -274,8 +278,10 @@ const handleConfirmDelete = async () => {
     longPressTimerRef.current = setTimeout(() => {
       const el = pressTargetElRef.current;
       if (!el) return;
+      
       openMenuAtCardCenter(el, id);
       justLongPressedRef.current = true;
+      
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500);
   };
@@ -290,17 +296,26 @@ const handleConfirmDelete = async () => {
 
   // 롱프레스 직후 “클릭” 무시 (상세보기 열리는 거 방지)
   const stopClickAfterLongPress = (e, id) => {
-    // 방금 막 롱프레스가 끝나서 메뉴가 처음 딱 떴을 때
+    // 1. 롱프레스 직후 발생하는 첫 번째 클릭 이벤트 무조건 차단
     if (justLongPressedRef.current) {
-      e.stopPropagation();           // 편지 상세보기가 열리는 걸 막음
-      justLongPressedRef.current = false; // "방금 롱프레스함" 플래그를 바로 꺼줌
-      return;                        // 여기서 끝내야 함! (closeMenu를 실행하지 않음)
+      e.stopPropagation();
+      e.preventDefault(); // 기본 동작(포커스 등)도 방지
+      justLongPressedRef.current = false;
+      return;
     }
 
-    // 메뉴가 이미 떠 있는 상태에서 카드를 한 번 더 클릭했을 때
+    // 2. 메뉴가 열린 지 300ms 이내에 발생하는 클릭은 무시 (실수로 닫히는 것 방지)
     if (menu.show && menu.targetId === id) {
-      e.stopPropagation();           // 편지 상세보기가 열리는 걸 막음
-      closeMenu();                   // 이때만 메뉴를 닫음
+      const timeSinceOpen = Date.now() - lastMenuOpenTimeRef.current;
+      
+      if (timeSinceOpen < 300) {
+        e.stopPropagation();
+        return;
+      }
+
+      // 300ms 이후에 다시 카드를 눌렀을 때만 메뉴를 닫음
+      e.stopPropagation();
+      closeMenu();
     }
   };
 
@@ -324,9 +339,11 @@ const handleConfirmDelete = async () => {
   };
 
   return (
-    <div
-      className={`letterbox-container ${focusedId ? "is-focusing" : ""}`}
-      onClick={handlePageClick}
+    <div 
+      className={`letterbox-container ...`} 
+      onClick={() => {
+        if (!menu.show) handlePageClick();
+      }}
     >
       <header className="letterbox-header" onClick={(e) => e.stopPropagation()}>
         <MailTabs
