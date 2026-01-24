@@ -15,8 +15,18 @@ const AlbumDetail = () => {
   const navigate = useNavigate();
 
   const albumData = location.state?.album;
+
+  // ⭐ [추가] 즐겨찾기 앨범 여부 확인
+  const isFavoriteAlbum = albumData?.title === "즐겨찾기";
   
-  const initialCover = albumData?.coverImageUrl || albumData?.coverUrl || "";
+  /**
+   * ⭐ [수정] 초기 커버 로직
+   * 서버에서 주는 주소에 플레이스홀더가 포함되어 있으면 빈 값으로 처리하여 아이콘이 나오게 합니다.
+   */
+  const initialCover = (albumData?.coverImageUrl?.includes("via.placeholder.com")) 
+    ? "" 
+    : (albumData?.coverImageUrl || "");
+    
   const [imgSrc, setImgSrc] = useState(initialCover);
   
   const [albumPhotos, setAlbumPhotos] = useState([]);
@@ -34,6 +44,7 @@ const AlbumDetail = () => {
     return { Authorization: `Bearer ${token}` };
   }, []);
 
+  /* 사진 목록 조회 */
   const fetchAlbumPhotos = useCallback(async () => {
     if (!albumId || albumId === "undefined") return;
 
@@ -74,6 +85,9 @@ const AlbumDetail = () => {
     );
   }
 
+  /**
+   * ⭐ 사진 선택 핸들러 (커버 변경 vs 일반 추가)
+   */
   const handlePhotoSelect = async (selectedPhotos) => {
     if (selectedPhotos.length === 0) return;
     
@@ -81,7 +95,7 @@ const AlbumDetail = () => {
       setLoading(true);
 
       if (isChangingCover) {
-        // 커버 변경 모드일 때는 선택된 첫 번째 사진만 사용 (단일 선택)
+        // [1] 커버 변경 모드: 수동 지정 로직
         const targetPhoto = selectedPhotos[0];
         const requestBody = {
           title: albumData.title,
@@ -99,7 +113,7 @@ const AlbumDetail = () => {
           setImgSrc(res.data.data.coverImageUrl);
         }
       } else {
-        // 일반 사진 추가 모드
+        // [2] 일반 사진 추가 모드
         const requestBody = {
           photoIds: selectedPhotos.map(p => Number(p.photoId))
         };
@@ -124,17 +138,15 @@ const AlbumDetail = () => {
     }
   };
 
-  // 삭제 버튼 클릭 시 실행 (모달만 띄움)
   const handleDeleteClick = (photoId) => {
     setPhotoIdToDelete(photoId);
     setIsDeleteModalOpen(true);
   };
 
-  // 모달에서 '삭제' 버튼을 눌렀을 때 실행될 실제 로직
   const handleConfirmDelete = async () => {
     if (!photoIdToDelete) return;
 
-    setLoading(true); // 버튼 비활성화를 위해 로딩 상태 사용
+    setLoading(true);
     try {
       const res = await axios.delete(
         `${apiBaseUrl}/api/albums/${albumId}/photos/${photoIdToDelete}`,
@@ -149,8 +161,8 @@ const AlbumDetail = () => {
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
-      setIsDeleteModalOpen(false); // 모달 닫기
-      setPhotoIdToDelete(null);    // ID 초기화
+      setIsDeleteModalOpen(false);
+      setPhotoIdToDelete(null);
     }
   };
 
@@ -185,31 +197,39 @@ const AlbumDetail = () => {
           <span className="album-nav-title">{albumData.title}</span>
         </div>
 
-        {/* 앨범 커버 클릭 시 수정 가능 (즐겨찾기 포함 모든 앨범 동일 적용) */}
-        <div className="album-banner" onClick={() => {
-          setIsChangingCover(true);
-          setIsAddModalOpen(true);
-        }}>
-          {imgSrc && imgSrc !== "" && !imgSrc.includes("via.placeholder.com") ? (
+        {/* 앨범 커버 영역: 즐겨찾기 앨범이 아닐 때만 클릭 및 오버레이 허용 */}
+        <div 
+          className="album-banner" 
+          onClick={() => {
+            if (isFavoriteAlbum) return; // ⭐ 즐겨찾기면 모달 오픈 차단
+            setIsChangingCover(true);
+            setIsAddModalOpen(true);
+          }}
+          style={{ cursor: isFavoriteAlbum ? "default" : "pointer" }}
+        >
+          {imgSrc && imgSrc !== "" ? (
             <img 
               src={imgSrc} 
               alt="Cover" 
               className="banner-img" 
-              onError={() => {
-                setImgSrc("");
-              }}
+              onError={() => setImgSrc("")} 
             />
           ) : (
             <div className="empty-cover-placeholder">
                <Videotape size={60} color="#ffffff" strokeWidth={1.2} opacity={0.6} />
-               <p style={{ marginTop: '10px', color: 'white', opacity: 0.6 }}>앨범 커버를 설정해보세요</p>
+               <p style={{ marginTop: '10px', color: 'white', opacity: 0.6 }}>
+                 {isFavoriteAlbum ? "즐겨찾는 사진을 추가해보세요" : "앨범 커버를 설정해보세요"}
+               </p>
             </div>
           )}
           
-          <div className="banner-overlay">
-            <Camera size={32} color="white" />
-            <span>커버 사진 변경</span>
-          </div>
+          {/* ⭐ 즐겨찾기 앨범이 아닐 때만 수정 오버레이 표시 */}
+          {!isFavoriteAlbum && (
+            <div className="banner-overlay">
+              <Camera size={32} color="white" />
+              <span>커버 사진 변경</span>
+            </div>
+          )}
         </div>
 
         <div className="album-content-area">
@@ -226,7 +246,7 @@ const AlbumDetail = () => {
                 <img src={photo.imageUrl} alt="" />
                 <button className="delete-photo-btn" onClick={(e) => {
                   e.stopPropagation(); 
-                  handleDeleteClick(photo.photoId); // 커스텀 모달 오픈
+                  handleDeleteClick(photo.photoId);
                 }}>
                   <X size={16} color="white" />
                 </button>
@@ -244,7 +264,6 @@ const AlbumDetail = () => {
             setIsChangingCover(false);
           }} 
           onSelect={handlePhotoSelect} 
-    // 커버를 바꿀 때만 true가 되도록 설정
           singleSelect={isChangingCover} 
         />
       )}
