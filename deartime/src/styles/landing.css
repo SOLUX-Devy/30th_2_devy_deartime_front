@@ -4,16 +4,16 @@ body,
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   font-family: 'ABeeZee', sans-serif;
 }
 
 .landing-container {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     overflow: hidden;
-    color: black;
+    background: url("../assets/background_star.png") center / cover no-repeat;
 }
 .background-img {
     width: 100%;

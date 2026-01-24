@@ -1,5 +1,11 @@
 // src/pages/letterboxPage.jsx
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import "../styles/LetterboxPage.css";
 
 import LetterDetail from "../components/LetterDetail";
@@ -8,7 +14,7 @@ import MailTabs from "../components/MailTabs";
 import SendButton from "../components/SendButton";
 import SharedMailbox from "../components/SharedMailbox";
 import FriendSelect from "../components/FriendSelect";
-import DeleteCheck from "../components/DeleteCheck";
+import ReallyDelete from "../components/ReallyDelete";
 
 import { Trash2 } from "lucide-react";
 
@@ -20,11 +26,11 @@ import bgLightBlue from "../assets/bg-light-blue.png";
 
 // 테마 코드에 따른 배경 이미지 매핑
 const THEME_IMAGES = {
-    theme1: bgDarkBlue,
-    theme2: bgLightBlue,
-    theme3: bgLightGrey,
-    theme4: bgLightPink,
-  };
+  theme1: bgDarkBlue,
+  theme2: bgLightBlue,
+  theme3: bgLightGrey,
+  theme4: bgLightPink,
+};
 
 export default function Letterbox() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
@@ -56,6 +62,7 @@ export default function Letterbox() {
 
   // ✅ 삭제 확인 모달
   const [isDeleteCheckOpen, setIsDeleteCheckOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ✅ 롱프레스
   const longPressTimerRef = useRef(null);
@@ -69,17 +76,24 @@ export default function Letterbox() {
   const pageSize = 8;
 
   // 엔드포인트 결정 함수 (실제 API 주소로 변경)
-  const getApiUrl = useCallback((index, pageNum) => {
-  const basePage = pageNum - 1;
-  const commonParams = `sort=createdAt,desc&page=${basePage}&size=${pageSize}`;
-  
-  switch (index) {
-    case 0: return `${BASE_URL}/api/letters/received?${commonParams}`;
-    case 1: return `${BASE_URL}/api/letters/sent?${commonParams}`;
-    case 2: return `${BASE_URL}/api/letters/bookmarked?${commonParams}`;
-    default: return null;
-  }
-}, [BASE_URL, pageSize]);
+  const getApiUrl = useCallback(
+    (index, pageNum) => {
+      const basePage = pageNum - 1;
+      const commonParams = `sort=createdAt,desc&page=${basePage}&size=${pageSize}`;
+
+      switch (index) {
+        case 0:
+          return `${BASE_URL}/api/letters/received?${commonParams}`;
+        case 1:
+          return `${BASE_URL}/api/letters/sent?${commonParams}`;
+        case 2:
+          return `${BASE_URL}/api/letters/bookmarked?${commonParams}`;
+        default:
+          return null;
+      }
+    },
+    [BASE_URL, pageSize],
+  );
 
   // 2. API 호출 useEffect
   useEffect(() => {
@@ -95,7 +109,7 @@ export default function Letterbox() {
       headers: {
         "Content-Type": "application/json",
         // 로그인 연동 시 저장한 accessToken 사용
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
     })
       .then((res) => {
@@ -128,86 +142,92 @@ export default function Letterbox() {
 
   // 현재 페이지가 전체 페이지보다 크면 마지막 페이지를 보여주도록 제한
   const safePage = Math.min(page, totalPages);
-  
+
   // 현재 페이지에서 보여주는 아이템 범위 계산
   const startItem = totalElements === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalElements);
 
   const pageNumbers = useMemo(
     () => Array.from({ length: totalPages }, (_, i) => i + 1),
-    [totalPages]
+    [totalPages],
   );
 
   // 이제 currentItems는 letters 전체가 됨 (서버가 이미 잘라서 주기 때문)
-  const currentItems = letters; 
+  const currentItems = letters;
   const emptySlotsCount = pageSize - currentItems.length;
 
   // 즐겨찾기 토글
   const handleToggleBookmark = async (id) => {
-  try {
-    const targetLetter = letters.find(l => l.letterId === id);
-    if (!targetLetter) return;
+    try {
+      const targetLetter = letters.find((l) => l.letterId === id);
+      if (!targetLetter) return;
 
-    // 서버에 상태 변경 요청
-    const response = await fetch(`${BASE_URL}/api/letters/${id}/bookmark`, {
+      // 서버에 상태 변경 요청
+      const response = await fetch(`${BASE_URL}/api/letters/${id}/bookmark`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
         body: JSON.stringify({ isBookmarked: !targetLetter.isBookmarked }),
       });
 
-    const json = await response.json();
+      const json = await response.json();
 
-    if (json.success) {
-      // 서버 성공 시에만 로컬 상태 업데이트
-      setLetters((prev) => {
-        if (activeIndex === 2) {
-          return prev.filter((letter) => letter.letterId !== id);
-        }
-        return prev.map((letter) =>
-          letter.letterId === id ? { ...letter, isBookmarked: !letter.isBookmarked } : letter
-        );
-      });
+      if (json.success) {
+        // 서버 성공 시에만 로컬 상태 업데이트
+        setLetters((prev) => {
+          if (activeIndex === 2) {
+            return prev.filter((letter) => letter.letterId !== id);
+          }
+          return prev.map((letter) =>
+            letter.letterId === id
+              ? { ...letter, isBookmarked: !letter.isBookmarked }
+              : letter,
+          );
+        });
+      }
+    } catch (err) {
+      console.error("즐겨찾기 요청 에러:", err);
     }
-  } catch (err) {
-    console.error("즐겨찾기 요청 에러:", err);
-  }
-};
+  };
 
+  // 삭제 처리 (DELETE 연동)
+  const handleConfirmDelete = async () => {
+    if (!menu.targetId) return;
 
-// 삭제 처리 (DELETE 연동)
-const handleConfirmDelete = async () => {
-  if (!menu.targetId) return;
-
-  try {
-    const response = await fetch(`${BASE_URL}/api/letters/${menu.targetId}`, {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`${BASE_URL}/api/letters/${menu.targetId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
-    if (response.ok) {
-      // 서버 삭제 성공 시 UI 업데이트
-      setLetters((prev) => prev.filter((letter) => letter.letterId !== menu.targetId));
-      setIsDeleteCheckOpen(false);
-      closeMenu();
-    } else {
-      throw new Error("삭제에 실패했습니다.");
+      if (response.ok) {
+        // 서버 삭제 성공 시 UI 업데이트
+        setLetters((prev) =>
+          prev.filter((letter) => letter.letterId !== menu.targetId),
+        );
+        setIsDeleteCheckOpen(false);
+        closeMenu();
+      } else {
+        throw new Error("삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("삭제 요청 에러:", err);
+    } finally {
+      setIsDeleting(false);
     }
-  } catch (err) {
-    console.error("삭제 요청 에러:", err);
-  }
-};
+  };
 
   // 읽음 처리
   const handleMarkAsRead = useCallback((id) => {
     setLetters((prev) =>
       prev.map((letter) =>
-        letter.letterId === id ? { ...letter, isRead: true } : letter
-      )
+        letter.letterId === id ? { ...letter, isRead: true } : letter,
+      ),
     );
   }, []);
 
@@ -217,7 +237,7 @@ const handleConfirmDelete = async () => {
   // 클릭 핸들러
   const handleLetterClick = (letter) => {
     // 상세 모달을 열기 위해 선택된 편지 정보를 저장합니다.
-    setSelectedLetter(letter); 
+    setSelectedLetter(letter);
   };
 
   // =========================
@@ -251,14 +271,14 @@ const handleConfirmDelete = async () => {
 
   // 카드 중앙 좌표로 메뉴 띄우기
   const openMenuAtCardCenter = (el, id) => {
-  const rect = el.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
+    const rect = el.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-  setFocusedId(id);
-  setMenu({ show: true, x: centerX, y: centerY, targetId: id });
-  lastMenuOpenTimeRef.current = Date.now(); // ✅ 메뉴가 열린 시점 기록
-};
+    setFocusedId(id);
+    setMenu({ show: true, x: centerX, y: centerY, targetId: id });
+    lastMenuOpenTimeRef.current = Date.now(); // ✅ 메뉴가 열린 시점 기록
+  };
 
   // 우클릭
   const handleContextMenu = (e, id) => {
@@ -278,10 +298,10 @@ const handleConfirmDelete = async () => {
     longPressTimerRef.current = setTimeout(() => {
       const el = pressTargetElRef.current;
       if (!el) return;
-      
+
       openMenuAtCardCenter(el, id);
       justLongPressedRef.current = true;
-      
+
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500);
   };
@@ -307,7 +327,7 @@ const handleConfirmDelete = async () => {
     // 2. 메뉴가 열린 지 300ms 이내에 발생하는 클릭은 무시 (실수로 닫히는 것 방지)
     if (menu.show && menu.targetId === id) {
       const timeSinceOpen = Date.now() - lastMenuOpenTimeRef.current;
-      
+
       if (timeSinceOpen < 300) {
         e.stopPropagation();
         return;
@@ -324,7 +344,6 @@ const handleConfirmDelete = async () => {
     e.stopPropagation();
     setIsDeleteCheckOpen(true);
   };
-  
 
   // 확인 모달: 취소
   const handleCancelDelete = () => {
@@ -339,8 +358,8 @@ const handleConfirmDelete = async () => {
   };
 
   return (
-    <div 
-      className={`letterbox-container ...`} 
+    <div
+      className={`letterbox-container ...`}
       onClick={() => {
         if (!menu.show) handlePageClick();
       }}
@@ -402,9 +421,9 @@ const handleConfirmDelete = async () => {
                 </div>
               </div>
             ) : (
-              <SharedMailbox 
-                friend={selectedFriend} 
-                onBack={() => setSelectedFriend(null)} 
+              <SharedMailbox
+                friend={selectedFriend}
+                onBack={() => setSelectedFriend(null)}
               />
             )}
 
@@ -415,7 +434,7 @@ const handleConfirmDelete = async () => {
                   // 1. 우선 모달을 닫습니다.
                   setIsSelectorOpen(false);
                   // 2. 선택된 친구로 우리의 우체통을 엽니다.
-                  setSelectedFriend(friend); 
+                  setSelectedFriend(friend);
                 }}
               />
             )}
@@ -454,57 +473,70 @@ const handleConfirmDelete = async () => {
             <main className="letter-grid">
               {isLoading ? (
                 <p>로딩 중...</p>
-                ) : letters.length === 0 ? ( 
-                  /* 편지가 없을 때 보여줄 빈 상태(Empty State) 화면 */
-                  /* 데이터 로딩이 끝났는데(isLoading: false) 편지가 0개인 경우 실행 */
-                  <div className="no-letters-container">
-                    <div className="no-letters-content">
-                      <p>아직 편지가 없어요.</p>
-                      <span>친구들에게 먼저 소식을 전해보는 건 어떨까요?</span>
-                    </div>
+              ) : letters.length === 0 ? (
+                /* 편지가 없을 때 보여줄 빈 상태(Empty State) 화면 */
+                /* 데이터 로딩이 끝났는데(isLoading: false) 편지가 0개인 경우 실행 */
+                <div className="no-letters-container">
+                  <div className="no-letters-content">
+                    <p>아직 편지가 없어요.</p>
+                    <span>친구들에게 먼저 소식을 전해보는 건 어떨까요?</span>
                   </div>
-                ) : (
-                  <>
+                </div>
+              ) : (
+                <>
                   {currentItems.map((letter) => {
-                    const isSpotlight = menu.show && menu.targetId === letter.letterId;
+                    const isSpotlight =
+                      menu.show && menu.targetId === letter.letterId;
 
                     return (
                       <div
                         key={letter.letterId}
                         className={`letter-item ${isSpotlight ? "spotlight" : ""}`}
-                        onContextMenu={(e) => handleContextMenu(e, letter.letterId)}
+                        onContextMenu={(e) =>
+                          handleContextMenu(e, letter.letterId)
+                        }
                         onMouseDown={(e) => startPress(e, letter.letterId)}
                         onMouseUp={cancelPress}
                         onMouseLeave={cancelPress}
                         onTouchStart={(e) => startPress(e, letter.letterId)}
                         onTouchEnd={cancelPress}
-                        onClickCapture={(e) => stopClickAfterLongPress(e, letter.letterId)}
-                        onClick={(e) => {
-                        if (menu.show) {
-                          e.stopPropagation();
-                          closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
-                        } else {
-                          handleLetterClick(letter);
+                        onClickCapture={(e) =>
+                          stopClickAfterLongPress(e, letter.letterId)
                         }
-                      }}
-                      // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
-                      style={{ 
-                        pointerEvents: "auto",
-                        zIndex: isSpotlight ? 1001 : 1 
-                      }}
-                    >
+                        onClick={(e) => {
+                          if (menu.show) {
+                            e.stopPropagation();
+                            closeMenu(); // 메뉴가 열린 상태에서 카드를 누르면 메뉴만 닫히게 함
+                          } else {
+                            handleLetterClick(letter);
+                          }
+                        }}
+                        // 메뉴가 열린 카드(spotlight)는 하위 요소(LetterCard)의 이벤트를 일시 정지
+                        style={{
+                          pointerEvents: "auto",
+                          zIndex: isSpotlight ? 1001 : 1,
+                        }}
+                      >
                         <LetterCard
                           data={letter}
                           isFocused={focusedId === letter.letterId}
-                          onToggleBookmark={() => handleToggleBookmark(letter.letterId)}
-                          bgImage={THEME_IMAGES[letter.themeCode] || THEME_IMAGES.theme1}
+                          onToggleBookmark={() =>
+                            handleToggleBookmark(letter.letterId)
+                          }
+                          bgImage={
+                            THEME_IMAGES[letter.themeCode] ||
+                            THEME_IMAGES.theme1
+                          }
                         />
                       </div>
                     );
                   })}
 
                   {Array.from({ length: emptySlotsCount }).map((_, i) => (
-                    <div key={`empty-${i}`} className="letter-card-placeholder" />
+                    <div
+                      key={`empty-${i}`}
+                      className="letter-card-placeholder"
+                    />
                   ))}
                 </>
               )}
@@ -517,10 +549,10 @@ const handleConfirmDelete = async () => {
                 onClose={() => setSelectedLetter(null)}
                 letterId={selectedLetter.letterId}
                 themeCode={selectedLetter.themeCode}
-                bgImage={THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.theme1}
-
+                bgImage={
+                  THEME_IMAGES[selectedLetter.themeCode] || THEME_IMAGES.theme1
+                }
                 isReceived={activeIndex === 0}
-
                 onMarkAsRead={activeIndex === 0 ? handleMarkAsRead : () => {}}
               />
             )}
@@ -546,11 +578,13 @@ const handleConfirmDelete = async () => {
             )}
 
             {/* ✅ 삭제 확인 모달 (FriendList 메뉴에서만 열림) */}
-            <DeleteCheck
-              isOpen={isDeleteCheckOpen}
-              onClose={handleCancelDelete}
-              onConfirm={handleConfirmDelete}
-            />
+            {isDeleteCheckOpen && (
+              <ReallyDelete
+                onCancel={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                isLoading={isDeleting}
+              />
+            )}
           </>
         )}
       </div>
