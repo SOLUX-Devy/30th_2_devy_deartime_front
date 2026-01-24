@@ -93,8 +93,6 @@
         if (!res.ok) {
           throw new Error(data?.message || "편지 전송 실패");
         }
-
-        alert(`${selectedFriend.friendNickname}님에게 편지를 보냈습니다!`);
         navigate(-1);
       } catch (e) {
         console.error(e);
