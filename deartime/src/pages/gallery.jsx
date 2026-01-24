@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/gallery.css";
-import React, {useMemo, useState, useRef, useEffect, useCallback,} from "react";
-import { Pen, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { Pen, Trash2, ChevronLeft, ChevronRight, Star } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
 import axios from "axios";
@@ -36,6 +36,9 @@ const Gallery = () => {
   const [albumPage, setAlbumPage] = useState(1);
   const ALBUMS_PER_PAGE = 6;
 
+  // 즐겨찾기 앨범 ID 저장 상태
+  const [favAlbumId, setFavAlbumId] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,6 +48,14 @@ const Gallery = () => {
     y: 0,
     targetId: null,
   });
+
+  /**
+   * ⭐ 파일 확장자 제거 헬퍼 함수
+   */
+  const stripExtension = (filename) => {
+    if (!filename) return "";
+    return filename.replace(/\.[^/.]+$/, "");
+  };
 
   const ensureHttps = (url) => {
     if (!url) return "https://via.placeholder.com/300";
@@ -69,7 +80,7 @@ const Gallery = () => {
           ? responseWrapper.data
           : [];
 
-        const isLast = responseWrapper.isLast || newPhotos.length < 20;
+        const isLast = responseWrapper.isLast ?? newPhotos.length < 20;
         setHasMorePhotos(!isLast);
 
         setPhotos((prev) => (page === 0 ? newPhotos : [...prev, ...newPhotos]));
@@ -83,7 +94,9 @@ const Gallery = () => {
     [BASE_PATH, getAuthHeader],
   );
 
-  /* [2] 앨범 목록 조회 */
+  /**
+   * [2] 앨범 목록 조회 및 정렬 로직 (즐겨찾기 1번 고정)
+   */
   const fetchAlbums = useCallback(async () => {
     setLoading(true);
     try {
@@ -91,7 +104,20 @@ const Gallery = () => {
         headers: getAuthHeader(),
       });
       const albumList = res.data.data;
-      setAlbums(Array.isArray(albumList) ? albumList : []);
+      const validAlbums = Array.isArray(albumList) ? albumList : [];
+
+      // ⭐ 정렬 로직: '즐겨찾기' 제목을 가진 앨범을 무조건 배열의 0번 인덱스로 보냄
+      const sortedAlbums = [...validAlbums].sort((a, b) => {
+        if (a.title === "즐겨찾기") return -1;
+        if (b.title === "즐겨찾기") return 1;
+        return 0; 
+      });
+
+      setAlbums(sortedAlbums);
+
+      // 즐겨찾기 앨범 ID 찾기 (토글 기능용)
+      const favAlbum = sortedAlbums.find((a) => a.title === "즐겨찾기");
+      if (favAlbum) setFavAlbumId(favAlbum.albumId);
     } catch (err) {
       console.error("앨범 로드 실패:", err);
     } finally {
@@ -99,7 +125,36 @@ const Gallery = () => {
     }
   }, [BASE_PATH, getAuthHeader]);
 
-  /* [3] 앨범 생성 로직 (2단계: 커버 업로드 -> 앨범 생성) */
+  /* [핵심 추가] 즐겨찾기 즉시 토글 함수 */
+  const handleToggleFavorite = async (e, photoId, currentStatus) => {
+    e.stopPropagation(); 
+    if (!favAlbumId) {
+      alert("즐겨찾기 앨범 정보를 불러오는 중입니다.");
+      return;
+    }
+
+    try {
+      if (currentStatus) {
+        await axios.delete(`${BASE_PATH}/albums/${favAlbumId}/photos/${photoId}`, {
+          headers: getAuthHeader()
+        });
+      } else {
+        await axios.post(`${BASE_PATH}/albums/${favAlbumId}/photos`, 
+          { photoIds: [Number(photoId)] }, 
+          { headers: getAuthHeader() }
+        );
+      }
+      
+      setPhotos(prev => prev.map(p => 
+        p.photoId === photoId ? { ...p, isFavorite: !currentStatus } : p
+      ));
+    } catch (err) {
+      console.error("즐겨찾기 토글 실패:", err);
+      alert("즐겨찾기 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  /* [3] 앨범 생성 로직 */
   const handleCreateAlbum = async (albumData) => {
     setLoading(true);
     try {
@@ -107,8 +162,9 @@ const Gallery = () => {
       if (albumData.imageFile) {
         const formData = new FormData();
         formData.append("files", albumData.imageFile);
+        // 표지 사진의 캡션에서도 확장자 제거
         const requestBlob = new Blob(
-          [JSON.stringify({ caption: `${albumData.title} 표지` })],
+          [JSON.stringify({ caption: stripExtension(albumData.title) + " 표지" })],
           { type: "application/json" },
         );
         formData.append("request", requestBlob);
@@ -125,9 +181,7 @@ const Gallery = () => {
           title: albumData.title,
           coverPhotoId: coverPhotoId,
         },
-        {
-          headers: getAuthHeader(),
-        },
+        { headers: getAuthHeader() },
       );
 
       if (res.data.success) {
@@ -142,7 +196,7 @@ const Gallery = () => {
     }
   };
 
-  /* [기능] 단일 사진 업로드 */
+  /* 단일 사진 업로드 - 확장자 제거 반영 */
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -150,8 +204,9 @@ const Gallery = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append("files", file);
+    // ⭐ 파일 전송 시 캡션에서 확장자 제거
     const requestBlob = new Blob(
-      [JSON.stringify({ caption: file.name, albumId: null })],
+      [JSON.stringify({ caption: stripExtension(file.name), albumId: null })],
       { type: "application/json" },
     );
     formData.append("request", requestBlob);
@@ -175,7 +230,7 @@ const Gallery = () => {
     }
   };
 
-  /* [기능] 삭제 로직 (사진/앨범 공통) */
+  /* 삭제 로직 */
   const handleDeletePhoto = async (photoId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
@@ -190,6 +245,12 @@ const Gallery = () => {
   };
 
   const handleDeleteAlbum = async (albumId) => {
+    const target = albums.find(a => a.albumId === albumId);
+    if (target?.title === "즐겨찾기") {
+      alert("즐겨찾기 앨범은 삭제할 수 없습니다.");
+      setContextMenu({ ...contextMenu, show: false });
+      return;
+    }
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
       const res = await axios.delete(`${BASE_PATH}/albums/${albumId}`, {
@@ -204,7 +265,7 @@ const Gallery = () => {
     setContextMenu({ ...contextMenu, show: false });
   };
 
-  /* [기능] 수정 완료 로직 (캡션/제목 공통) */
+  /* 수정 완료 로직 */
   const handleEditComplete = async (e, id) => {
     const newText = e.target.value;
     if (e.key === "Enter") {
@@ -221,7 +282,13 @@ const Gallery = () => {
             ),
           );
         } else {
-          await axios.post(
+          const target = albums.find(a => a.albumId === id);
+          if (target?.title === "즐겨찾기") {
+            alert("즐겨찾기 앨범의 이름은 수정할 수 없습니다.");
+            setEditingId(null);
+            return;
+          }
+          await axios.patch(
             `${BASE_PATH}/albums/${id}/title`,
             { title: newText },
             { headers: getAuthHeader() },
@@ -237,36 +304,33 @@ const Gallery = () => {
     } else if (e.key === "Escape") setEditingId(null);
   };
 
-  /* [수정] 탭 및 데이터 동기화 Effect - async/await 적용 */
+  /* 데이터 동기화 Effect */
   useEffect(() => {
     const syncData = async () => {
       if (activeIndex === 0) {
         setPhotos([]);
         setPhotoPage(0);
         setHasMorePhotos(true);
-        fetchPhotos(0, true);
+        await fetchPhotos(0, true);
+        await fetchAlbums(); 
       } else {
-        // 1. 서버 데이터를 먼저 완전히 가져온 후(await)
         await fetchAlbums();
-        
-        // 2. 상세 페이지(AlbumDetail)에서 돌아왔을 때의 로컬 수정을 그 위에 덧씌웁니다.
         if (location.state?.updatedAlbum) {
           const updated = location.state.updatedAlbum;
           setAlbums((prev) =>
             prev.map((a) =>
               a.albumId === updated.albumId
-                ? { ...a, coverImageUrl: updated.coverImageUrl }
+                ? { ...a, coverImageUrl: updated.coverImageUrl, title: updated.title }
                 : a,
             ),
           );
         }
       }
     };
-
     syncData();
   }, [activeIndex, fetchPhotos, fetchAlbums, location.state]);
 
-  /* 무한 스크롤 Observer Effect */
+  /* 무한 스크롤 Observer */
   useEffect(() => {
     if (activeIndex !== 0 || !hasMorePhotos) return;
 
@@ -404,11 +468,25 @@ const Gallery = () => {
                     >
                       <div className="img-box">
                         <img src={ensureHttps(photo.imageUrl)} alt="" />
+                        
+                        {/* ⭐ 토글 기능이 포함된 즐겨찾기 별 표시 */}
+                        <span 
+                          className={`bookmark-icon ${photo.isFavorite ? "active" : ""}`} 
+                          onClick={(e) => handleToggleFavorite(e, photo.photoId, photo.isFavorite)}
+                          style={{
+                            position: "absolute",
+                            top: "10px",
+                            right: "10px",
+                            zIndex: 10,
+                            filter: "drop-shadow(0px 0px 3px rgba(0,0,0,0.5))"
+                          }}
+                        ></span>
                       </div>
+                      
                       {editingId === photo.photoId ? (
                         <input
                           className="edit-title-input"
-                          defaultValue={photo.caption}
+                          defaultValue={stripExtension(photo.caption)} // 수정 시 확장자 제거
                           autoFocus
                           onKeyDown={(e) =>
                             handleEditComplete(e, photo.photoId)
@@ -420,7 +498,8 @@ const Gallery = () => {
                           className="photo-title"
                           onClick={() => setEditingId(photo.photoId)}
                         >
-                          {photo.caption || "설명 추가"}
+                          {/* ⭐ 렌더링 시 확장자 제거 */}
+                          {photo.caption ? stripExtension(photo.caption) : "설명 추가"}
                         </p>
                       )}
                     </div>
