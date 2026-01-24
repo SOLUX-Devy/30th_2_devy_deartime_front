@@ -4,6 +4,7 @@ import React, { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { Pen, Trash2, ChevronLeft, ChevronRight, Videotape } from "lucide-react"; 
 import bg from "../assets/background_nostar.png";
 import AlbumCreateModal from "../components/AlbumCreateModal";
+import ReallyDelete from "../components/ReallyDelete"; // ✅ 삭제 확인 모달 임포트
 import axios from "axios";
 
 const Gallery = () => {
@@ -41,6 +42,14 @@ const Gallery = () => {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // ✅ 삭제 모달 상태 관리
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    type: null, // 'photo' 또는 'album'
+    targetId: null,
+  });
+
   const [contextMenu, setContextMenu] = useState({
     show: false,
     x: 0,
@@ -56,10 +65,11 @@ const Gallery = () => {
   const ensureHttps = (url) => {
     if (!url) return "";
     const cleaned = url.replace(/[<>]/g, "");
-    // 플레이스홀더 URL인 경우 빈 문자열 반환하여 아이콘이 뜨게 함
     if (cleaned.includes("via.placeholder.com")) return "";
     return cleaned;
   };
+
+  // --- API 데이터 호출 로직 ---
 
   const fetchPhotos = useCallback(
     async (page, isInitial = false) => {
@@ -119,6 +129,34 @@ const Gallery = () => {
       setLoading(false);
     }
   }, [BASE_PATH, getAuthHeader]);
+
+  // --- 삭제 및 수정 로직 ---
+
+  // ✅ 삭제 모달 확정 시 실행되는 함수
+  const handleConfirmDelete = async () => {
+    const { type, targetId } = deleteModal;
+    try {
+      if (type === "photo") {
+        await axios.delete(`${BASE_PATH}/photos/${targetId}`, {
+          headers: getAuthHeader(),
+        });
+        setPhotos((prev) => prev.filter((p) => p.photoId !== targetId));
+        fetchAlbums(); // 앨범 커버나 카운트 갱신을 위해 호출
+      } else if (type === "album") {
+        const res = await axios.delete(`${BASE_PATH}/albums/${targetId}`, {
+          headers: getAuthHeader(),
+        });
+        if (res.data.success) {
+          setAlbums((prev) => prev.filter((a) => a.albumId !== targetId));
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.data || "삭제 실패");
+    } finally {
+      // 모달 닫기 및 상태 초기화
+      setDeleteModal({ isOpen: false, type: null, targetId: null });
+    }
+  };
 
   const handleToggleFavorite = async (e, photoId, currentStatus) => {
     e.stopPropagation();
@@ -209,47 +247,12 @@ const Gallery = () => {
         fetchPhotos(0, true);
         fetchAlbums();
       }
-    } catch (err) {
+    } catch {
       alert("업로드 실패");
     } finally {
       setLoading(false);
       e.target.value = "";
     }
-  };
-
-  const handleDeletePhoto = async (photoId) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    try {
-      await axios.delete(`${BASE_PATH}/photos/${photoId}`, {
-        headers: getAuthHeader(),
-      });
-      setPhotos((prev) => prev.filter((p) => p.photoId !== photoId));
-      fetchAlbums();
-    } catch (err) {
-      alert(err.response?.data?.data || "삭제 권한이 없습니다.");
-    }
-    setContextMenu({ ...contextMenu, show: false });
-  };
-
-  const handleDeleteAlbum = async (albumId) => {
-    const target = albums.find(a => a.albumId === albumId);
-    if (target?.title === "즐겨찾기") {
-      alert("즐겨찾기 앨범은 삭제할 수 없습니다.");
-      setContextMenu({ ...contextMenu, show: false });
-      return;
-    }
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-    try {
-      const res = await axios.delete(`${BASE_PATH}/albums/${albumId}`, {
-        headers: getAuthHeader(),
-      });
-      if (res.data.success) {
-        setAlbums((prev) => prev.filter((a) => a.albumId !== albumId));
-      }
-    } catch (err) {
-      alert(err.response?.data?.data || "삭제 실패");
-    }
-    setContextMenu({ ...contextMenu, show: false });
   };
 
   const handleEditComplete = async (e, id) => {
@@ -285,6 +288,8 @@ const Gallery = () => {
       setEditingId(null);
     } else if (e.key === "Escape") setEditingId(null);
   };
+
+  // --- 이펙트 및 스크롤 핸들러 ---
 
   useEffect(() => {
     const syncData = async () => {
@@ -354,11 +359,26 @@ const Gallery = () => {
       style={{ backgroundImage: `url(${bg})` }}
       onClick={() => setContextMenu({ ...contextMenu, show: false })}
     >
+      {/* 1. 조건부 렌더링: deleteModal.isOpen이 true일 때만 컴포넌트를 그립니다. */}
+      {deleteModal.isOpen && (
+        <ReallyDelete
+          // 2. 프롭 매칭: ReallyDelete는 onClose 대신 onCancel을 사용합니다.
+          onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+          
+          // 3. 실행 함수 연결
+          onConfirm={handleConfirmDelete}
+          
+          // 4. 로딩 상태 연결: Gallery의 loading 상태를 그대로 전달
+          isLoading={loading}
+        />
+      )}
+
       <AlbumCreateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateAlbum}
       />
+
       <input
         type="file"
         ref={fileInputRef}
@@ -385,11 +405,27 @@ const Gallery = () => {
           <div className="menu-divider" />
           <div
             className="menu-item delete"
-            onClick={() =>
-              activeIndex === 0
-                ? handleDeletePhoto(contextMenu.targetId)
-                : handleDeleteAlbum(contextMenu.targetId)
-            }
+            onClick={() => {
+              const type = activeIndex === 0 ? "photo" : "album";
+              
+              // 즐겨찾기 앨범 삭제 방지 로직 유지
+              if (type === "album") {
+                const target = albums.find(a => a.albumId === contextMenu.targetId);
+                if (target?.title === "즐겨찾기") {
+                  alert("즐겨찾기 앨범은 삭제할 수 없습니다.");
+                  setContextMenu({ ...contextMenu, show: false });
+                  return;
+                }
+              }
+
+              // ✅ 모달 오픈 상태로 변경
+              setDeleteModal({
+                isOpen: true,
+                type: type,
+                targetId: contextMenu.targetId
+              });
+              setContextMenu({ ...contextMenu, show: false });
+            }}
           >
             <Trash2 size={16} /> <span>삭제</span>
           </div>
