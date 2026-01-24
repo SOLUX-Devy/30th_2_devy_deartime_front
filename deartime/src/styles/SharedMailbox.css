@@ -106,7 +106,7 @@
 .chat-item.theirs {
     align-self: flex-start;
     gap: 1em; 
-    margin-left: 20px;
+    margin-left: 5em;
 }
 
 .theirs .message-bubble {
@@ -149,6 +149,7 @@
     margin: 20px 0;
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.4);
+    width:100%
 }
 
 .shared-mailbox-container::after {

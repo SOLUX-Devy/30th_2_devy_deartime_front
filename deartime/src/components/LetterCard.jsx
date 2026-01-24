@@ -26,9 +26,9 @@ export default function LetterCard({
 
   // 즐겨찾기 토글
   const handleBookmarkToggle = (e) => {
-    e.stopPropagation();
-    // 부모가 넘겨준 함수를 실행합니다.
-    onToggleBookmark?.(); 
+    e.stopPropagation(); // 부모로 이벤트 전파 차단
+    e.preventDefault();  // 브라우저 기본 동작 방지
+    onToggleBookmark?.();
   };
 
   // 일반 클릭 → 상세보기
