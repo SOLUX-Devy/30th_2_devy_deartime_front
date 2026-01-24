@@ -20,7 +20,7 @@ const SharedMailbox = ({ friend, onBack }) => {
             if (!targetId) return;
             try {
                 setIsLoading(true);
-                const response = await fetch(`${BASE_URL}/api/letters/conversation/${targetId}?sort=createdAt,desc&page=0&size=20`, {
+                const response = await fetch(`${BASE_URL}/api/letters/conversation/${targetId}?sort=createdAt,asc&page=0&size=20`, {
                     headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
                 });
                 const json = await response.json();
